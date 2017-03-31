@@ -26,25 +26,19 @@
 	    <version>1.2</version>
 	</dependency>
   
-  <!-- https://mvnrepository.com/artifact/commons-configuration/commons-configuration -->
+<!-- https://mvnrepository.com/artifact/org.apache.commons/commons-configuration2 -->
 <dependency>
-    <groupId>commons-configuration</groupId>
-    <artifactId>commons-configuration</artifactId>
-    <version>1.10</version>
+    <groupId>org.apache.commons</groupId>
+    <artifactId>commons-configuration2</artifactId>
+    <version>2.1.1</version>
 </dependency>
+
   
   <!-- https://mvnrepository.com/artifact/org.apache.httpcomponents/httpclient -->
 <dependency>
     <groupId>org.apache.httpcomponents</groupId>
     <artifactId>httpclient</artifactId>
     <version>4.5.3</version>
-</dependency>
-  
-  <!-- https://mvnrepository.com/artifact/org.apache.httpcomponents/httpcore -->
-<dependency>
-    <groupId>org.apache.httpcomponents</groupId>
-    <artifactId>httpcore</artifactId>
-    <version>4.4.6</version>
 </dependency>
   
   <!-- https://mvnrepository.com/artifact/commons-codec/commons-codec -->
@@ -61,7 +55,20 @@
     <version>1.8.3</version>
 </dependency>
 
-  
-  
+<!-- https://mvnrepository.com/artifact/mysql/mysql-connector-java -->
+<dependency>
+    <groupId>mysql</groupId>
+    <artifactId>mysql-connector-java</artifactId>
+    <version>6.0.6</version>
+</dependency>
+
+<!-- https://mvnrepository.com/artifact/commons-lang/commons-lang -->
+<dependency>
+    <groupId>commons-lang</groupId>
+    <artifactId>commons-lang</artifactId>
+    <version>2.6</version>
+</dependency>
+
+
   </dependencies>
 </project>

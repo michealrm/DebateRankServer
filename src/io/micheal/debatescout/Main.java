@@ -1,31 +1,73 @@
 package io.micheal.debatescout;
 
+import java.io.File;
 import java.io.IOException;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
+import org.apache.commons.configuration2.Configuration;
+import org.apache.commons.configuration2.builder.fluent.Configurations;
+import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
-import org.jsoup.nodes.Document.OutputSettings;
 import org.jsoup.nodes.Element;
-import org.jsoup.nodes.Entities;
 import org.jsoup.select.Elements;
+
+import com.mysql.cj.xdevapi.DbDoc;
 
 public class Main {
 
-	public static Log log;
-	public static boolean active = true;
-	
-	static {
-		log = LogFactory.getLog(Main.class);
-		log.debug("Instantiated logger");
-	}
+	public Log log;
+	public boolean active = true;
+	private Connection sql;
+	private String host, name, user, pass;
+	private int port;
 	
 	public static void main(String[] args) {
+		new Main().run();
+	}
+	
+	public Main() {
+		log = LogFactory.getLog(Main.class);
+		log.debug("Instantiated logger");
+
+		Configurations configs = new Configurations();
+		try
+		{
+		    Configuration config = configs.properties(new File("config.properties"));
+		    host = config.getString("db.host");
+		    name = config.getString("db.name");
+		    user = config.getString("db.user");
+		    pass = config.getString("db.pass");
+		    port = config.getInt("db.port");
+		}
+		catch (ConfigurationException cex)
+		{
+		    log.error(cex);
+		    System.exit(0);
+		}
+		
+		try {
+			Class.forName("com.mysql.jdbc.Driver");
+		} catch (ClassNotFoundException e) {
+			log.error(e);
+			System.exit(1);
+		}
+		
+		try {
+			sql = DriverManager.getConnection(host, user, pass);
+		} catch (SQLException e) {
+			log.error(e);
+			System.exit(1);
+		}
+	}
+	
+	public void run() {
 		
 		while(active) {
 			try {
@@ -73,18 +115,27 @@ public class Main {
 						if(ld != null && ld.text().equals("Prelims")) { // Add Packet & Elims
 							Document prelim = Jsoup.connect(ld.absUrl("href")).get();
 							Element table = prelim.select("table[border=1]").first();
-							Elements rows = table.select("tr");
+							Elements rows = table.select("tr:has(table)");
 							HashMap<String, Debater> competitors = new HashMap<String, Debater>();
 							
 							// Register all debaters
 							
-							Elements tds = rows.select("tr ~ td");
-							System.out.println(tds);
+							for(Element row : rows) {
+								Elements infos = row.select("td").first().select("td");
+								competitors.put(infos.get(2).text(), new Debater(infos.get(3).text(), infos.get(1).text()));
+							}
 							
 							// Parse rounds
 							for(int i = 0;i<rows.size();i++) {
-								Elements cols = rows.select("td");
-								
+								Elements cols = rows.select("td[width=80]");
+								for(int k = 1;k<cols.size()-1;k++) {
+									Element speaks = cols.get(k).select("[width=50%][align=left]").first();
+									Element side = cols.get(k).select("[width=50%][align=right]").first();
+									Element win = cols.get(k).select("[colspan=2].rec").first();
+									Element against = cols.get(k).select("[colspan=2][align=right]").first();
+									System.out.println(win);
+									System.exit(0);
+								}
 								
 							}
 						}
@@ -96,5 +147,13 @@ public class Main {
 				e.printStackTrace();
 			}
 		}
+	}
+	
+	/**
+	 * Searches the SQL tables for the specified name. If no match is found, a debater will be created and returned
+	 * @return
+	 */
+	private int getOrCreateDebaterID(String name, String school) {
+		return 0;
 	}
 }
