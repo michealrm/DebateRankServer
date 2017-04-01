@@ -8,6 +8,8 @@ public class Tournament {
 		this.name = name;
 		this.link = link;
 		this.state = state;
+		if(date.matches("\\d\\/\\d\\d\\/\\d\\d\\d\\d"))
+			date = "0" + date;
 		this.date = date;
 	}
 	

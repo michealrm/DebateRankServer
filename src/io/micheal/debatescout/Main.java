@@ -3,22 +3,23 @@ package io.micheal.debatescout;
 import java.io.File;
 import java.io.IOException;
 import java.sql.Connection;
+import java.sql.Date;
 import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.HashMap;
 
 import org.apache.commons.configuration2.Configuration;
 import org.apache.commons.configuration2.builder.fluent.Configurations;
-import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
-
-import com.mysql.cj.xdevapi.DbDoc;
 
 public class Main {
 
@@ -27,6 +28,8 @@ public class Main {
 	private Connection sql;
 	private String host, name, user, pass;
 	private int port;
+	private Statement st;
+	private Configuration config;
 	
 	public static void main(String[] args) {
 		new Main().run();
@@ -39,29 +42,17 @@ public class Main {
 		Configurations configs = new Configurations();
 		try
 		{
-		    Configuration config = configs.properties(new File("config.properties"));
+		    config = configs.properties(new File("config.properties"));
 		    host = config.getString("db.host");
 		    name = config.getString("db.name");
-		    user = config.getString("db.user");
-		    pass = config.getString("db.pass");
+		    user = config.getString("db.username");
+		    pass = config.getString("db.password");
 		    port = config.getInt("db.port");
-		}
-		catch (ConfigurationException cex)
-		{
-		    log.error(cex);
-		    System.exit(0);
-		}
-		
-		try {
-			Class.forName("com.mysql.jdbc.Driver");
-		} catch (ClassNotFoundException e) {
-			log.error(e);
-			System.exit(1);
-		}
-		
-		try {
-			sql = DriverManager.getConnection(host, user, pass);
-		} catch (SQLException e) {
+
+			Class.forName("com.mysql.cj.jdbc.Driver");
+			sql = DriverManager.getConnection("jdbc:mysql://" + host + ":" + port + "/" + name + "?user=" + user + "&password=" + pass);
+			st = sql.createStatement();
+		} catch (Exception e) {
 			log.error(e);
 			System.exit(1);
 		}
@@ -104,7 +95,37 @@ public class Main {
 					}
 				}
 				
-				log.info(tournaments.size() + " tournaments scraped from JOT");
+				// Update DB / Remove cached tournaments from the queue
+				log.debug(tournaments.size() + " tournaments scraped from JOT");
+				try {
+					ResultSet links = executeQuery("SELECT link FROM tournaments");
+					ArrayList<String> cachedLinks = new ArrayList<String>();
+					while(links.next())
+						cachedLinks.add(links.getString(1));
+
+					if(config.getBoolean("useCache"))
+						for(int i = 0;i<tournaments.size();i++)
+							for(String k : cachedLinks)
+								if(tournaments.get(i).getLink().equals(k))
+									tournaments.remove(i--);
+					
+					int updated = 0;
+					for(Tournament t : tournaments) {
+						PreparedStatement ps = sql.prepareStatement("INSERT IGNORE INTO tournaments (name, state, link, date) VALUES (?, ?, ?, STR_TO_DATE(?, '%m/%d/%Y'))");
+						ps.setString(1, t.getName());
+						ps.setString(2, t.getState());
+						ps.setString(3, t.getLink());
+						ps.setString(4, t.getDate());
+						ps.execute();
+						updated++;
+					}
+					log.info(updated + " tournaments inserted into DB");
+				} catch (SQLException e) {
+					log.error(e);
+					log.fatal("DB could not be updated with JOT tournament info");
+				}
+				
+				log.info(tournaments.size() + " tournaments queued from JOT");
 				
 				// Scape events per tournament
 				
@@ -155,5 +176,15 @@ public class Main {
 	 */
 	private int getOrCreateDebaterID(String name, String school) {
 		return 0;
+	}
+	
+	private ResultSet executeQuery(String query) throws SQLException {
+		log.debug("Executing query --> " + query);
+		return st.executeQuery(query);
+	}
+	
+	private boolean execute(String query) throws SQLException {
+		log.debug("Executing --> " + query);
+		return st.execute(query);
 	}
 }
