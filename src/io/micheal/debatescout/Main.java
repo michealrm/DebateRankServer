@@ -11,9 +11,11 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Map;
 
 import org.apache.commons.configuration2.Configuration;
 import org.apache.commons.configuration2.builder.fluent.Configurations;
+import org.apache.commons.lang.ObjectUtils.Null;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.jsoup.Jsoup;
@@ -108,27 +110,29 @@ public class Main {
 							for(String k : cachedLinks)
 								if(tournaments.get(i).getLink().equals(k))
 									tournaments.remove(i--);
-					
-					int updated = 0;
+					String query = "INSERT IGNORE INTO tournaments (name, state, link, date) VALUES ";
+					ArrayList<String> args = new ArrayList<String>();
 					for(Tournament t : tournaments) {
-						PreparedStatement ps = sql.prepareStatement("INSERT IGNORE INTO tournaments (name, state, link, date) VALUES (?, ?, ?, STR_TO_DATE(?, '%m/%d/%Y'))");
-						ps.setString(1, t.getName());
-						ps.setString(2, t.getState());
-						ps.setString(3, t.getLink());
-						ps.setString(4, t.getDate());
-						ps.execute();
-						updated++;
+						query += "(?,?,?,STR_TO_DATE(?, '%m/%d/%Y')), ";
+						args.add(t.getName());
+						args.add(t.getState());
+						args.add(t.getLink());
+						args.add(t.getDate());
 					}
-					log.info(updated + " tournaments inserted into DB");
+					query = query.substring(0, query.lastIndexOf(", "));
+					String[] argsArr = new String[args.size()];
+					for(int i = 0;i<args.size();i++)
+						argsArr[i] = args.get(i);
+					executePreparedStatement(query, argsArr);
 				} catch (SQLException e) {
+					e.printStackTrace();
 					log.error(e);
-					log.fatal("DB could not be updated with JOT tournament info");
+					log.fatal("DB could not be updated with JOT tournament info. " + e.getErrorCode());
 				}
 				
 				log.info(tournaments.size() + " tournaments queued from JOT");
 				
 				// Scape events per tournament
-				
 				for(Tournament t : tournaments) {
 					Document tPage = Jsoup.connect(t.getLink()).get();
 					Elements lds = tPage.select("a[title~=LD|Lincoln|L-D]");
@@ -140,31 +144,72 @@ public class Main {
 							HashMap<String, Debater> competitors = new HashMap<String, Debater>();
 							
 							// Register all debaters
-							
 							for(Element row : rows) {
 								Elements infos = row.select("td").first().select("td");
-								competitors.put(infos.get(2).text(), new Debater(infos.get(3).text(), infos.get(1).text()));
+								try {
+									competitors.put(infos.get(2).text(), new Debater(infos.get(3).text(), infos.get(1).text()));
+								} catch (UnsupportedNameException e) {
+									log.error(e);
+								}
 							}
 							
+							// Update DB with debaters
+							ResultSet names = executeQuery("SELECT first, middle, last, surname, school, id FROM debaters"); // Fatal exception
+							while(names.next())
+								for(Map.Entry<String, Debater> entry : competitors.entrySet())
+								    if(entry.getValue().equals(new Debater(names.getString(1), names.getString(2), names.getString(3), names.getString(4), names.getString(5))))
+								    	competitors.get(entry.getKey()).setID(names.getInt(6));
+							
+							// INSERT any debaters that didn't get assigned an ID
+							for(Map.Entry<String, Debater> entry : competitors.entrySet())
+								getOrCreateDebaterID(entry.getValue());
+							
 							// Parse rounds
+							String query = "INSERT INTO ld_rounds (tournament, debater, against, speaks, decision) VALUES ";
+							ArrayList<Object> args = new ArrayList<Object>();
 							for(int i = 0;i<rows.size();i++) {
+								String key = rows.get(i).select("td").first().select("td").get(2).text();
 								Elements cols = rows.select("td[width=80]");
 								for(int k = 1;k<cols.size()-1;k++) {
 									Element speaks = cols.get(k).select("[width=50%][align=left]").first();
 									Element side = cols.get(k).select("[width=50%][align=right]").first();
 									Element win = cols.get(k).select("[colspan=2].rec").first();
 									Element against = cols.get(k).select("[colspan=2][align=right]").first();
-									System.out.println(win);
-									System.exit(0);
+									if(win == null)
+										continue;
+									
+									ArrayList<Object> a = new ArrayList<Object>();
+									a.add(t.getLink());
+									a.add(competitors.get(key).getID());
+									a.add(competitors.get(against.text()).getID());
+									a.add(speaks == null ? null : Double.parseDouble(speaks.text().replaceAll("\\*", "")));
+									if(win.text().equals("W"))
+										a.add("1-0");
+									else if(win.text().equals("L"))
+										a.add("0-1");
+									else
+										a.add(win.text());
+									
+									// Check if exists
+									ResultSet exists = executeQueryPreparedStatement("SELECT * FROM ld_rounds WHERE tournament=(SELECT id FROM tournaments WHERE link=?) AND debater=(SELECT id FROM debaters WHERE id=?) AND against=(SELECT id FROM debaters WHERE id=?) AND speaks=? AND decision=?", a.get(0), a.get(1), a.get(2), a.get(3), a.get(4));
+									if(!exists.next()) {
+										query += "((SELECT id FROM tournaments WHERE link=?), (SELECT id FROM debaters WHERE id=?), (SELECT id FROM debaters WHERE id=?), ?, ?), ";
+										args.addAll(a);
+									}
 								}
-								
 							}
+							query = query.substring(0, query.lastIndexOf(", "));
+							executePreparedStatement(query, args.toArray());
 						}
+					System.exit(0);
 				}
 				
 				System.exit(0);
 				
 			} catch (IOException e) {
+				e.printStackTrace();
+			} catch (SQLException e) {
+				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 		}
@@ -173,9 +218,17 @@ public class Main {
 	/**
 	 * Searches the SQL tables for the specified name. If no match is found, a debater will be created and returned
 	 * @return
+	 * @throws SQLException 
 	 */
-	private int getOrCreateDebaterID(String name, String school) {
-		return 0;
+	private int getOrCreateDebaterID(Debater debater) throws SQLException {
+		if(debater.getID() != null)
+			return debater.getID();
+		ResultSet index = executeQueryPreparedStatement("SELECT * FROM debaters WHERE first=? AND middle=? AND last=? AND surname=? AND school=?", debater.getFirst(), debater.getMiddle(), debater.getLast(), debater.getSurname(), debater.getSchool());
+		if(!index.next())
+			executePreparedStatementArgs("INSERT INTO debaters (first, middle, last, surname, school) VALUES (?, ?, ?, ?, ?)", debater.getFirst(), debater.getMiddle(), debater.getLast(), debater.getSurname(), debater.getSchool());
+		else
+			return index.getInt(1);
+		return -1;
 	}
 	
 	private ResultSet executeQuery(String query) throws SQLException {
@@ -183,8 +236,39 @@ public class Main {
 		return st.executeQuery(query);
 	}
 	
-	private boolean execute(String query) throws SQLException {
-		log.debug("Executing --> " + query);
-		return st.execute(query);
+	private ResultSet executeQueryPreparedStatement(String query, Object... values) throws SQLException {
+		PreparedStatement ps = sql.prepareStatement(query);
+		for(int i = 0;i<values.length;i++) {
+			if(values[i] instanceof String)
+				ps.setString(i+1, (String)values[i]);
+			else if(values[i] instanceof Integer)
+				ps.setInt(i+1, (Integer)values[i]);
+			else if(values[i] instanceof Double)
+				ps.setDouble(i+1, (Double)values[i]);
+			else if(values[i] == null)
+				ps.setString(i+1, (String)values[i]);
+		}
+		log.debug("Executing query --> " + ps);
+		return ps.executeQuery();
+	}
+	
+	private boolean executePreparedStatementArgs(String query, String... values) throws SQLException {
+		return executePreparedStatement(query, values);
+	}
+	
+	private boolean executePreparedStatement(String query, Object[] values) throws SQLException {
+		PreparedStatement ps = sql.prepareStatement(query);
+		for(int i = 0;i<values.length;i++) {
+			if(values[i] instanceof String)
+				ps.setString(i+1, (String)values[i]);
+			else if(values[i] instanceof Integer)
+				ps.setInt(i+1, (Integer)values[i]);
+			else if(values[i] instanceof Double)
+				ps.setDouble(i+1, (Double)values[i]);
+			else if(values[i] == null)
+				ps.setString(i+1, (String)values[i]);
+		}
+		log.debug("Executing --> " + ps);
+		return ps.execute();
 	}
 }
