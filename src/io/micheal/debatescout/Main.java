@@ -169,8 +169,8 @@ public class Main {
 							ArrayList<Object> args = new ArrayList<Object>();
 							for(int i = 0;i<rows.size();i++) {
 								String key = rows.get(i).select("td").first().select("td").get(2).text();
-								Elements cols = rows.select("td[width=80]");
-								for(int k = 1;k<cols.size()-1;k++) {
+								Elements cols = rows.get(i).select("td[width=80]");
+								for(int k = 0;k<cols.size();k++) {
 									Element speaks = cols.get(k).select("[width=50%][align=left]").first();
 									Element side = cols.get(k).select("[width=50%][align=right]").first();
 									Element win = cols.get(k).select("[colspan=2].rec").first();
@@ -179,16 +179,26 @@ public class Main {
 										continue;
 									
 									ArrayList<Object> a = new ArrayList<Object>();
-									a.add(t.getLink());
-									a.add(competitors.get(key).getID());
-									a.add(competitors.get(against.text()).getID());
-									a.add(speaks == null ? null : Double.parseDouble(speaks.text().replaceAll("\\*", "")));
-									if(win.text().equals("W"))
-										a.add("1-0");
-									else if(win.text().equals("L"))
-										a.add("0-1");
-									else
+									if(win.text().matches("F|B")) {
+										a.add(t.getLink());
+										a.add(competitors.get(key).getID());
+										a.add(competitors.get(key).getID());
+										a.add(null);
 										a.add(win.text());
+									}
+									else {
+										a.add(t.getLink());
+										a.add(competitors.get(key).getID());
+										a.add(competitors.get(against.text()).getID());
+										a.add(speaks == null ? null : Double.parseDouble(speaks.text().replaceAll("\\*", "")));
+										if(win.text().equals("W"))
+											a.add("1-0");
+										else if(win.text().equals("L"))
+											a.add("0-1");
+										else
+											a.add(win.text());
+										
+									}
 									
 									// Check if exists
 									ResultSet exists = executeQueryPreparedStatement("SELECT * FROM ld_rounds WHERE tournament=(SELECT id FROM tournaments WHERE link=?) AND debater=(SELECT id FROM debaters WHERE id=?) AND against=(SELECT id FROM debaters WHERE id=?) AND speaks=? AND decision=?", a.get(0), a.get(1), a.get(2), a.get(3), a.get(4));
@@ -198,10 +208,15 @@ public class Main {
 									}
 								}
 							}
-							query = query.substring(0, query.lastIndexOf(", "));
-							executePreparedStatement(query, args.toArray());
+							if(!query.equals("INSERT INTO ld_rounds (tournament, debater, against, speaks, decision) VALUES ")) {
+
+								System.out.println(t.getName() + " " + args);
+								
+								query = query.substring(0, query.lastIndexOf(", "));
+								executePreparedStatement(query, args.toArray());
+							}
 						}
-					System.exit(0);
+					//System.exit(0);
 				}
 				
 				System.exit(0);
