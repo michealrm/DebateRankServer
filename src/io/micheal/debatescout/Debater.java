@@ -43,8 +43,8 @@ public class Debater {
 		String last = debater.getLast();
 		String school = debater.getSchool();
 		if(school != null && this.school != null) {
-			String[] blocks1 = Main.cleanString(this.school).split(" ");
-			String[] blocks2 = Main.cleanString(school).split(" ");
+			String[] blocks1 = SQLHelper.cleanString(this.school).split(" ");
+			String[] blocks2 = SQLHelper.cleanString(school).split(" ");
 			if(blocks1.length > blocks2.length) {
 				String[] temp = blocks2;
 				blocks2 = blocks1;
@@ -60,8 +60,8 @@ public class Debater {
 				found = false;
 			}
 		}
-		if(((this.first == null && first == null) || Main.cleanString(this.first).equals(Main.cleanString(first))) &&
-				((this.last == null && last == null) || Main.cleanString(this.last).equals(Main.cleanString(last)))) {
+		if(((this.first == null && first == null) || SQLHelper.cleanString(this.first).equals(SQLHelper.cleanString(first))) &&
+				((this.last == null && last == null) || SQLHelper.cleanString(this.last).equals(SQLHelper.cleanString(last)))) {
 			return true;
 		}
 
