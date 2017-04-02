@@ -1,8 +1,5 @@
 package io.micheal.debatescout;
 
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
 public class Debater {
 
 	private String first, middle, last, surname, school;
@@ -45,23 +42,30 @@ public class Debater {
 		String first = debater.getFirst();
 		String last = debater.getLast();
 		String school = debater.getSchool();
-		String regex = "";
-		String[] blocks = this.school.split(" ");
 		if(school != null && this.school != null) {
-			if(blocks.length <= 1)
-				regex = blocks[0];
-			else {
-				for(String s : blocks)
-					regex += s + "|";
-				regex = regex.substring(0, regex.length()-1);
+			String[] blocks1 = Main.cleanString(this.school).split(" ");
+			String[] blocks2 = Main.cleanString(school).split(" ");
+			if(blocks1.length > blocks2.length) {
+				String[] temp = blocks2;
+				blocks2 = blocks1;
+				blocks1 = temp;
+			}
+			boolean found = false;
+			for(int i = 0;i<blocks2.length;i++) {
+				for(int k = 0;k<blocks1.length;k++)
+					if(blocks2[i].equals(blocks1[k]))
+						found = true;
+				if(!found)
+					return false;
+				found = false;
 			}
 		}
-		Pattern p = Pattern.compile(regex);
-		Matcher m = p.matcher(school);
-		if((this.first == null && first == null) || (this.first != null && first != null && this.first.equalsIgnoreCase(first)) &&
-				(this.last == null && last == null) || (this.last != null && last != null && this.last.equalsIgnoreCase(last)) &&
-				(school == null || this.school == null || (school != null && this.school != null && m.find())))
+		if(((this.first == null && first == null) || Main.cleanString(this.first).equals(Main.cleanString(first))) &&
+				((this.last == null && last == null) || Main.cleanString(this.last).equals(Main.cleanString(last)))) {
 			return true;
+		}
+
+		System.out.println(first + " " + last + " from " + school + " didnt match " + this.first + " " + this.last + " from " + this.school);
 		return false;
 	}
 	
