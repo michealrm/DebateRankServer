@@ -54,12 +54,7 @@ public class Main {
 		
 		while(active) {
 			
-			// Timer
-			try {
-				Thread.sleep(1);
-			} catch (InterruptedException e) {
-				e.printStackTrace();
-			}
+			active = false;
 			// TODO: Change to next update time
 			// TODO: Check if thread pool = 0
 			
@@ -148,48 +143,48 @@ public class Main {
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
-				// Modules //
+			// Modules //
 				
-				modules.add(new LD(tournaments, sql, log));
-				// TODO: Policy
-				// TODO: PF
+			modules.add(new LD(tournaments, sql, log, manager));
+			// TODO: Policy
+			// TODO: PF
 				
-				/////////////
-				// Tabroom //
-				/////////////
+			/////////////
+			// Tabroom //
+			/////////////
+			
+			//////////
+			// NSDA //
+			//////////
+			
+			////////////////
+			// TFA Points //
+			////////////////
+			
+			///////////////////////
+			// Judgephilosophies //
+			///////////////////////
+			
+			///////////////
+			// NDCA Wiki //
+			///////////////
 				
-				//////////
-				// NSDA //
-				//////////
+			/////////////
+			// Execute //
+			/////////////
 				
-				////////////////
-				// TFA Points //
-				////////////////
+			for(Module module : modules)
+				manager.newModule(module);
 				
-				///////////////////////
-				// Judgephilosophies //
-				///////////////////////
+			/////////////////
+			// CALCULATION //
+			/////////////////
+			
+			// Bids
 				
-				///////////////
-				// NDCA Wiki //
-				///////////////
-				
-				/////////////////
-				// CALCULATION //
-				/////////////////
-				
-				// Bids
-				
-				// Glicko-2
-				
-				/////////////
-				// Execute //
-				/////////////
-				
-				for(Module module : modules)
-					manager.newModule(module);
-				
-				System.exit(0); // Temp - 1 loop
+			// Glicko-2
+			
+			//System.exit(0); // Temp - 1 loop
 		}
 	}
 }

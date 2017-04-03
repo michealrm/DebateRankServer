@@ -73,7 +73,10 @@ public class SQLHelper {
 	}
 	
 	public static String cleanString(String s) {
-		return s.toLowerCase().replaceAll(".|,|'|\"", "");
+		if(s == null)
+			return null;
+		else
+			return s.toLowerCase().replaceAll("[^A-Za-z ]", "");
 	}
 	
 }
