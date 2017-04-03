@@ -5,16 +5,19 @@ import java.io.IOException;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.HashMap;
 
 import org.apache.commons.configuration2.Configuration;
 import org.apache.commons.configuration2.builder.fluent.Configurations;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.goochjs.glicko2.Rating;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
+import io.micheal.debatescout.modules.Module;
 import io.micheal.debatescout.modules.ModuleManager;
 import io.micheal.debatescout.modules.jot.LD;
 
@@ -183,6 +186,23 @@ public class Main {
 			// Bids
 				
 			// Glicko-2
+			while(manager.getActiveCount() != 0) {
+				try {
+					Thread.sleep(5000);
+				} catch (InterruptedException e) {
+					log.error(e);
+					System.exit(1);
+				}
+			}
+			
+			HashMap<String, Rating> debaters = new HashMap<String, Rating>();
+			ResultSet orderedT = null;
+			try {
+				orderedT = sql.executeQuery("SELECT (id, date) FROM tournaments ORDERBY date DESC");
+			} catch (SQLException e) {
+				log.error(e);
+				log.fatal("Could not update debater ratings.");
+			}
 			
 			//System.exit(0); // Temp - 1 loop
 		}

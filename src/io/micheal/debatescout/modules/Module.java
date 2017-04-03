@@ -1,6 +1,8 @@
-package io.micheal.debatescout;
+package io.micheal.debatescout.modules;
 
 import org.apache.commons.logging.Log;
+
+import io.micheal.debatescout.SQLHelper;
 
 public abstract class Module implements Runnable {
 

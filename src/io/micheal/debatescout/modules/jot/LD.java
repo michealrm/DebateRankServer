@@ -14,10 +14,10 @@ import org.jsoup.select.Elements;
 
 import io.micheal.debatescout.Debater;
 import io.micheal.debatescout.JsoupHelper;
-import io.micheal.debatescout.Module;
 import io.micheal.debatescout.SQLHelper;
 import io.micheal.debatescout.Tournament;
 import io.micheal.debatescout.UnsupportedNameException;
+import io.micheal.debatescout.modules.Module;
 import io.micheal.debatescout.modules.ModuleManager;
 
 public class LD extends Module {
