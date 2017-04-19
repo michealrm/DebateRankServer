@@ -2,7 +2,7 @@ package io.micheal.debatescout.modules;
 
 import org.apache.commons.logging.Log;
 
-import io.micheal.debatescout.SQLHelper;
+import io.micheal.debatescout.helpers.SQLHelper;
 
 public abstract class Module implements Runnable {
 

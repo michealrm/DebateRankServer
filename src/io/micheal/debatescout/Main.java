@@ -14,8 +14,11 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
-import io.micheal.debatescout.modules.Module;
+import io.micheal.debatescout.helpers.SQLHelper;
 import io.micheal.debatescout.modules.ModuleManager;
+import io.micheal.debatescout.modules.PoolSizeException;
+import io.micheal.debatescout.modules.WorkerPool;
+import io.micheal.debatescout.modules.WorkerPoolManager;
 import io.micheal.debatescout.modules.jot.LD;
 
 public class Main {
@@ -62,8 +65,8 @@ public class Main {
 			// Variables //
 			///////////////
 			
-			ModuleManager manager = new ModuleManager();
-			ArrayList<Module> modules = new ArrayList<Module>();
+			ModuleManager moduleManager = new ModuleManager();
+			WorkerPoolManager workerManager = new WorkerPoolManager();
 			
 			/////////
 			// JOT //
@@ -134,8 +137,10 @@ public class Main {
 				e.printStackTrace();
 			}
 			// Modules //
-				
-			modules.add(new LD(tournaments, sql, manager));
+			
+			WorkerPool ld = new WorkerPool();
+			moduleManager.newModule(new LD(tournaments, sql, ld));
+			workerManager.add(ld);
 			// TODO: Policy
 			// TODO: PF
 				
@@ -163,8 +168,13 @@ public class Main {
 			// Execute //
 			/////////////
 				
-			for(Module module : modules)
-				manager.newModule(module);
+			try {
+				workerManager.start();
+			} catch (PoolSizeException e) {
+				log.error(e);
+				log.fatal("Not enough threads!");
+				System.exit(1);
+			}
 				
 			/////////////////
 			// CALCULATION //

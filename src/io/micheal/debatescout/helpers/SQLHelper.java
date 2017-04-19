@@ -1,4 +1,4 @@
-package io.micheal.debatescout;
+package io.micheal.debatescout.helpers;
 
 import java.sql.Connection;
 import java.sql.DriverManager;

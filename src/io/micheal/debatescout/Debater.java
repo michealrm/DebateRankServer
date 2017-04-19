@@ -1,5 +1,7 @@
 package io.micheal.debatescout;
 
+import io.micheal.debatescout.helpers.SQLHelper;
+
 public class Debater {
 
 	private String first, middle, last, surname, school;
