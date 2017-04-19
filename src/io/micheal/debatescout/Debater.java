@@ -6,7 +6,7 @@ public class Debater {
 	private Integer id;
 	
 	public Debater(String name, String school) throws UnsupportedNameException {
-		name.replaceAll(" (drop)", "");
+		name = name.replaceAll(" \\(drop\\)", "");
 		this.school = school;
 		String[] blocks = name.split(" ");
 		if(blocks.length == 0)
