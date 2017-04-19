@@ -11,7 +11,7 @@ import java.util.Map;
 import org.apache.commons.configuration2.Configuration;
 import org.apache.commons.configuration2.builder.fluent.Configurations;
 import org.apache.commons.configuration2.ex.ConfigurationException;
-import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
@@ -31,8 +31,8 @@ public class LD extends Module {
 	private ArrayList<Tournament> tournaments;
 	private ModuleManager manager;
 	
-	public LD(ArrayList<Tournament> tournaments, SQLHelper sql, Log log, ModuleManager manager) {
-		super(sql, log);
+	public LD(ArrayList<Tournament> tournaments, SQLHelper sql, ModuleManager manager) {
+		super(sql, LogFactory.getLog(LD.class));
 		this.tournaments = tournaments;
 		this.manager = manager;
 	}

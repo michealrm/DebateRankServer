@@ -135,7 +135,7 @@ public class Main {
 			}
 			// Modules //
 				
-			modules.add(new LD(tournaments, sql, log, manager));
+			modules.add(new LD(tournaments, sql, manager));
 			// TODO: Policy
 			// TODO: PF
 				
