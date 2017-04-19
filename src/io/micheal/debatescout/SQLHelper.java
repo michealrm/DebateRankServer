@@ -28,7 +28,7 @@ public class SQLHelper {
 		return st.executeQuery(query);
 	}
 	
-	public  ResultSet executeQueryPreparedStatement(String query, Object... values) throws SQLException {
+	public ResultSet executeQueryPreparedStatement(String query, Object... values) throws SQLException {
 		PreparedStatement ps = sql.prepareStatement(query);
 		for(int i = 0;i<values.length;i++) {
 			if(values[i] instanceof String)

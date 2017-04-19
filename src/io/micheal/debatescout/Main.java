@@ -2,16 +2,13 @@ package io.micheal.debatescout;
 
 import java.io.File;
 import java.io.IOException;
-import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.HashMap;
 
 import org.apache.commons.configuration2.Configuration;
 import org.apache.commons.configuration2.builder.fluent.Configurations;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.goochjs.glicko2.Rating;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -102,16 +99,6 @@ public class Main {
 				// Update DB / Remove cached tournaments from the queue
 				log.debug(tournaments.size() + " tournaments scraped from JOT");
 				try {
-					ResultSet links = sql.executeQuery("SELECT link FROM tournaments");
-					ArrayList<String> cachedLinks = new ArrayList<String>();
-					while(links.next())
-						cachedLinks.add(links.getString(1));
-
-					if(config.getBoolean("useCache"))
-						for(int i = 0;i<tournaments.size();i++)
-							for(String k : cachedLinks)
-								if(tournaments.get(i).getLink().equals(k))
-									tournaments.remove(i--);
 					String query = "INSERT IGNORE INTO tournaments (name, state, link, date) VALUES ";
 					ArrayList<String> args = new ArrayList<String>();
 					for(Tournament t : tournaments) {
@@ -186,23 +173,23 @@ public class Main {
 			// Bids
 				
 			// Glicko-2
-			while(manager.getActiveCount() != 0) {
-				try {
-					Thread.sleep(5000);
-				} catch (InterruptedException e) {
-					log.error(e);
-					System.exit(1);
-				}
-			}
-			
-			HashMap<String, Rating> debaters = new HashMap<String, Rating>();
-			ResultSet orderedT = null;
-			try {
-				orderedT = sql.executeQuery("SELECT (id, date) FROM tournaments ORDERBY date DESC");
-			} catch (SQLException e) {
-				log.error(e);
-				log.fatal("Could not update debater ratings.");
-			}
+//			while(manager.getActiveCount() != 0) {
+//				try {
+//					Thread.sleep(5000);
+//				} catch (InterruptedException e) {
+//					log.error(e);
+//					System.exit(1);
+//				}
+//			}
+//			
+//			HashMap<String, Rating> debaters = new HashMap<String, Rating>();
+//			ResultSet orderedT = null;
+//			try {
+//				orderedT = sql.executeQuery("SELECT (id, date) FROM tournaments ORDERBY date DESC");
+//			} catch (SQLException e) {
+//				log.error(e);
+//				log.fatal("Could not update debater ratings.");
+//			}
 			
 			//System.exit(0); // Temp - 1 loop
 		}

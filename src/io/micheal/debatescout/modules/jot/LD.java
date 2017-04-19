@@ -1,5 +1,6 @@
 package io.micheal.debatescout.modules.jot;
 
+import java.io.File;
 import java.io.IOException;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -7,6 +8,9 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.apache.commons.configuration2.Configuration;
+import org.apache.commons.configuration2.builder.fluent.Configurations;
+import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.commons.logging.Log;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -41,15 +45,56 @@ public class LD extends Module {
 				public void run() {
 					try {
 						Document tPage = JsoupHelper.retryIfTimeout(t.getLink(), 3);
-						Elements prelims = tPage.select("tr:has(td:matches(LD|Lincoln|L-D)").select("a[href]:contains(Prelims)"); // TODO: Include tournaments from 2013, which don't contain this attribute (match by table/row)
+						Elements prelims = tPage.select("tr:has(td:matches(LD|Lincoln|L-D)").select("a[href]:contains(Prelims)");
+						HashMap<String, Debater> competitors = null;
 						for(Element prelim : prelims)
 							if(prelim != null && prelim.text().equals("Prelims")) { // TODO: Add Packet & Elims
 								log.info("JOT Updating " + t.getName());
 								Document p = JsoupHelper.retryIfTimeout(prelim.absUrl("href"), 3);
 								Element table = p.select("table[border=1]").first();
 								Elements rows = table.select("tr:has(table)");
-								HashMap<String, Debater> competitors = new HashMap<String, Debater>();
+								
+								// Check if we've logged this tournament
+								Configurations configs = new Configurations();
+								Configuration config;
+								boolean overwrite;
+								try {
+									config = configs.properties(new File("config.properties"));
+									overwrite = config.getBoolean("overwrite");
+								} catch (ConfigurationException e) {
+									log.error(e);
+									log.fatal("Could not read config for overwrite boolean. Default false");
+									overwrite = false;
+								}
+								ResultSet tournamentExists = sql.executeQueryPreparedStatement("SELECT id FROM ld_rounds WHERE absUrl=?", p.baseUri());
+								if(tournamentExists.last() && rows.size() > 0) {
+									int count = 0;
+									for(int i = 0;i<rows.size();i++) {
+										Elements cols = rows.get(i).select("td[width=80]");
+										for(int k = 0;k<cols.size();k++) {
+											Element win = cols.get(k).select("[colspan=2].rec").first();
+											Element against = cols.get(k).select("[colspan=2][align=right]").first();
+											try {
+												if(win.text().equals("F"))
+													continue;
+												against.text();
+												count++;
+											}
+											catch(Exception e) {}
+										}
+									}
+									if(tournamentExists.getRow() == count) {
+										log.info("JOT " + t.getName() + " prelims is up to date.");
+										continue;
+									}
+									
+									// Overwrite
+									if(overwrite)
+										sql.executePreparedStatementArgs("DELETE FROM ld_rounds WHERE absUrl=?", p.baseUri());
+								}
+								
 								// Register all debaters
+								competitors = new HashMap<String, Debater>();
 								for(Element row : rows) {
 									Elements infos = row.select("td").first().select("td");
 									try {
@@ -58,13 +103,13 @@ public class LD extends Module {
 										log.error(e);
 									}
 								}
-								
+
 								// Update DB with debaters
 								for(Map.Entry<String, Debater> entry : competitors.entrySet())
 									entry.getValue().setID(getDebaterID(entry.getValue()));
 								
 								// Parse rounds
-								String query = "INSERT INTO ld_rounds (tournament, debater, against, round, side, speaks, decision) VALUES ";
+								String query = "INSERT INTO ld_rounds (tournament, absUrl, debater, against, round, side, speaks, decision) VALUES ";
 								ArrayList<Object> args = new ArrayList<Object>();
 								for(int i = 0;i<rows.size();i++) {
 									String key = rows.get(i).select("td").first().select("td").get(2).text();
@@ -84,9 +129,10 @@ public class LD extends Module {
 										ArrayList<Object> a = new ArrayList<Object>();
 										if(win.text().equals("F") || win.text().equals("B")) {
 											a.add(t.getLink());
+											a.add(p.baseUri());
 											a.add(competitors.get(key).getID());
 											a.add(competitors.get(key).getID());
-											a.add(null);
+											a.add(new Character(Character.forDigit(k+1, 10)));
 											a.add(null);
 											a.add(null);
 											a.add(win.text());
@@ -95,6 +141,7 @@ public class LD extends Module {
 										}
 										else {
 											a.add(t.getLink());
+											a.add(p.baseUri());
 											a.add(competitors.get(key).getID());
 											if(against.text() != null && competitors.get(against.text()) != null)
 												a.add(competitors.get(against.text()).getID());
@@ -121,22 +168,30 @@ public class LD extends Module {
 										}
 										
 										// Check if exists
-										ResultSet exists = sql.executeQueryPreparedStatement("SELECT * FROM ld_rounds WHERE tournament=(SELECT id FROM tournaments WHERE link=?) AND debater=(SELECT id FROM debaters WHERE id=?) AND against=(SELECT id FROM debaters WHERE id=?) AND round<=>? AND side<=>? AND speaks<=>? AND decision<=>?", a.get(0), a.get(1), a.get(2), a.get(3), a.get(4), a.get(5), a.get(6));
-										if(!exists.next()) {
-											query += "((SELECT id FROM tournaments WHERE link=?), (SELECT id FROM debaters WHERE id=?), (SELECT id FROM debaters WHERE id=?), ?, ?, ?, ?), ";
+										if(!overwrite) {
+											ResultSet exists = sql.executeQueryPreparedStatement("SELECT * FROM ld_rounds WHERE tournament=(SELECT id FROM tournaments WHERE link=?) AND absUrl<=>? AND debater=(SELECT id FROM debaters WHERE id=?) AND against=(SELECT id FROM debaters WHERE id=?) AND round<=>? AND side<=>? AND speaks<=>? AND decision<=>?", a.get(0), a.get(1), a.get(2), a.get(3), a.get(4), a.get(5), a.get(6), a.get(7));
+											if(!exists.next()) {
+												query += "((SELECT id FROM tournaments WHERE link=?), ?, (SELECT id FROM debaters WHERE id=?), (SELECT id FROM debaters WHERE id=?), ?, ?, ?, ?), ";
+												args.addAll(a);
+											}
+										}
+										else {
+											query += "((SELECT id FROM tournaments WHERE link=?), ?, (SELECT id FROM debaters WHERE id=?), (SELECT id FROM debaters WHERE id=?), ?, ?, ?, ?), ";
 											args.addAll(a);
 										}
 									}
 								}
-								if(!query.equals("INSERT INTO ld_rounds (tournament, debater, against, round, side, speaks, decision) VALUES ")) {
+								if(!query.equals("INSERT INTO ld_rounds (tournament, absUrl, debater, against, round, side, speaks, decision) VALUES ")) {
 									query = query.substring(0, query.lastIndexOf(", "));
 									sql.executePreparedStatement(query, args.toArray());
-									log.info("JOT " + t.getName() + " updated.");
+									log.info("JOT " + t.getName() + " prelims updated.");
 								}
 								else {
-									log.info("JOT " + t.getName() + " is up to date.");
+									log.info("JOT " + t.getName() + " prelims is up to date.");
 								}
 							}
+						
+						//Elements bracket = tPage.select("tr:has(td:matches(LD|Lincoln|L-D)").select("a[href]:contains(Bracket)");
 					} catch(IOException ioe) {
 						log.error(ioe);
 						log.fatal("Could not update " + t.getName());
