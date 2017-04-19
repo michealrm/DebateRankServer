@@ -41,7 +41,7 @@ public class LD extends Module {
 		
 		// Scape events per tournament
 		for(Tournament t : tournaments) {
-			manager.newModule(new Runnable() {
+			manager.newModule(new Runnable() { // TODO: Add blocking for thread pool
 				public void run() {
 					try {
 						Document tPage = JsoupHelper.retryIfTimeout(t.getLink(), 3);
