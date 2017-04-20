@@ -112,10 +112,7 @@ public class Main {
 						args.add(t.getDate());
 					}
 					query = query.substring(0, query.lastIndexOf(", "));
-					String[] argsArr = new String[args.size()];
-					for(int i = 0;i<args.size();i++)
-						argsArr[i] = args.get(i);
-					sql.executePreparedStatement(query, argsArr);
+					sql.executePreparedStatement(query, args.toArray(new String[args.size()]));
 				} catch (SQLException e) {
 					e.printStackTrace();
 					log.error(e);
@@ -136,6 +133,7 @@ public class Main {
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
+			
 			// Modules //
 			
 			WorkerPool ld = new WorkerPool();
@@ -163,7 +161,7 @@ public class Main {
 			///////////////
 			// NDCA Wiki //
 			///////////////
-				
+			
 			/////////////
 			// Execute //
 			/////////////
@@ -175,9 +173,15 @@ public class Main {
 				log.fatal("Not enough threads!");
 				System.exit(1);
 			}
-				
+			
+			// Begin tasks that are not multi-threaded / order dependent
+			
+			//////////////
+			// Clean-up //
+			//////////////
+			
 			/////////////////
-			// CALCULATION //
+			// Calculation //
 			/////////////////
 			
 			// Bids

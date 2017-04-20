@@ -86,6 +86,7 @@ public class LD extends Module {
 								entry.getValue().setID(getDebaterID(entry.getValue()));
 							
 							// Check if we've logged this
+							table.select("[colspan=2].rec:not(:contains(F))[colspan=2][align=right] > td[width=80]"); // TODO: Test to see if element.size() will do the same thing as the code below.
 							int count = 0;
 							for(int i = 0;i<rows.size();i++) {
 								Elements cols = rows.get(i).select("td[width=80]");
@@ -98,6 +99,8 @@ public class LD extends Module {
 									} catch(Exception e) {}
 								}
 							}
+							
+							// If we have the same amount of entries, then do not check the tournament
 							if(tournamentExists(p.baseUri(), count)) {
 								log.log(RoundHelper.JOT, t.getName() + " prelims is up to date.");
 								continue;
