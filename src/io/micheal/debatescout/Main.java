@@ -7,8 +7,8 @@ import java.util.ArrayList;
 
 import org.apache.commons.configuration2.Configuration;
 import org.apache.commons.configuration2.builder.fluent.Configurations;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -23,7 +23,7 @@ import io.micheal.debatescout.modules.jot.LD;
 
 public class Main {
 
-	public Log log;
+	public Logger log;
 	public boolean active = true;
 	private SQLHelper sql;
 	private Configuration config;
@@ -33,7 +33,7 @@ public class Main {
 	}
 	
 	public Main() {
-		log = LogFactory.getLog(Main.class);
+		log = LogManager.getLogger(Main.class);
 		log.debug("Instantiated logger");
 
 		Configurations configs = new Configurations();
@@ -46,7 +46,7 @@ public class Main {
 		    String pass = config.getString("db.password");
 		    int port = config.getInt("db.port");
 
-			sql = new SQLHelper(log, host, port, name, user, pass);
+			sql = new SQLHelper(host, port, name, user, pass);
 		} catch (Exception e) {
 			log.error(e);
 			System.exit(1);

@@ -8,16 +8,17 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Types;
 
-import org.apache.commons.logging.Log;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public class SQLHelper {
 
 	private Connection sql;
 	private Statement st;
-	private Log log;
+	private Logger log;
 	
-	public SQLHelper(Log log, String host, Integer port, String name, String user, String pass) throws ClassNotFoundException, SQLException {
-		this.log = log;
+	public SQLHelper(String host, Integer port, String name, String user, String pass) throws ClassNotFoundException, SQLException {
+		this.log = LogManager.getLogger(SQLHelper.class);
 		Class.forName("com.mysql.cj.jdbc.Driver");
 		sql = DriverManager.getConnection("jdbc:mysql://" + host + ":" + port + "/" + name + "?user=" + user + "&password=" + pass);
 		st = sql.createStatement();
