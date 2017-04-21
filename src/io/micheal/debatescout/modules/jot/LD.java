@@ -53,7 +53,7 @@ public class LD extends Module {
 	
 	public void run() {
 		
-		// Scape events per tournament
+		// Scrape events per tournament
 		for(Tournament t : tournaments) {
 			manager.newModule(new Runnable() {
 				public void run() {
