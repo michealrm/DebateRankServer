@@ -190,12 +190,13 @@ public class LD extends Module {
 									log.log(RoundHelper.JOT, t.getName() + " double octos is up to date.");
 								}
 								else {
-									matcher.reset();
-									ArrayList<Object> args = new ArrayList<Object>();
-									String query = "INSERT INTO ld_rounds (tournament, absUrl, debater, against, round, side, speaks, decision) VALUES ";
 									// Overwrite
 									if(overwrite)
 										sql.executePreparedStatementArgs("DELETE FROM ld_rounds WHERE absUrl=?", dbocp.baseUri());
+									
+									matcher.reset();
+									ArrayList<Object> args = new ArrayList<Object>();
+									String query = "INSERT INTO ld_rounds (tournament, absUrl, debater, against, round, side, speaks, decision) VALUES ";
 									while(matcher.find()) {
 										// First debater
 										ArrayList<Object> a = new ArrayList<Object>();
