@@ -137,8 +137,8 @@ public class Main {
 			// Modules //
 			
 			WorkerPool ld = new WorkerPool();
-			moduleManager.newModule(new LD(tournaments, sql, ld));
 			workerManager.add(ld);
+			moduleManager.newModule(new LD(tournaments, sql, ld));
 			// TODO: Policy
 			// TODO: PF
 				

@@ -33,21 +33,17 @@ public class LD extends Module {
 	
 	private ArrayList<Tournament> tournaments;
 	private WorkerPool manager;
+	private final boolean overwrite;
 	
 	public LD(ArrayList<Tournament> tournaments, SQLHelper sql, WorkerPool manager) {
 		super(sql, LogManager.getLogger(LD.class));
 		this.tournaments = tournaments;
 		this.manager = manager;
-	}
-	
-	public void run() {
 		
-		Configurations configs = new Configurations();
 		Configuration config;
-		final boolean overwrite;
 		boolean temp;
 		try {
-			config = configs.properties(new File("config.properties"));
+			config = new Configurations().properties(new File("config.properties"));
 			temp = config.getBoolean("overwrite");
 		} catch (ConfigurationException e) {
 			log.error(e);
@@ -55,13 +51,16 @@ public class LD extends Module {
 			temp = false;
 		}
 		overwrite = temp;
+	}
+	
+	public void run() {
 		
 		// Scape events per tournament
 		for(Tournament t : tournaments) {
 			manager.newModule(new Runnable() {
 				public void run() {
 					try {
-						log.log(RoundHelper.JOT, "JOT Updating " + t.getName());
+						log.log(RoundHelper.JOT, "Updating " + t.getName());
 						Document tPage = JsoupHelper.retryIfTimeout(t.getLink(), 3);
 						Elements prelims = tPage.select("tr:has(td:matches(LD|Lincoln|L-D)").select("a[href]:contains(Prelims)");
 						HashMap<String, Debater> competitors = null;
@@ -69,6 +68,12 @@ public class LD extends Module {
 							Document p = JsoupHelper.retryIfTimeout(prelim.absUrl("href"), 3);
 							Element table = p.select("table[border=1]").first();
 							Elements rows = table.select("tr:has(table)");
+							
+							// If we have the same amount of entries, then do not check the tournament
+							if(tournamentExists(p.baseUri(), table.select("[colspan=2].rec:not(:containsOwn(F))").size())) {
+								log.log(RoundHelper.JOT, t.getName() + " prelims is up to date.");
+								continue;
+							}
 							
 							// Register all debaters
 							competitors = new HashMap<String, Debater>();
@@ -84,27 +89,6 @@ public class LD extends Module {
 							// Update DB with debaters
 							for(Map.Entry<String, Debater> entry : competitors.entrySet())
 								entry.getValue().setID(getDebaterID(entry.getValue()));
-							
-							// Check if we've logged this
-							table.select("[colspan=2].rec:not(:contains(F))[colspan=2][align=right] > td[width=80]"); // TODO: Test to see if element.size() will do the same thing as the code below.
-							int count = 0;
-							for(int i = 0;i<rows.size();i++) {
-								Elements cols = rows.get(i).select("td[width=80]");
-								for(int k = 0;k<cols.size();k++) {
-									try {
-										if(cols.get(k).select("[colspan=2].rec").first().equals("F"))
-											continue;
-										cols.get(k).select("[colspan=2][align=right]").first().text();
-										count++;
-									} catch(Exception e) {}
-								}
-							}
-							
-							// If we have the same amount of entries, then do not check the tournament
-							if(tournamentExists(p.baseUri(), count)) {
-								log.log(RoundHelper.JOT, t.getName() + " prelims is up to date.");
-								continue;
-							}
 							
 							// Overwrite
 							if(overwrite)
@@ -217,6 +201,7 @@ public class LD extends Module {
 										ArrayList<Object> a = new ArrayList<Object>();
 										a.add(t.getLink());
 										a.add(dbocp.baseUri());
+										System.out.println(matcher.group(1) + " " + matcher.group(2));
 										a.add(competitors.get(matcher.group(1)).getID());
 										a.add(competitors.get(matcher.group(4)).getID());
 										a.add("DO");
