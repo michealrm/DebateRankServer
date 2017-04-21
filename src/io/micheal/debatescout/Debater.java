@@ -53,12 +53,12 @@ public class Debater {
 			
 			ArrayList<String> compare = new ArrayList<String>(Arrays.asList(SQLHelper.cleanString(this.school).split(" ")));
 			ArrayList<String> against = new ArrayList<String>(Arrays.asList(SQLHelper.cleanString(school).split(" ")));
-			if(SQLHelper.cleanString(this.school).split(" ").length < SQLHelper.cleanString(school).length()) {
+			if(SQLHelper.cleanString(this.school).split(" ").length < SQLHelper.cleanString(school).split(" ").length) {
 				compare = new ArrayList<String>(Arrays.asList(SQLHelper.cleanString(school).split(" ")));
 				against = new ArrayList<String>(Arrays.asList(SQLHelper.cleanString(this.school).split(" ")));
 			}
 			
-			if(!against.containsAll(compare))
+			if(!compare.containsAll(against))
 				return false;
 			else
 				replaceThis = true;
@@ -68,7 +68,7 @@ public class Debater {
 			replaceThis = true;
 		
 		if((SQLHelper.cleanString(this.first).equals(SQLHelper.cleanString(first))) &&
-				(SQLHelper.cleanString(this.last).equals(SQLHelper.cleanString(last)))) {
+				((this.last == null || last == null) || SQLHelper.cleanString(this.last).equals(SQLHelper.cleanString(last)))) {
 			if(replaceThis) {
 				this.first = debater.getFirst();
 				this.middle = debater.getMiddle();

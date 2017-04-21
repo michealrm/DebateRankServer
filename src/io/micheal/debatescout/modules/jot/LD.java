@@ -7,8 +7,6 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import org.apache.commons.configuration2.Configuration;
 import org.apache.commons.configuration2.builder.fluent.Configurations;
@@ -174,90 +172,90 @@ public class LD extends Module {
 							}
 						
 						}
-						// Double Octos (NEEDS WORK)
-						Elements doubleOctos = tPage.select("tr:has(td:matches(LD|Lincoln|L-D)").select("a[href]:contains(Double Octos)");
-						if(competitors != null && competitors.size() > 0)
-							for(Element dboc : doubleOctos) {
-								Document dbocp = JsoupHelper.retryIfTimeout(dboc.absUrl("href"), 3);
-								Pattern pattern = Pattern.compile("(.+?) .+?( \\(.+?\\))? \\((Aff|Neg)\\) def. (.+?) .+?( \\(.+?\\))? \\((Aff|Neg)\\)");
-								Matcher matcher = pattern.matcher(dbocp.html().replaceAll("\n", ""));
-								
-								// Check if we've logged this
-								int count = 0;
-								while(matcher.find())
-									count += 2;
-								if(tournamentExists(dbocp.baseUri(), count)) {
-									log.log(RoundHelper.JOT, t.getName() + " double octos is up to date.");
-								}
-								else {
-									// Overwrite
-									if(overwrite)
-										sql.executePreparedStatementArgs("DELETE FROM ld_rounds WHERE absUrl=?", dbocp.baseUri());
-									
-									matcher.reset();
-									ArrayList<Object> args = new ArrayList<Object>();
-									String query = "INSERT INTO ld_rounds (tournament, absUrl, debater, against, round, side, speaks, decision) VALUES ";
-									while(matcher.find()) {
-										// First debater
-										ArrayList<Object> a = new ArrayList<Object>();
-										a.add(t.getLink());
-										a.add(dbocp.baseUri());
-										System.out.println(matcher.group(1) + " " + matcher.group(2));
-										a.add(competitors.get(matcher.group(1)).getID());
-										a.add(competitors.get(matcher.group(4)).getID());
-										a.add("DO");
-										a.add(matcher.group(3).equals("Aff") ? new Character('A') : new Character('N'));
-										a.add(null);
-										a.add("1-0");
-										if(!overwrite) {
-											ResultSet exists = sql.executeQueryPreparedStatement("SELECT * FROM ld_rounds WHERE tournament=(SELECT id FROM tournaments WHERE link=?) AND absUrl<=>? AND debater=? AND against=? AND round<=>? AND side<=>? AND speaks<=>? AND decision<=>?", a.get(0), a.get(1), a.get(2), a.get(3), a.get(4), a.get(5), a.get(6), a.get(7));
-											if(!exists.next()) {
-												query += "((SELECT id FROM tournaments WHERE link=?), ?, ?, ?, ?, ?, ?, ?), ";
-												args.addAll(a);
-											}
-										}
-										else {
-											query += "((SELECT id FROM tournaments WHERE link=?), ?, ?, ?, ?, ?, ?, ?), ";
-											args.addAll(a);
-										}
-										
-										// Second debater
-										a.clear();
-										a.add(t.getLink());
-										a.add(dbocp.baseUri());
-										a.add(competitors.get(matcher.group(4)).getID());
-										a.add(competitors.get(matcher.group(1)).getID());
-										a.add("DO");
-										a.add(matcher.group(6).equals("Aff") ? new Character('A') : new Character('N'));
-										a.add(null);
-										a.add("0-1");
-										if(!overwrite) {
-											ResultSet exists = sql.executeQueryPreparedStatement("SELECT * FROM ld_rounds WHERE tournament=(SELECT id FROM tournaments WHERE link=?) AND absUrl<=>? AND debater=? AND against=? AND round<=>? AND side<=>? AND speaks<=>? AND decision<=>?", a.get(0), a.get(1), a.get(2), a.get(3), a.get(4), a.get(5), a.get(6), a.get(7));
-											if(!exists.next()) {
-												query += "((SELECT id FROM tournaments WHERE link=?), ?, ?, ?, ?, ?, ?, ?), ";
-												args.addAll(a);
-											}
-										}
-										else {
-											query += "((SELECT id FROM tournaments WHERE link=?), ?, ?, ?, ?, ?, ?, ?), ";
-											args.addAll(a);
-										}
-									}
-
-									System.out.println(query);
-									System.out.println(args);
-									System.exit(0);
-									
-									if(!query.equals("INSERT INTO ld_rounds (tournament, absUrl, debater, against, round, side, speaks, decision) VALUES ")) {
-										query = query.substring(0, query.lastIndexOf(", "));
-										//sql.executePreparedStatement(query, args.toArray());
-										log.log(RoundHelper.JOT, t.getName() + " prelims updated.");
-									}
-									else {
-										log.log(RoundHelper.JOT, t.getName() + " prelims is up to date.");
-									}
-								}
-							}
+//						// Double Octos (NEEDS WORK)
+//						Elements doubleOctos = tPage.select("tr:has(td:matches(LD|Lincoln|L-D)").select("a[href]:contains(Double Octos)");
+//						if(competitors != null && competitors.size() > 0)
+//							for(Element dboc : doubleOctos) {
+//								Document dbocp = JsoupHelper.retryIfTimeout(dboc.absUrl("href"), 3);
+//								Pattern pattern = Pattern.compile("(.+?) .+?( \\(.+?\\))? \\((Aff|Neg)\\) def. (.+?) .+?( \\(.+?\\))? \\((Aff|Neg)\\)");
+//								Matcher matcher = pattern.matcher(dbocp.html().replaceAll("\n", ""));
+//								
+//								// Check if we've logged this
+//								int count = 0;
+//								while(matcher.find())
+//									count += 2;
+//								if(tournamentExists(dbocp.baseUri(), count)) {
+//									log.log(RoundHelper.JOT, t.getName() + " double octos is up to date.");
+//								}
+//								else {
+//									// Overwrite
+//									if(overwrite)
+//										sql.executePreparedStatementArgs("DELETE FROM ld_rounds WHERE absUrl=?", dbocp.baseUri());
+//									
+//									matcher.reset();
+//									ArrayList<Object> args = new ArrayList<Object>();
+//									String query = "INSERT INTO ld_rounds (tournament, absUrl, debater, against, round, side, speaks, decision) VALUES ";
+//									while(matcher.find()) {
+//										// First debater
+//										ArrayList<Object> a = new ArrayList<Object>();
+//										a.add(t.getLink());
+//										a.add(dbocp.baseUri());
+//										System.out.println(matcher.group(1) + " " + matcher.group(2));
+//										a.add(competitors.get(matcher.group(1)).getID());
+//										a.add(competitors.get(matcher.group(4)).getID());
+//										a.add("DO");
+//										a.add(matcher.group(3).equals("Aff") ? new Character('A') : new Character('N'));
+//										a.add(null);
+//										a.add("1-0");
+//										if(!overwrite) {
+//											ResultSet exists = sql.executeQueryPreparedStatement("SELECT * FROM ld_rounds WHERE tournament=(SELECT id FROM tournaments WHERE link=?) AND absUrl<=>? AND debater=? AND against=? AND round<=>? AND side<=>? AND speaks<=>? AND decision<=>?", a.get(0), a.get(1), a.get(2), a.get(3), a.get(4), a.get(5), a.get(6), a.get(7));
+//											if(!exists.next()) {
+//												query += "((SELECT id FROM tournaments WHERE link=?), ?, ?, ?, ?, ?, ?, ?), ";
+//												args.addAll(a);
+//											}
+//										}
+//										else {
+//											query += "((SELECT id FROM tournaments WHERE link=?), ?, ?, ?, ?, ?, ?, ?), ";
+//											args.addAll(a);
+//										}
+//										
+//										// Second debater
+//										a.clear();
+//										a.add(t.getLink());
+//										a.add(dbocp.baseUri());
+//										a.add(competitors.get(matcher.group(4)).getID());
+//										a.add(competitors.get(matcher.group(1)).getID());
+//										a.add("DO");
+//										a.add(matcher.group(6).equals("Aff") ? new Character('A') : new Character('N'));
+//										a.add(null);
+//										a.add("0-1");
+//										if(!overwrite) {
+//											ResultSet exists = sql.executeQueryPreparedStatement("SELECT * FROM ld_rounds WHERE tournament=(SELECT id FROM tournaments WHERE link=?) AND absUrl<=>? AND debater=? AND against=? AND round<=>? AND side<=>? AND speaks<=>? AND decision<=>?", a.get(0), a.get(1), a.get(2), a.get(3), a.get(4), a.get(5), a.get(6), a.get(7));
+//											if(!exists.next()) {
+//												query += "((SELECT id FROM tournaments WHERE link=?), ?, ?, ?, ?, ?, ?, ?), ";
+//												args.addAll(a);
+//											}
+//										}
+//										else {
+//											query += "((SELECT id FROM tournaments WHERE link=?), ?, ?, ?, ?, ?, ?, ?), ";
+//											args.addAll(a);
+//										}
+//									}
+//
+//									System.out.println(query);
+//									System.out.println(args);
+//									System.exit(0);
+//									
+//									if(!query.equals("INSERT INTO ld_rounds (tournament, absUrl, debater, against, round, side, speaks, decision) VALUES ")) {
+//										query = query.substring(0, query.lastIndexOf(", "));
+//										//sql.executePreparedStatement(query, args.toArray());
+//										log.log(RoundHelper.JOT, t.getName() + " prelims updated.");
+//									}
+//									else {
+//										log.log(RoundHelper.JOT, t.getName() + " prelims is up to date.");
+//									}
+//								}
+//							}
 						
 						//Elements bracket = tPage.select("tr:has(td:matches(LD|Lincoln|L-D)").select("a[href]:contains(Bracket)");
 					} catch(IOException ioe) {
@@ -280,11 +278,15 @@ public class LD extends Module {
 	private int getDebaterID(Debater debater) throws SQLException {
 		if(debater.getID() != null)
 			return debater.getID();
-		ResultSet index = sql.executeQueryPreparedStatement("SELECT id FROM debaters WHERE first_clean<=>? AND middle_clean<=>? AND last_clean<=>? AND surname_clean<=>? AND school_clean<=>?", SQLHelper.cleanString(debater.getFirst()), SQLHelper.cleanString(debater.getMiddle()), SQLHelper.cleanString(debater.getLast()), SQLHelper.cleanString(debater.getSurname()), SQLHelper.cleanString(debater.getSchool()));
-		if(!index.next())
-				return sql.executePreparedStatementArgs("INSERT INTO debaters (first, middle, last, surname, school, first_clean, middle_clean, last_clean, surname_clean, school_clean) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", debater.getFirst(), debater.getMiddle(), debater.getLast(), debater.getSurname(), debater.getSchool(), SQLHelper.cleanString(debater.getFirst()), SQLHelper.cleanString(debater.getMiddle()), SQLHelper.cleanString(debater.getLast()), SQLHelper.cleanString(debater.getSurname()), SQLHelper.cleanString(debater.getSchool()));
-		else
-			return index.getInt(1);
+		ResultSet index = sql.executeQueryPreparedStatement("SELECT id, first, middle, last, surname, school FROM debaters WHERE first_clean<=>? AND last_clean<=>?", SQLHelper.cleanString(debater.getFirst()), SQLHelper.cleanString(debater.getLast()));
+		if(index.next()) {
+			do {
+				Debater d = new Debater(index.getString(2), index.getString(3), index.getString(4), index.getString(5), index.getString(6));
+				if(debater.equals(d))
+					return index.getInt(1);
+			} while(index.next());
+		}
+		return sql.executePreparedStatementArgs("INSERT INTO debaters (first, middle, last, surname, school, first_clean, middle_clean, last_clean, surname_clean, school_clean) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", debater.getFirst(), debater.getMiddle(), debater.getLast(), debater.getSurname(), debater.getSchool(), SQLHelper.cleanString(debater.getFirst()), SQLHelper.cleanString(debater.getMiddle()), SQLHelper.cleanString(debater.getLast()), SQLHelper.cleanString(debater.getSurname()), SQLHelper.cleanString(debater.getSchool()));
 	}
 	
 	private boolean tournamentExists(String absUrl, int rounds) throws SQLException {
