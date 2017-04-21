@@ -1,165 +1,220 @@
-2017-04-20 19:08:29.747 [main] INFO  io.micheal.debatescout.Main - 2503 tournaments queued from JOT
-2017-04-20 19:08:29.755 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - Updating 2016 Emmett J Conrad Memorial High School Tournament
-2017-04-20 19:08:30.332 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - 2016 Emmett J Conrad Memorial High School Tournament prelims is up to date.
-2017-04-20 19:08:30.333 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - Updating 2016 Foster/George Ranch Swing Tournament
-2017-04-20 19:08:30.430 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - Updating 2016 Lake Travis High School Tournament
-2017-04-20 19:08:31.047 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - 2016 Lake Travis High School Tournament prelims is up to date.
-2017-04-20 19:08:31.047 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - Updating 2016 Burges High School Tournament
-2017-04-20 19:08:31.428 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - 2016 Burges High School Tournament prelims is up to date.
-2017-04-20 19:08:31.429 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - Updating 2016 Clear Brook High School Tournament
-2017-04-20 19:08:31.912 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - 2016 Clear Brook High School Tournament prelims is up to date.
-2017-04-20 19:08:32.178 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - 2016 Clear Brook High School Tournament prelims is up to date.
-2017-04-20 19:08:32.179 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - Updating 2016 Hendrickson High School Tournament
-2017-04-20 19:08:32.570 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - 2016 Hendrickson High School Tournament prelims is up to date.
-2017-04-20 19:08:32.570 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - Updating 2016 Oak Grove High School Tournament
-2017-04-20 19:08:32.912 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - 2016 Oak Grove High School Tournament prelims is up to date.
-2017-04-20 19:08:33.124 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - 2016 Oak Grove High School Tournament prelims is up to date.
-2017-04-20 19:08:33.125 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - Updating 2016 Brandeis Tournament
-2017-04-20 19:08:33.420 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - 2016 Brandeis Tournament prelims is up to date.
-2017-04-20 19:08:33.420 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - Updating 2016 Midway TFA Panther Kick-off Tournament
-2017-04-20 19:08:33.713 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - 2016 Midway TFA Panther Kick-off Tournament prelims is up to date.
-2017-04-20 19:08:33.713 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - Updating 2016 Plano Senior Fall Classic
-2017-04-20 19:08:34.075 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - 2016 Plano Senior Fall Classic prelims is up to date.
-2017-04-20 19:08:34.075 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - Updating 2016 Elkins High School Tournament
-2017-04-20 19:08:34.422 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - 2016 Elkins High School Tournament prelims is up to date.
-2017-04-20 19:08:35.117 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - 2016 Elkins High School Tournament prelims is up to date.
-2017-04-20 19:08:35.117 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - Updating 2016 Grapevine High School Tournament (Grapevine & Cross Timbers Middle)
-2017-04-20 19:08:35.217 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - Updating 2016 The Woodlands High School Tournament
-2017-04-20 19:08:35.552 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - 2016 The Woodlands High School Tournament prelims is up to date.
-2017-04-20 19:08:35.756 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - 2016 The Woodlands High School Tournament prelims is up to date.
-2017-04-20 19:08:35.757 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - Updating 2016 Ysleta High School Tournament
-2017-04-20 19:08:36.073 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - 2016 Ysleta High School Tournament prelims is up to date.
-2017-04-20 19:08:36.074 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - Updating 2016 Carroll High School Tournament (Carroll HS)
-2017-04-20 19:08:36.395 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - 2016 Carroll High School Tournament (Carroll HS) prelims is up to date.
-2017-04-20 19:08:36.396 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - Updating 2016 Holy Trinity 10th Annual Hurricane (Holy Trinity Catholic)
-2017-04-20 19:08:36.739 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - 2016 Holy Trinity 10th Annual Hurricane (Holy Trinity Catholic) prelims is up to date.
-2017-04-20 19:08:36.934 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - 2016 Holy Trinity 10th Annual Hurricane (Holy Trinity Catholic) prelims is up to date.
-2017-04-20 19:08:36.934 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - Updating 2016 La Vernia High School Tournament
-2017-04-20 19:08:37.257 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - 2016 La Vernia High School Tournament prelims is up to date.
-2017-04-20 19:08:37.257 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - Updating 2016 North Lamar/Princeton Panthers Dual
-2017-04-20 19:08:37.551 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - 2016 North Lamar/Princeton Panthers Dual prelims is up to date.
-2017-04-20 19:08:37.750 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - 2016 North Lamar/Princeton Panthers Dual prelims is up to date.
-2017-04-20 19:08:37.750 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - Updating 2016 Texas Tech University Tournament
-2017-04-20 19:08:38.063 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - 2016 Texas Tech University Tournament prelims is up to date.
-2017-04-20 19:08:38.258 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - 2016 Texas Tech University Tournament prelims is up to date.
-2017-04-20 19:08:38.259 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - Updating 2016 Coronado Tournament
-2017-04-20 19:08:38.601 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - 2016 Coronado Tournament prelims is up to date.
-2017-04-20 19:08:38.601 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - Updating 2016 Elsik HS TFA Tournament (Elsik Alief)
-2017-04-20 19:08:38.896 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - 2016 Elsik HS TFA Tournament (Elsik Alief) prelims is up to date.
-2017-04-20 19:08:39.094 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - 2016 Elsik HS TFA Tournament (Elsik Alief) prelims is up to date.
-2017-04-20 19:08:39.094 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - Updating 2016 Houston Memorial High School Tournament
-2017-04-20 19:08:39.449 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - 2016 Houston Memorial High School Tournament prelims is up to date.
-2017-04-20 19:08:39.660 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - 2016 Houston Memorial High School Tournament prelims is up to date.
-2017-04-20 19:08:39.661 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - Updating 2016 Parish Episcopal School Tournament
-2017-04-20 19:08:39.958 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - 2016 Parish Episcopal School Tournament prelims is up to date.
-2017-04-20 19:08:40.158 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - 2016 Parish Episcopal School Tournament prelims is up to date.
-2017-04-20 19:08:40.158 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - Updating 2016 Pflugerville High School TFA Tournament
-2017-04-20 19:08:40.484 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - 2016 Pflugerville High School TFA Tournament prelims is up to date.
-2017-04-20 19:08:40.684 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - 2016 Pflugerville High School TFA Tournament prelims is up to date.
-2017-04-20 19:08:40.684 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - Updating 2016 Stennis High School Tournament (Hattiesburg)
-2017-04-20 19:08:41.000 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - 2016 Stennis High School Tournament (Hattiesburg) prelims is up to date.
-2017-04-20 19:08:41.000 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - Updating 2016 CVFL #1 @ Ponderosa
-2017-04-20 19:08:41.303 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - 2016 CVFL #1 @ Ponderosa prelims is up to date.
-2017-04-20 19:08:41.500 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - 2016 CVFL #1 @ Ponderosa prelims is up to date.
-2017-04-20 19:08:41.501 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - Updating 2016 Lovejoy High School Tournament
-2017-04-20 19:08:41.875 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - 2016 Lovejoy High School Tournament prelims is up to date.
-2017-04-20 19:08:42.104 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - 2016 Lovejoy High School Tournament prelims is up to date.
-2017-04-20 19:08:42.105 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - Updating 2016 Mabank Angel Tournament (Mabank HS)
-2017-04-20 19:08:42.435 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - 2016 Mabank Angel Tournament (Mabank HS) prelims is up to date.
-2017-04-20 19:08:42.435 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - Updating 2016 Sandra Day O'Connor High School Tournament (Sandra Day O''Connor)
-2017-04-20 19:08:43.274 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - 2016 Sandra Day O'Connor High School Tournament (Sandra Day O''Connor) prelims is up to date.
-2017-04-20 19:08:43.511 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - 2016 Sandra Day O'Connor High School Tournament (Sandra Day O''Connor) prelims is up to date.
-2017-04-20 19:08:43.512 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - Updating 2016 SDIVSL #1-A Parli/Public Forum @ Helix Charter School
-2017-04-20 19:08:43.607 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - Updating 2016 SWSDI Novice @ Horizon (Central)
-2017-04-20 19:08:43.922 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - 2016 SWSDI Novice @ Horizon (Central) prelims is up to date.
-2017-04-20 19:08:43.922 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - Updating 2016 WBFL Fall Varsity IE (Culver City)
-2017-04-20 19:08:44.015 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - Updating 2016 Clear Falls High School Tournament
-2017-04-20 19:08:44.348 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - 2016 Clear Falls High School Tournament prelims is up to date.
-2017-04-20 19:08:44.566 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - 2016 Clear Falls High School Tournament prelims is up to date.
-2017-04-20 19:08:44.566 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - Updating 2016 Cypress Woods High School Tournament
-2017-04-20 19:08:44.937 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - 2016 Cypress Woods High School Tournament prelims is up to date.
-2017-04-20 19:08:45.140 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - 2016 Cypress Woods High School Tournament prelims is up to date.
-2017-04-20 19:08:45.140 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - Updating 2016 LC Anderson Trojan Classic
-2017-04-20 19:08:45.437 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - 2016 LC Anderson Trojan Classic prelims is up to date.
-2017-04-20 19:08:45.634 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - 2016 LC Anderson Trojan Classic prelims is up to date.
-2017-04-20 19:08:45.634 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - Updating 2016 Newman Smith High School Tournament
-2017-04-20 19:08:45.728 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - Updating 2016 NNFL #1 @ Elko
-2017-04-20 19:08:46.046 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - 2016 NNFL #1 @ Elko prelims is up to date.
-2017-04-20 19:08:46.243 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - 2016 NNFL #1 @ Elko prelims is up to date.
-2017-04-20 19:08:46.243 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - Updating 2016 Rice University Classic Swing Tournament (Rice U.)
-2017-04-20 19:08:46.338 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - Updating 2016 Douglas MacArthur High School Tournament
-2017-04-20 19:08:46.434 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - Updating 2016 Flying L Tournament (Ft. Lauderdale HS)
-2017-04-20 19:08:46.798 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - 2016 Flying L Tournament (Ft. Lauderdale HS) prelims is up to date.
-2017-04-20 19:08:46.999 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - 2016 Flying L Tournament (Ft. Lauderdale HS) prelims is up to date.
-2017-04-20 19:08:46.999 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - Updating 2016 GGSA Congress 1 @ George Washington
-2017-04-20 19:08:47.094 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - Updating 2016 Harlingen South High School Tournament
-2017-04-20 19:08:47.428 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - 2016 Harlingen South High School Tournament prelims is up to date.
-2017-04-20 19:08:47.625 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - 2016 Harlingen South High School Tournament prelims is up to date.
-2017-04-20 19:08:47.625 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - Updating 2016 Holy Trinity Journey Year Five (Holy Trinity Catholic)
-2017-04-20 19:08:47.955 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - 2016 Holy Trinity Journey Year Five (Holy Trinity Catholic) prelims is up to date.
-2017-04-20 19:08:47.955 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - Updating 2016 Jack Howe Memorial @ CSULB (California State University Long Beach)
-2017-04-20 19:08:48.629 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - 2016 Jack Howe Memorial @ CSULB (California State University Long Beach) prelims is up to date.
-2017-04-20 19:08:48.860 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - 2016 Jack Howe Memorial @ CSULB (California State University Long Beach) prelims is up to date.
-2017-04-20 19:08:49.518 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - 2016 Jack Howe Memorial @ CSULB (California State University Long Beach) prelims is up to date.
-2017-04-20 19:08:49.518 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - Updating 2016 Lindale High School TFA Tournament
-2017-04-20 19:08:49.844 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - 2016 Lindale High School TFA Tournament prelims is up to date.
-2017-04-20 19:08:50.043 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - 2016 Lindale High School TFA Tournament prelims is up to date.
-2017-04-20 19:08:50.043 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - Updating 2016 Morton M.E.E.T (Morton Isd)
-2017-04-20 19:08:50.351 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - 2016 Morton M.E.E.T (Morton Isd) prelims is up to date.
-2017-04-20 19:08:50.352 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - Updating 2016 PBCFL #1 Congressional @ PB Gardens (Palm Beach Gardens)
-2017-04-20 19:08:50.446 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - Updating 2016 Prep School Congress @ SPA (Scottsdale Preparatory Academy)
-2017-04-20 19:08:50.539 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - Updating 2016 Riverside High School Tournament
-2017-04-20 19:08:50.862 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - 2016 Riverside High School Tournament prelims is up to date.
-2017-04-20 19:08:51.094 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - 2016 Riverside High School Tournament prelims is up to date.
-2017-04-20 19:08:51.094 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - Updating 2016 Stamford TFA IQT Tournament
-2017-04-20 19:08:51.433 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - 2016 Stamford TFA IQT Tournament prelims is up to date.
-2017-04-20 19:08:51.433 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - Updating 2016 Cy Lakes/Langham Creek Swing (Cypress Lakes)
-2017-04-20 19:08:51.529 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - Updating 2016 Austin East Roadrunner Invitational (Austin East Magnet)
-2017-04-20 19:08:51.626 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - Updating 2016 Clark Cougar Classic (Plano Senior)
-2017-04-20 19:08:51.963 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - 2016 Clark Cougar Classic (Plano Senior) prelims is up to date.
-2017-04-20 19:08:51.963 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - Updating 2016 Muleshoe High School Tournament
-2017-04-20 19:08:52.304 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - 2016 Muleshoe High School Tournament prelims is up to date.
-2017-04-20 19:08:52.304 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - Updating 2016 Van High Fall Invitational
-2017-04-20 19:08:52.633 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - 2016 Van High Fall Invitational prelims is up to date.
-2017-04-20 19:08:52.827 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - 2016 Van High Fall Invitational prelims is up to date.
-2017-04-20 19:08:52.827 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - Updating 2016 WBFL Fall Debate (Narbonne)
-2017-04-20 19:08:53.154 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - 2016 WBFL Fall Debate (Narbonne) prelims is up to date.
-2017-04-20 19:08:53.356 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - 2016 WBFL Fall Debate (Narbonne) prelims is up to date.
-2017-04-20 19:08:53.357 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - Updating 2016 Red Mountain Lost Dutchman
-2017-04-20 19:08:53.711 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - 2016 Red Mountain Lost Dutchman prelims is up to date.
-2017-04-20 19:08:53.929 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - 2016 Red Mountain Lost Dutchman prelims is up to date.
-2017-04-20 19:08:53.929 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - Updating 2016 University of Mississippi Tournament
-2017-04-20 19:08:54.221 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - 2016 University of Mississippi Tournament prelims is up to date.
-2017-04-20 19:08:54.416 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - 2016 University of Mississippi Tournament prelims is up to date.
-2017-04-20 19:08:54.416 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - Updating 2016 Cross Roads Tournament (Cross Roads ISD)
-2017-04-20 19:08:54.773 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - 2016 Cross Roads Tournament (Cross Roads ISD) prelims is up to date.
-2017-04-20 19:08:54.774 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - Updating 2016 CVFL #2 @ Woodcreek
-2017-04-20 19:08:54.870 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - Updating 2016 GDSDA #3 @ Desert Oasis
-2017-04-20 19:08:54.968 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - Updating 2016 GGSA Debate 1 (PuFo, LD, Policy) @ Santa Rosa
-2017-04-20 19:08:55.309 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - 2016 GGSA Debate 1 (PuFo, LD, Policy) @ Santa Rosa prelims is up to date.
-2017-04-20 19:08:55.508 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - 2016 GGSA Debate 1 (PuFo, LD, Policy) @ Santa Rosa prelims is up to date.
-2017-04-20 19:08:55.714 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - 2016 GGSA Debate 1 (PuFo, LD, Policy) @ Santa Rosa prelims is up to date.
-2017-04-20 19:08:55.714 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - Updating 2016 Santa Ana Fall Novice Classic (Santa Ana Unified School District)
-2017-04-20 19:08:55.808 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - Updating 2016 SDIVSL #1-B LD/Policy/Congress @ Mission Vista
-2017-04-20 19:08:56.385 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - 2016 SDIVSL #1-B LD/Policy/Congress @ Mission Vista prelims is up to date.
-2017-04-20 19:08:56.652 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - 2016 SDIVSL #1-B LD/Policy/Congress @ Mission Vista prelims is up to date.
-2017-04-20 19:08:56.652 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - Updating 2016 Viking Classic @ North Mecklenberg (North Mecklenburg H.S.)
-2017-04-20 19:08:57.010 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - 2016 Viking Classic @ North Mecklenberg (North Mecklenburg H.S.) prelims is up to date.
-2017-04-20 19:08:57.268 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - 2016 Viking Classic @ North Mecklenberg (North Mecklenburg H.S.) prelims is up to date.
-2017-04-20 19:08:57.269 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - Updating 2016 WBFL Fall Congress #1 (West)
-2017-04-20 19:08:57.363 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - Updating 2016 West Hardin Teaching Tournament
-2017-04-20 19:08:57.752 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - 2016 West Hardin Teaching Tournament prelims is up to date.
-2017-04-20 19:08:58.144 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - 2016 West Hardin Teaching Tournament prelims is up to date.
-2017-04-20 19:08:58.144 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - Updating 2016 GGSA Parli @ Lowell
-2017-04-20 19:08:58.241 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - Updating 2016 Americas High School Tournament
-2017-04-20 19:08:58.669 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - 2016 Americas High School Tournament prelims is up to date.
-2017-04-20 19:08:58.669 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - Updating 2016 Bellaire High School Tournament
-2017-04-20 19:08:59.118 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - 2016 Bellaire High School Tournament prelims is up to date.
-2017-04-20 19:08:59.419 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - 2016 Bellaire High School Tournament prelims is up to date.
-2017-04-20 19:08:59.419 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - Updating 2016 NNFL #2 @ Reno
-2017-04-20 19:08:59.877 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - 2016 NNFL #2 @ Reno prelims is up to date.
-2017-04-20 19:09:00.168 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - 2016 NNFL #2 @ Reno prelims is up to date.
-2017-04-20 19:09:00.169 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - Updating 2016 Reagan HS Tournament
-2017-04-20 19:09:00.264 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - Updating 2016 Arlington TFA Tournament
-2017-04-20 19:09:00.685 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - 2016 Arlington TFA Tournament prelims is up to date.
-2017-04-20 19:09:00.943 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - 2016 Arlington TFA Tournament prelims is up to date.
+2017-04-20 19:13:03.453 [main] INFO  io.micheal.debatescout.Main - 2503 tournaments queued from JOT
+2017-04-20 19:13:03.471 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - Updating 2016 Emmett J Conrad Memorial High School Tournament
+2017-04-20 19:13:03.916 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - 2016 Emmett J Conrad Memorial High School Tournament prelims is up to date.
+2017-04-20 19:13:03.917 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - Updating 2016 Foster/George Ranch Swing Tournament
+2017-04-20 19:13:04.017 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - Updating 2016 Lake Travis High School Tournament
+2017-04-20 19:13:04.516 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - 2016 Lake Travis High School Tournament prelims is up to date.
+2017-04-20 19:13:04.517 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - Updating 2016 Burges High School Tournament
+2017-04-20 19:13:04.882 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - 2016 Burges High School Tournament prelims is up to date.
+2017-04-20 19:13:04.882 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - Updating 2016 Clear Brook High School Tournament
+2017-04-20 19:13:05.274 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - 2016 Clear Brook High School Tournament prelims is up to date.
+2017-04-20 19:13:05.498 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - 2016 Clear Brook High School Tournament prelims is up to date.
+2017-04-20 19:13:05.499 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - Updating 2016 Hendrickson High School Tournament
+2017-04-20 19:13:05.940 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - 2016 Hendrickson High School Tournament prelims is up to date.
+2017-04-20 19:13:05.941 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - Updating 2016 Oak Grove High School Tournament
+2017-04-20 19:13:06.339 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - 2016 Oak Grove High School Tournament prelims is up to date.
+2017-04-20 19:13:06.590 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - 2016 Oak Grove High School Tournament prelims is up to date.
+2017-04-20 19:13:06.590 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - Updating 2016 Brandeis Tournament
+2017-04-20 19:13:06.949 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - 2016 Brandeis Tournament prelims is up to date.
+2017-04-20 19:13:06.949 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - Updating 2016 Midway TFA Panther Kick-off Tournament
+2017-04-20 19:13:07.288 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - 2016 Midway TFA Panther Kick-off Tournament prelims is up to date.
+2017-04-20 19:13:07.289 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - Updating 2016 Plano Senior Fall Classic
+2017-04-20 19:13:07.648 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - 2016 Plano Senior Fall Classic prelims is up to date.
+2017-04-20 19:13:07.649 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - Updating 2016 Elkins High School Tournament
+2017-04-20 19:13:08.039 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - 2016 Elkins High School Tournament prelims is up to date.
+2017-04-20 19:13:08.264 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - 2016 Elkins High School Tournament prelims is up to date.
+2017-04-20 19:13:08.265 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - Updating 2016 Grapevine High School Tournament (Grapevine & Cross Timbers Middle)
+2017-04-20 19:13:08.365 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - Updating 2016 The Woodlands High School Tournament
+2017-04-20 19:13:08.739 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - 2016 The Woodlands High School Tournament prelims is up to date.
+2017-04-20 19:13:08.972 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - 2016 The Woodlands High School Tournament prelims is up to date.
+2017-04-20 19:13:08.973 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - Updating 2016 Ysleta High School Tournament
+2017-04-20 19:13:09.306 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - 2016 Ysleta High School Tournament prelims is up to date.
+2017-04-20 19:13:09.307 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - Updating 2016 Carroll High School Tournament (Carroll HS)
+2017-04-20 19:13:09.647 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - 2016 Carroll High School Tournament (Carroll HS) prelims is up to date.
+2017-04-20 19:13:09.648 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - Updating 2016 Holy Trinity 10th Annual Hurricane (Holy Trinity Catholic)
+2017-04-20 19:13:09.955 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - 2016 Holy Trinity 10th Annual Hurricane (Holy Trinity Catholic) prelims is up to date.
+2017-04-20 19:13:10.161 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - 2016 Holy Trinity 10th Annual Hurricane (Holy Trinity Catholic) prelims is up to date.
+2017-04-20 19:13:10.161 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - Updating 2016 La Vernia High School Tournament
+2017-04-20 19:13:10.539 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - 2016 La Vernia High School Tournament prelims is up to date.
+2017-04-20 19:13:10.539 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - Updating 2016 North Lamar/Princeton Panthers Dual
+2017-04-20 19:13:10.835 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - 2016 North Lamar/Princeton Panthers Dual prelims is up to date.
+2017-04-20 19:13:11.031 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - 2016 North Lamar/Princeton Panthers Dual prelims is up to date.
+2017-04-20 19:13:11.031 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - Updating 2016 Texas Tech University Tournament
+2017-04-20 19:13:11.395 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - 2016 Texas Tech University Tournament prelims is up to date.
+2017-04-20 19:13:11.628 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - 2016 Texas Tech University Tournament prelims is up to date.
+2017-04-20 19:13:11.628 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - Updating 2016 Coronado Tournament
+2017-04-20 19:13:12.018 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - 2016 Coronado Tournament prelims is up to date.
+2017-04-20 19:13:12.018 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - Updating 2016 Elsik HS TFA Tournament (Elsik Alief)
+2017-04-20 19:13:12.336 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - 2016 Elsik HS TFA Tournament (Elsik Alief) prelims is up to date.
+2017-04-20 19:13:12.557 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - 2016 Elsik HS TFA Tournament (Elsik Alief) prelims is up to date.
+2017-04-20 19:13:12.557 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - Updating 2016 Houston Memorial High School Tournament
+2017-04-20 19:13:12.887 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - 2016 Houston Memorial High School Tournament prelims is up to date.
+2017-04-20 19:13:13.083 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - 2016 Houston Memorial High School Tournament prelims is up to date.
+2017-04-20 19:13:13.084 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - Updating 2016 Parish Episcopal School Tournament
+2017-04-20 19:13:13.416 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - 2016 Parish Episcopal School Tournament prelims is up to date.
+2017-04-20 19:13:13.614 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - 2016 Parish Episcopal School Tournament prelims is up to date.
+2017-04-20 19:13:13.614 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - Updating 2016 Pflugerville High School TFA Tournament
+2017-04-20 19:13:13.910 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - 2016 Pflugerville High School TFA Tournament prelims is up to date.
+2017-04-20 19:13:14.111 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - 2016 Pflugerville High School TFA Tournament prelims is up to date.
+2017-04-20 19:13:14.111 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - Updating 2016 Stennis High School Tournament (Hattiesburg)
+2017-04-20 19:13:14.621 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - 2016 Stennis High School Tournament (Hattiesburg) prelims is up to date.
+2017-04-20 19:13:14.621 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - Updating 2016 CVFL #1 @ Ponderosa
+2017-04-20 19:13:14.967 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - 2016 CVFL #1 @ Ponderosa prelims is up to date.
+2017-04-20 19:13:15.165 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - 2016 CVFL #1 @ Ponderosa prelims is up to date.
+2017-04-20 19:13:15.165 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - Updating 2016 Lovejoy High School Tournament
+2017-04-20 19:13:15.505 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - 2016 Lovejoy High School Tournament prelims is up to date.
+2017-04-20 19:13:15.705 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - 2016 Lovejoy High School Tournament prelims is up to date.
+2017-04-20 19:13:15.705 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - Updating 2016 Mabank Angel Tournament (Mabank HS)
+2017-04-20 19:13:16.083 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - 2016 Mabank Angel Tournament (Mabank HS) prelims is up to date.
+2017-04-20 19:13:16.083 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - Updating 2016 Sandra Day O'Connor High School Tournament (Sandra Day O''Connor)
+2017-04-20 19:13:16.376 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - 2016 Sandra Day O'Connor High School Tournament (Sandra Day O''Connor) prelims is up to date.
+2017-04-20 19:13:16.639 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - 2016 Sandra Day O'Connor High School Tournament (Sandra Day O''Connor) prelims is up to date.
+2017-04-20 19:13:16.640 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - Updating 2016 SDIVSL #1-A Parli/Public Forum @ Helix Charter School
+2017-04-20 19:13:16.734 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - Updating 2016 SWSDI Novice @ Horizon (Central)
+2017-04-20 19:13:17.131 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - 2016 SWSDI Novice @ Horizon (Central) prelims is up to date.
+2017-04-20 19:13:17.131 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - Updating 2016 WBFL Fall Varsity IE (Culver City)
+2017-04-20 19:13:17.225 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - Updating 2016 Clear Falls High School Tournament
+2017-04-20 19:13:17.973 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - 2016 Clear Falls High School Tournament prelims is up to date.
+2017-04-20 19:13:18.206 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - 2016 Clear Falls High School Tournament prelims is up to date.
+2017-04-20 19:13:18.207 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - Updating 2016 Cypress Woods High School Tournament
+2017-04-20 19:13:18.903 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - 2016 Cypress Woods High School Tournament prelims is up to date.
+2017-04-20 19:13:19.158 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - 2016 Cypress Woods High School Tournament prelims is up to date.
+2017-04-20 19:13:19.158 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - Updating 2016 LC Anderson Trojan Classic
+2017-04-20 19:13:19.511 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - 2016 LC Anderson Trojan Classic prelims is up to date.
+2017-04-20 19:13:19.708 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - 2016 LC Anderson Trojan Classic prelims is up to date.
+2017-04-20 19:13:19.708 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - Updating 2016 Newman Smith High School Tournament
+2017-04-20 19:13:19.805 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - Updating 2016 NNFL #1 @ Elko
+2017-04-20 19:13:20.124 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - 2016 NNFL #1 @ Elko prelims is up to date.
+2017-04-20 19:13:20.318 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - 2016 NNFL #1 @ Elko prelims is up to date.
+2017-04-20 19:13:20.318 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - Updating 2016 Rice University Classic Swing Tournament (Rice U.)
+2017-04-20 19:13:20.414 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - Updating 2016 Douglas MacArthur High School Tournament
+2017-04-20 19:13:20.510 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - Updating 2016 Flying L Tournament (Ft. Lauderdale HS)
+2017-04-20 19:13:21.222 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - 2016 Flying L Tournament (Ft. Lauderdale HS) prelims is up to date.
+2017-04-20 19:13:21.584 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - 2016 Flying L Tournament (Ft. Lauderdale HS) prelims is up to date.
+2017-04-20 19:13:21.584 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - Updating 2016 GGSA Congress 1 @ George Washington
+2017-04-20 19:13:21.680 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - Updating 2016 Harlingen South High School Tournament
+2017-04-20 19:13:21.979 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - 2016 Harlingen South High School Tournament prelims is up to date.
+2017-04-20 19:13:22.174 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - 2016 Harlingen South High School Tournament prelims is up to date.
+2017-04-20 19:13:22.175 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - Updating 2016 Holy Trinity Journey Year Five (Holy Trinity Catholic)
+2017-04-20 19:13:22.510 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - 2016 Holy Trinity Journey Year Five (Holy Trinity Catholic) prelims is up to date.
+2017-04-20 19:13:22.510 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - Updating 2016 Jack Howe Memorial @ CSULB (California State University Long Beach)
+2017-04-20 19:13:23.237 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - 2016 Jack Howe Memorial @ CSULB (California State University Long Beach) prelims is up to date.
+2017-04-20 19:13:23.498 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - 2016 Jack Howe Memorial @ CSULB (California State University Long Beach) prelims is up to date.
+2017-04-20 19:13:24.198 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - 2016 Jack Howe Memorial @ CSULB (California State University Long Beach) prelims is up to date.
+2017-04-20 19:13:24.198 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - Updating 2016 Lindale High School TFA Tournament
+2017-04-20 19:13:24.757 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - 2016 Lindale High School TFA Tournament prelims is up to date.
+2017-04-20 19:13:25.027 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - 2016 Lindale High School TFA Tournament prelims is up to date.
+2017-04-20 19:13:25.027 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - Updating 2016 Morton M.E.E.T (Morton Isd)
+2017-04-20 19:13:25.348 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - 2016 Morton M.E.E.T (Morton Isd) prelims is up to date.
+2017-04-20 19:13:25.349 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - Updating 2016 PBCFL #1 Congressional @ PB Gardens (Palm Beach Gardens)
+2017-04-20 19:13:25.444 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - Updating 2016 Prep School Congress @ SPA (Scottsdale Preparatory Academy)
+2017-04-20 19:13:25.539 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - Updating 2016 Riverside High School Tournament
+2017-04-20 19:13:25.939 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - 2016 Riverside High School Tournament prelims is up to date.
+2017-04-20 19:13:26.150 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - 2016 Riverside High School Tournament prelims is up to date.
+2017-04-20 19:13:26.151 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - Updating 2016 Stamford TFA IQT Tournament
+2017-04-20 19:13:26.463 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - 2016 Stamford TFA IQT Tournament prelims is up to date.
+2017-04-20 19:13:26.463 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - Updating 2016 Cy Lakes/Langham Creek Swing (Cypress Lakes)
+2017-04-20 19:13:26.559 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - Updating 2016 Austin East Roadrunner Invitational (Austin East Magnet)
+2017-04-20 19:13:26.657 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - Updating 2016 Clark Cougar Classic (Plano Senior)
+2017-04-20 19:13:27.011 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - 2016 Clark Cougar Classic (Plano Senior) prelims is up to date.
+2017-04-20 19:13:27.012 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - Updating 2016 Muleshoe High School Tournament
+2017-04-20 19:13:27.672 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - 2016 Muleshoe High School Tournament prelims is up to date.
+2017-04-20 19:13:27.673 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - Updating 2016 Van High Fall Invitational
+2017-04-20 19:13:28.064 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - 2016 Van High Fall Invitational prelims is up to date.
+2017-04-20 19:13:28.346 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - 2016 Van High Fall Invitational prelims is up to date.
+2017-04-20 19:13:28.346 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - Updating 2016 WBFL Fall Debate (Narbonne)
+2017-04-20 19:13:28.759 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - 2016 WBFL Fall Debate (Narbonne) prelims is up to date.
+2017-04-20 19:13:28.979 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - 2016 WBFL Fall Debate (Narbonne) prelims is up to date.
+2017-04-20 19:13:28.979 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - Updating 2016 Red Mountain Lost Dutchman
+2017-04-20 19:13:29.304 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - 2016 Red Mountain Lost Dutchman prelims is up to date.
+2017-04-20 19:13:29.504 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - 2016 Red Mountain Lost Dutchman prelims is up to date.
+2017-04-20 19:13:29.505 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - Updating 2016 University of Mississippi Tournament
+2017-04-20 19:13:29.826 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - 2016 University of Mississippi Tournament prelims is up to date.
+2017-04-20 19:13:30.408 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - 2016 University of Mississippi Tournament prelims is up to date.
+2017-04-20 19:13:30.409 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - Updating 2016 Cross Roads Tournament (Cross Roads ISD)
+2017-04-20 19:13:30.697 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - 2016 Cross Roads Tournament (Cross Roads ISD) prelims is up to date.
+2017-04-20 19:13:30.697 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - Updating 2016 CVFL #2 @ Woodcreek
+2017-04-20 19:13:30.792 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - Updating 2016 GDSDA #3 @ Desert Oasis
+2017-04-20 19:13:30.890 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - Updating 2016 GGSA Debate 1 (PuFo, LD, Policy) @ Santa Rosa
+2017-04-20 19:13:31.219 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - 2016 GGSA Debate 1 (PuFo, LD, Policy) @ Santa Rosa prelims is up to date.
+2017-04-20 19:13:31.417 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - 2016 GGSA Debate 1 (PuFo, LD, Policy) @ Santa Rosa prelims is up to date.
+2017-04-20 19:13:31.612 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - 2016 GGSA Debate 1 (PuFo, LD, Policy) @ Santa Rosa prelims is up to date.
+2017-04-20 19:13:31.613 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - Updating 2016 Santa Ana Fall Novice Classic (Santa Ana Unified School District)
+2017-04-20 19:13:31.708 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - Updating 2016 SDIVSL #1-B LD/Policy/Congress @ Mission Vista
+2017-04-20 19:13:32.084 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - 2016 SDIVSL #1-B LD/Policy/Congress @ Mission Vista prelims is up to date.
+2017-04-20 19:13:32.332 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - 2016 SDIVSL #1-B LD/Policy/Congress @ Mission Vista prelims is up to date.
+2017-04-20 19:13:32.332 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - Updating 2016 Viking Classic @ North Mecklenberg (North Mecklenburg H.S.)
+2017-04-20 19:13:32.682 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - 2016 Viking Classic @ North Mecklenberg (North Mecklenburg H.S.) prelims is up to date.
+2017-04-20 19:13:32.963 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - 2016 Viking Classic @ North Mecklenberg (North Mecklenburg H.S.) prelims is up to date.
+2017-04-20 19:13:32.963 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - Updating 2016 WBFL Fall Congress #1 (West)
+2017-04-20 19:13:33.059 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - Updating 2016 West Hardin Teaching Tournament
+2017-04-20 19:13:33.384 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - 2016 West Hardin Teaching Tournament prelims is up to date.
+2017-04-20 19:13:33.631 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - 2016 West Hardin Teaching Tournament prelims is up to date.
+2017-04-20 19:13:33.632 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - Updating 2016 GGSA Parli @ Lowell
+2017-04-20 19:13:33.726 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - Updating 2016 Americas High School Tournament
+2017-04-20 19:13:34.080 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - 2016 Americas High School Tournament prelims is up to date.
+2017-04-20 19:13:34.080 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - Updating 2016 Bellaire High School Tournament
+2017-04-20 19:13:34.997 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - 2016 Bellaire High School Tournament prelims is up to date.
+2017-04-20 19:13:35.593 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - 2016 Bellaire High School Tournament prelims is up to date.
+2017-04-20 19:13:35.594 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - Updating 2016 NNFL #2 @ Reno
+2017-04-20 19:13:35.918 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - 2016 NNFL #2 @ Reno prelims is up to date.
+2017-04-20 19:13:36.112 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - 2016 NNFL #2 @ Reno prelims is up to date.
+2017-04-20 19:13:36.112 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - Updating 2016 Reagan HS Tournament
+2017-04-20 19:13:36.207 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - Updating 2016 Arlington TFA Tournament
+2017-04-20 19:13:36.535 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - 2016 Arlington TFA Tournament prelims is up to date.
+2017-04-20 19:13:36.739 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - 2016 Arlington TFA Tournament prelims is up to date.
+2017-04-20 19:13:36.739 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - Updating 2016 Bob Jones Academy Tournament
+2017-04-20 19:13:37.029 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - 2016 Bob Jones Academy Tournament prelims is up to date.
+2017-04-20 19:13:37.275 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - 2016 Bob Jones Academy Tournament prelims is up to date.
+2017-04-20 19:13:37.275 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - Updating 2016 Midland Lee High School Tournament
+2017-04-20 19:13:37.569 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - 2016 Midland Lee High School Tournament prelims is up to date.
+2017-04-20 19:13:37.569 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - Updating 2016 North Lamar City of Lights Fall
+2017-04-20 19:13:37.924 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - 2016 North Lamar City of Lights Fall prelims is up to date.
+2017-04-20 19:13:38.127 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - 2016 North Lamar City of Lights Fall prelims is up to date.
+2017-04-20 19:13:38.127 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - Updating 2016 PBCFL #2 @ PB Central (Palm Beach Central)
+2017-04-20 19:13:38.434 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - 2016 PBCFL #2 @ PB Central (Palm Beach Central) prelims is up to date.
+2017-04-20 19:13:38.435 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - Updating 2016 PSJA Southwest High School Tournament
+2017-04-20 19:13:38.766 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - 2016 PSJA Southwest High School Tournament prelims is up to date.
+2017-04-20 19:13:38.977 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - 2016 PSJA Southwest High School Tournament prelims is up to date.
+2017-04-20 19:13:38.978 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - Updating 2016 SDIVSL #1-C IEs @ Carlsbad High School
+2017-04-20 19:13:39.073 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - Updating 2016 WBFL Fall Novice IE (North)
+2017-04-20 19:13:39.182 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - Updating 2016 Austin SFA High School Tournament
+2017-04-20 19:13:39.828 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - 2016 Austin SFA High School Tournament prelims is up to date.
+2017-04-20 19:13:40.106 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - 2016 Austin SFA High School Tournament prelims is up to date.
+2017-04-20 19:13:40.106 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - Updating 2016 Bayou City Swing (San Jacinto College North Campus)
+2017-04-20 19:13:40.456 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - 2016 Bayou City Swing (San Jacinto College North Campus) prelims is up to date.
+2017-04-20 19:13:40.456 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - Updating 2016 Centennial High School Tournament
+2017-04-20 19:13:40.816 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - 2016 Centennial High School Tournament prelims is up to date.
+2017-04-20 19:13:40.816 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - Updating 2016 GDSDA #4 @ Green Valley
+2017-04-20 19:13:41.179 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - 2016 GDSDA #4 @ Green Valley prelims is up to date.
+2017-04-20 19:13:41.398 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - 2016 GDSDA #4 @ Green Valley prelims is up to date.
+2017-04-20 19:13:41.399 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - Updating 2016 Jim Fountain Classic @ McClintock Tournament
+2017-04-20 19:13:42.156 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - 2016 Jim Fountain Classic @ McClintock Tournament prelims is up to date.
+2017-04-20 19:13:42.385 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - 2016 Jim Fountain Classic @ McClintock Tournament prelims is up to date.
+2017-04-20 19:13:42.386 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - Updating 2016 Klein High School Tournament
+2017-04-20 19:13:43.117 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - 2016 Klein High School Tournament prelims is up to date.
+2017-04-20 19:13:43.846 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - 2016 Klein High School Tournament prelims is up to date.
+2017-04-20 19:13:43.846 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - Updating 2016 Lamar Consolidated TFA Tournament
+2017-04-20 19:13:44.186 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - 2016 Lamar Consolidated TFA Tournament prelims is up to date.
+2017-04-20 19:13:44.406 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - 2016 Lamar Consolidated TFA Tournament prelims is up to date.
+2017-04-20 19:13:44.406 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - Updating 2016 Loretto Academy Fall Classic
+2017-04-20 19:13:44.789 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - 2016 Loretto Academy Fall Classic prelims is up to date.
+2017-04-20 19:13:44.789 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - Updating 2016 Naaman Forest High School Tournament
+2017-04-20 19:13:44.912 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - Updating 2016 Petal High School Tournament
+2017-04-20 19:13:45.589 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - 2016 Petal High School Tournament prelims is up to date.
+2017-04-20 19:13:45.884 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - 2016 Petal High School Tournament prelims is up to date.
+2017-04-20 19:13:45.885 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - Updating 2016 Plano West Senior High School Tournament
+2017-04-20 19:13:46.663 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - 2016 Plano West Senior High School Tournament prelims is up to date.
+2017-04-20 19:13:47.090 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - 2016 Plano West Senior High School Tournament prelims is up to date.
+2017-04-20 19:13:47.090 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - Updating 2016 Shelley Novice Harvest
+2017-04-20 19:13:47.477 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - 2016 Shelley Novice Harvest prelims is up to date.
+2017-04-20 19:13:47.478 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - Updating 2016 Caprock High School Tournament
+2017-04-20 19:13:47.838 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - 2016 Caprock High School Tournament prelims is up to date.
+2017-04-20 19:13:47.839 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - Updating 2016 Charlotte Catholic High School Tournament
+2017-04-20 19:13:48.156 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - 2016 Charlotte Catholic High School Tournament prelims is up to date.
+2017-04-20 19:13:48.358 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - 2016 Charlotte Catholic High School Tournament prelims is up to date.
+2017-04-20 19:13:48.358 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - Updating 2016 CVFL #3 - Satyaprit Classic @ Mira Loma
+2017-04-20 19:13:48.711 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - 2016 CVFL #3 - Satyaprit Classic @ Mira Loma prelims is up to date.
+2017-04-20 19:13:48.919 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - 2016 CVFL #3 - Satyaprit Classic @ Mira Loma prelims is up to date.
+2017-04-20 19:13:48.919 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - Updating 2016 GGSA IE 1 @ James Logan
+2017-04-20 19:13:49.014 [pool-3-thread-1] JOT   io.micheal.debatescout.modules.jot.LD - Updating 2016 Holy Trinity 12th Annual Trinity Classic (Holy Trinity Catholic)
