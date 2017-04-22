@@ -2,6 +2,7 @@
 <Configuration status="INFO">
     <CustomLevels>
       <CustomLevel name="JOT" intLevel="400" />
+      <CustomLevel name="NSDA" intLevel="400" />
     </CustomLevels>
     <Appenders>
         <Console name="Console" target="SYSTEM_OUT">

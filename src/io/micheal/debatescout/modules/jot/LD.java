@@ -20,7 +20,7 @@ import io.micheal.debatescout.Debater;
 import io.micheal.debatescout.Tournament;
 import io.micheal.debatescout.UnsupportedNameException;
 import io.micheal.debatescout.helpers.JsoupHelper;
-import io.micheal.debatescout.helpers.RoundHelper;
+import io.micheal.debatescout.helpers.DebateHelper;
 import io.micheal.debatescout.helpers.SQLHelper;
 import io.micheal.debatescout.modules.Module;
 import io.micheal.debatescout.modules.WorkerPool;
@@ -58,7 +58,7 @@ public class LD extends Module {
 			manager.newModule(new Runnable() {
 				public void run() {
 					try {
-						log.log(RoundHelper.JOT, "Updating " + t.getName());
+						log.log(DebateHelper.JOT, "Updating " + t.getName());
 						Document tPage = JsoupHelper.retryIfTimeout(t.getLink(), 3);
 						Elements prelims = tPage.select("tr:has(td:matches(LD|Lincoln|L-D)").select("a[href]:contains(Prelims)");
 						HashMap<String, Debater> competitors = null;
@@ -69,7 +69,7 @@ public class LD extends Module {
 							
 							// If we have the same amount of entries, then do not check the tournament
 							if(tournamentExists(p.baseUri(), table.select("[colspan=2].rec:not(:containsOwn(F))").size())) {
-								log.log(RoundHelper.JOT, t.getName() + " prelims is up to date.");
+								log.log(DebateHelper.JOT, t.getName() + " prelims is up to date.");
 								continue;
 							}
 							
@@ -86,7 +86,7 @@ public class LD extends Module {
 							
 							// Update DB with debaters
 							for(Map.Entry<String, Debater> entry : competitors.entrySet())
-								entry.getValue().setID(getDebaterID(entry.getValue()));
+								entry.getValue().setID(DebateHelper.getDebaterID(sql, entry.getValue()));
 							
 							// Overwrite
 							if(overwrite)
@@ -165,10 +165,10 @@ public class LD extends Module {
 							if(!query.equals("INSERT INTO ld_rounds (tournament, absUrl, debater, against, round, side, speaks, decision) VALUES ")) {
 								query = query.substring(0, query.lastIndexOf(", "));
 								sql.executePreparedStatement(query, args.toArray());
-								log.log(RoundHelper.JOT, t.getName() + " prelims updated.");
+								log.log(DebateHelper.JOT, t.getName() + " prelims updated.");
 							}
 							else {
-								log.log(RoundHelper.JOT, t.getName() + " prelims is up to date.");
+								log.log(DebateHelper.JOT, t.getName() + " prelims is up to date.");
 							}
 						
 						}
@@ -268,25 +268,6 @@ public class LD extends Module {
 				}
 			});
 		}
-	}
-	
-	/**
-	 * Searches the SQL tables for the specified name. If no match is found, a debater will be created and returned
-	 * @return
-	 * @throws SQLException 
-	 */
-	private int getDebaterID(Debater debater) throws SQLException {
-		if(debater.getID() != null)
-			return debater.getID();
-		ResultSet index = sql.executeQueryPreparedStatement("SELECT id, first, middle, last, surname, school FROM debaters WHERE first_clean<=>? AND last_clean<=>?", SQLHelper.cleanString(debater.getFirst()), SQLHelper.cleanString(debater.getLast()));
-		if(index.next()) {
-			do {
-				Debater d = new Debater(index.getString(2), index.getString(3), index.getString(4), index.getString(5), index.getString(6));
-				if(debater.equals(d))
-					return index.getInt(1);
-			} while(index.next());
-		}
-		return sql.executePreparedStatementArgs("INSERT INTO debaters (first, middle, last, surname, school, first_clean, middle_clean, last_clean, surname_clean, school_clean) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", debater.getFirst(), debater.getMiddle(), debater.getLast(), debater.getSurname(), debater.getSchool(), SQLHelper.cleanString(debater.getFirst()), SQLHelper.cleanString(debater.getMiddle()), SQLHelper.cleanString(debater.getLast()), SQLHelper.cleanString(debater.getSurname()), SQLHelper.cleanString(debater.getSchool()));
 	}
 	
 	private boolean tournamentExists(String absUrl, int rounds) throws SQLException {

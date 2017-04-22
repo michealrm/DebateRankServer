@@ -14,6 +14,7 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
+import io.micheal.debatescout.helpers.JsoupHelper;
 import io.micheal.debatescout.helpers.SQLHelper;
 import io.micheal.debatescout.modules.ModuleManager;
 import io.micheal.debatescout.modules.PoolSizeException;
@@ -146,9 +147,27 @@ public class Main {
 			// Tabroom //
 			/////////////
 			
+			while(moduleManager.getActiveCount() != 0) {
+				try {
+					Thread.sleep(5000);
+				} catch (InterruptedException e) {
+					log.error(e);
+					System.exit(1);
+				}
+			}
+			
 			//////////
 			// NSDA //
 			//////////
+			
+			moduleManager.newModule(new Runnable() {
+				
+				public void run() {
+					// TODO Auto-generated method stub
+					
+				}
+			});
+			//JsoupHelper.retryIfTimeout("http://points.speechanddebate.org/points_application/showreport.php?fname=Micheal&lname=Myers&rpt=findstudent", times)
 			
 			////////////////
 			// TFA Points //
@@ -187,14 +206,6 @@ public class Main {
 			// Bids
 				
 			// Glicko-2
-//			while(manager.getActiveCount() != 0) {
-//				try {
-//					Thread.sleep(5000);
-//				} catch (InterruptedException e) {
-//					log.error(e);
-//					System.exit(1);
-//				}
-//			}
 //			
 //			HashMap<String, Rating> debaters = new HashMap<String, Rating>();
 //			ResultSet orderedT = null;
