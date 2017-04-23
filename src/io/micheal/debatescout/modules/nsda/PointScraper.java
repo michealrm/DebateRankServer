@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import org.apache.logging.log4j.LogManager;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
+import org.jsoup.select.Elements;
 
 import io.micheal.debatescout.Debater;
 import io.micheal.debatescout.helpers.DebateHelper;
@@ -30,7 +31,7 @@ public class PointScraper extends Module {
 				manager.newModule(new Runnable() {
 					public void run() {
 						try {
-							Document search = Jsoup.connect("http://points.speechanddebate.org/points_application/showreport.php?fname="+ debater.getFirst() + "&lname=" + debater.getLast() + "&rpt=findstudent").get();
+							ArrayList<Debater> searchDebaters = searchDebater(debater);
 						} catch (IOException ioe) {
 							log.error(ioe);
 							log.log(DebateHelper.NSDA, "Could not update NSDA points for " + debater.getID());
@@ -42,6 +43,13 @@ public class PointScraper extends Module {
 			log.error(sqle);
 			log.fatal("Could not update NSDA points - " + sqle.getErrorCode());
 		}
+	}
+	
+	public static ArrayList<Debater> searchDebater(Debater debater) throws IOException {
+		Document search = Jsoup.connect("http://points.speechanddebate.org/points_application/showreport.php?fname="+ debater.getFirst() + "&lname=" + debater.getLast() + "&rpt=findstudent").get();
+		Elements rows = search.select("table.subitem").select("tr:not(.colhead)");
+		System.out.println(rows);
+		return null;
 	}
 
 }
