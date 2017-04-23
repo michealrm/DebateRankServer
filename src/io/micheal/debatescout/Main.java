@@ -14,7 +14,6 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
-import io.micheal.debatescout.helpers.JsoupHelper;
 import io.micheal.debatescout.helpers.SQLHelper;
 import io.micheal.debatescout.modules.ModuleManager;
 import io.micheal.debatescout.modules.PoolSizeException;
