@@ -22,6 +22,7 @@ public class SQLHelper {
 		Class.forName("com.mysql.cj.jdbc.Driver");
 		sql = DriverManager.getConnection("jdbc:mysql://" + host + ":" + port + "/" + name + "?user=" + user + "&password=" + pass);
 		st = sql.createStatement();
+		st.setFetchSize(Integer.MIN_VALUE);
 	}
 	
 	public ResultSet executeQuery(String query) throws SQLException {
@@ -31,6 +32,7 @@ public class SQLHelper {
 	
 	public ResultSet executeQueryPreparedStatement(String query, Object... values) throws SQLException {
 		PreparedStatement ps = sql.prepareStatement(query);
+		ps.setFetchSize(5000);
 		for(int i = 0;i<values.length;i++) {
 			if(values[i] instanceof String)
 				ps.setString(i+1, (String)values[i]);
@@ -53,6 +55,7 @@ public class SQLHelper {
 	
 	public int executePreparedStatement(String query, Object[] values) throws SQLException {
 		PreparedStatement ps = sql.prepareStatement(query, Statement.RETURN_GENERATED_KEYS);
+		ps.setFetchSize(5000);
 		for(int i = 0;i<values.length;i++) {
 			if(values[i] instanceof String)
 				ps.setString(i+1, (String)values[i]);
