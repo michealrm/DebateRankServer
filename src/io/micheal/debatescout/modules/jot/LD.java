@@ -175,7 +175,7 @@ public class LD extends Module {
 								}
 							}
 								
-							// Double Octos (NEEDS WORK)
+							// Double Octos
 							Element doubleOctos = eventRow.select("a[href]:contains(Double Octos)").first();
 							if(doubleOctos != null) {
 								Document doubleOctosDoc = JsoupHelper.retryIfTimeout(doubleOctos.absUrl("href"), 3);
@@ -249,7 +249,7 @@ public class LD extends Module {
 	
 									if(!query.equals("INSERT INTO ld_rounds (tournament, absUrl, debater, against, round, side, speaks, decision) VALUES ")) {
 										query = query.substring(0, query.lastIndexOf(", "));
-										//sql.executePreparedStatement(query, args.toArray()); TODO: QA testing
+										sql.executePreparedStatement(query, args.toArray());
 										log.log(DebateHelper.JOT, t.getName() + " double octos updated.");
 									}
 									else {
@@ -258,7 +258,7 @@ public class LD extends Module {
 								}
 							}
 							
-							//Elements bracket = tPage.select("tr:has(td:matches(LD|Lincoln|L-D)").select("a[href]:contains(Bracket)");
+							// Bracket
 						}
 					} catch(IOException ioe) {
 						log.error(ioe);
