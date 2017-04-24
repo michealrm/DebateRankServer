@@ -42,6 +42,8 @@ public class SQLHelper {
 				ps.setDouble(i+1, (Double)values[i]);
 			else if(values[i] instanceof Character)
 				ps.setString(i+1, ((Character)values[i]).toString());
+			else if(values[i] instanceof Round)
+				ps.setString(i+1, ((Round)values[i]).toString());
 			else if(values[i] == null)
 				ps.setNull(i+1, Types.NULL);
 		}
@@ -65,6 +67,8 @@ public class SQLHelper {
 				ps.setDouble(i+1, (Double)values[i]);
 			else if(values[i] instanceof Character)
 				ps.setString(i+1, ((Character)values[i]).toString());
+			else if(values[i] instanceof Round)
+				ps.setString(i+1, ((Round)values[i]).toString());
 			else if(values[i] == null)
 				ps.setNull(i+1, Types.NULL);
 		}

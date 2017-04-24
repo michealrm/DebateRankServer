@@ -23,6 +23,7 @@ import io.micheal.debatescout.Tournament;
 import io.micheal.debatescout.UnsupportedNameException;
 import io.micheal.debatescout.helpers.DebateHelper;
 import io.micheal.debatescout.helpers.JsoupHelper;
+import io.micheal.debatescout.helpers.Round;
 import io.micheal.debatescout.helpers.SQLHelper;
 import io.micheal.debatescout.modules.Module;
 import io.micheal.debatescout.modules.WorkerPool;
@@ -57,16 +58,16 @@ public class LD extends Module {
 		
 		// Scrape events per tournament
 		for(Tournament t : tournaments) {
-			if(t.getName().contains("Bell")) // TEMP
 			manager.newModule(new Runnable() {
 				public void run() {
 					try {
 						log.log(DebateHelper.JOT, "Updating " + t.getName());
 						Document tPage = JsoupHelper.retryIfTimeout(t.getLink(), 3);
 						Elements eventRows = tPage.select("tr:has(td:matches(LD|Lincoln|L-D)");
-						HashMap<String, Debater> competitors = new HashMap<String, Debater>();
 						
 						for(Element eventRow : eventRows) {
+							
+							// Prelims
 							Element prelim = eventRow.select("a[href]:contains(Prelims)").first();
 							if(prelim != null) {
 								Document p = JsoupHelper.retryIfTimeout(prelim.absUrl("href"), 3);
@@ -74,6 +75,7 @@ public class LD extends Module {
 								Elements rows = table.select("tr:has(table)");
 								
 								// Register all debaters
+								HashMap<String, Debater> competitors = new HashMap<String, Debater>();
 								for(Element row : rows) {
 									Elements infos = row.select("td").first().select("td");
 									try {
@@ -178,22 +180,22 @@ public class LD extends Module {
 							// Double Octos
 							Element doubleOctos = eventRow.select("a[href]:contains(Double Octos)").first();
 							if(doubleOctos != null) {
-								Document doubleOctosDoc = JsoupHelper.retryIfTimeout(doubleOctos.absUrl("href"), 3);
+								Document doc = JsoupHelper.retryIfTimeout(doubleOctos.absUrl("href"), 3);
 								
 								// If we have the same amount of entries, then do not check
 								Pattern pattern = Pattern.compile("[^\\s]+ (.+?)( \\((.+?)\\))? \\((Aff|Neg)\\) def. [^\\s]+ (.+?)( \\((.+?)\\))? \\((Aff|Neg)\\)");
-								doubleOctosDoc.getElementsByTag("font").unwrap();
-								Matcher matcher = pattern.matcher(doubleOctosDoc.toString().replaceAll("<br>", ""));
+								doc.getElementsByTag("font").unwrap();
+								Matcher matcher = pattern.matcher(doc.toString().replaceAll("<br>", ""));
 								int count = 0;
 								while(matcher.find())
 									count += 2;
-								if(tournamentExists(doubleOctosDoc.baseUri(), count))
+								if(tournamentExists(doc.baseUri(), count))
 									log.log(DebateHelper.JOT, t.getName() + " double octos is up to date.");
 								else {
 									
 									// Overwrite
 									if(overwrite)
-										sql.executePreparedStatementArgs("DELETE FROM ld_rounds WHERE absUrl=?", doubleOctosDoc.baseUri());
+										sql.executePreparedStatementArgs("DELETE FROM ld_rounds WHERE absUrl=?", doc.baseUri());
 									
 									matcher.reset();
 									ArrayList<Object> args = new ArrayList<Object>();
@@ -203,10 +205,10 @@ public class LD extends Module {
 											// First debater
 											ArrayList<Object> a = new ArrayList<Object>();
 											a.add(t.getLink());
-											a.add(doubleOctosDoc.baseUri());
+											a.add(doc.baseUri());
 											a.add(DebateHelper.getDebaterID(sql, new Debater(matcher.group(1), matcher.group(3))));
 											a.add(DebateHelper.getDebaterID(sql, new Debater(matcher.group(5), matcher.group(7))));
-											a.add("DO");
+											a.add(Round.DOUBLE_OCTOS);
 											a.add(matcher.group(4).equals("Aff") ? new Character('A') : new Character('N'));
 											a.add(null);
 											a.add("1-0");
@@ -225,10 +227,10 @@ public class LD extends Module {
 											// Second debater
 											a.clear();
 											a.add(t.getLink());
-											a.add(doubleOctosDoc.baseUri());
+											a.add(doc.baseUri());
 											a.add(DebateHelper.getDebaterID(sql, new Debater(matcher.group(5), matcher.group(7))));
 											a.add(DebateHelper.getDebaterID(sql, new Debater(matcher.group(1), matcher.group(3))));
-											a.add("DO");
+											a.add(Round.DOUBLE_OCTOS);
 											a.add(matcher.group(8).equals("Aff") ? new Character('A') : new Character('N'));
 											a.add(null);
 											a.add("0-1");
@@ -258,7 +260,19 @@ public class LD extends Module {
 								}
 							}
 							
-							// Bracket
+							//Bracket
+							Element bracket = eventRow.select("a[href]:contains(Bracket)").first();
+							if(bracket != null) {
+								Document doc = JsoupHelper.retryIfTimeout(bracket.absUrl("href"), 3);
+								
+								int index = 0;
+								Round round = null;
+								while((round = getBracketRound(doc, index++)) != null) {
+									System.out.println(round);
+									Elements col = doc.select("table[cellspacing=0] > tbody > tr > td:eq(" + index + "):not(:contains(\u00a0))");
+								}
+								System.exit(0);
+							}
 						}
 					} catch(IOException ioe) {
 						log.error(ioe);
@@ -288,6 +302,32 @@ public class LD extends Module {
 	private boolean tournamentExists(String absUrl, int rounds) throws SQLException {
 		ResultSet tournamentExists = sql.executeQueryPreparedStatement("SELECT id FROM ld_rounds WHERE absUrl=?", absUrl);
 		return tournamentExists.last() && tournamentExists.getRow() == rounds;
+	}
+	
+	private Round getBracketRound(Document doc, int col) {
+		int elements = doc.select("table[cellspacing=0] > tbody > tr > td.topr:eq(" + col + "), table[cellspacing=0] > tbody > tr > td.botr:eq(" + col + "), table[cellspacing=0] > tbody > tr > td.top:eq(" + col + ")").size();
+		int topr = doc.select("table[cellspacing=0] > tbody > tr > td.topr:eq(" + col + ")").size();
+		int botr = doc.select("table[cellspacing=0] > tbody > tr > td.botr:eq(" + col + ")").size();
+		int size;
+		if((size = elements) % 2 == 0 || (size = topr) % 2 == 0 || (size = botr) % 2 == 0 ) {
+			if(size == topr || size == botr)
+				size *= 2;
+			switch(size) {
+				case 2:
+					return Round.FINALS;
+				case 4:
+					return Round.SEMIS;
+				case 8:
+					return Round.QUARTERS;
+				case 16:
+					return Round.OCTOS;
+				case 32:
+					return Round.DOUBLE_OCTOS;
+			}
+		}
+		else if(elements == 1)
+			return Round.FINALS;
+		return null;
 	}
 
 }
