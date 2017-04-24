@@ -1,1 +1,1 @@
-# DebateScout
+# DebateRank
