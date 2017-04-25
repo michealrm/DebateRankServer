@@ -1,4 +1,4 @@
-package io.micheal.debatescout;
+package io.micheal.debaterank;
 
 public class Tournament {
 

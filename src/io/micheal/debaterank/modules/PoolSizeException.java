@@ -1,4 +1,4 @@
-package io.micheal.debatescout.modules;
+package io.micheal.debaterank.modules;
 
 public class PoolSizeException extends Exception {
 

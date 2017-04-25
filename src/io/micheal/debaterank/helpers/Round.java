@@ -1,4 +1,4 @@
-package io.micheal.debatescout.helpers;
+package io.micheal.debaterank.helpers;
 
 public enum Round {
 	

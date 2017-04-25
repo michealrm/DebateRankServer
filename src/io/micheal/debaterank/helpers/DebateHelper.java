@@ -1,4 +1,4 @@
-package io.micheal.debatescout.helpers;
+package io.micheal.debaterank.helpers;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -8,8 +8,8 @@ import java.util.Map;
 
 import org.apache.logging.log4j.Level;
 
-import io.micheal.debatescout.Debater;
-import io.micheal.debatescout.UnsupportedNameException;
+import io.micheal.debaterank.Debater;
+import io.micheal.debaterank.UnsupportedNameException;
 
 public class DebateHelper {
 

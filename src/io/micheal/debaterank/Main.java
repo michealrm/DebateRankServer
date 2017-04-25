@@ -1,4 +1,4 @@
-package io.micheal.debatescout;
+package io.micheal.debaterank;
 
 import java.io.File;
 import java.io.IOException;
@@ -14,12 +14,12 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
-import io.micheal.debatescout.helpers.SQLHelper;
-import io.micheal.debatescout.modules.ModuleManager;
-import io.micheal.debatescout.modules.PoolSizeException;
-import io.micheal.debatescout.modules.WorkerPool;
-import io.micheal.debatescout.modules.WorkerPoolManager;
-import io.micheal.debatescout.modules.jot.LD;
+import io.micheal.debaterank.helpers.SQLHelper;
+import io.micheal.debaterank.modules.ModuleManager;
+import io.micheal.debaterank.modules.PoolSizeException;
+import io.micheal.debaterank.modules.WorkerPool;
+import io.micheal.debaterank.modules.WorkerPoolManager;
+import io.micheal.debaterank.modules.jot.LD;
 
 public class Main {
 

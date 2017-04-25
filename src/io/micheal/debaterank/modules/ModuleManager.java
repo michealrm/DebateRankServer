@@ -1,4 +1,4 @@
-package io.micheal.debatescout.modules;
+package io.micheal.debaterank.modules;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;

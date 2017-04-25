@@ -1,8 +1,8 @@
-package io.micheal.debatescout.modules;
+package io.micheal.debaterank.modules;
 
 import org.apache.logging.log4j.Logger;
 
-import io.micheal.debatescout.helpers.SQLHelper;
+import io.micheal.debaterank.helpers.SQLHelper;
 
 public abstract class Module implements Runnable {
 

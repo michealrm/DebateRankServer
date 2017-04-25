@@ -1,9 +1,9 @@
-package io.micheal.debatescout;
+package io.micheal.debaterank;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 
-import io.micheal.debatescout.helpers.SQLHelper;
+import io.micheal.debaterank.helpers.SQLHelper;
 
 public class Debater {
 

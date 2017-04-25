@@ -1,4 +1,4 @@
-package io.micheal.debatescout.modules;
+package io.micheal.debaterank.modules;
 
 import java.io.File;
 import java.util.ArrayList;
