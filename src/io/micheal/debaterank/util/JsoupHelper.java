@@ -1,4 +1,4 @@
-package io.micheal.debaterank.helpers;
+package io.micheal.debaterank.util;
 
 import java.io.IOException;
 import java.net.SocketTimeoutException;
