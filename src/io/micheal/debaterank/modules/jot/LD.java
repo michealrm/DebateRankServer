@@ -13,20 +13,22 @@ import java.util.regex.Pattern;
 import org.apache.commons.configuration2.Configuration;
 import org.apache.commons.configuration2.builder.fluent.Configurations;
 import org.apache.commons.configuration2.ex.ConfigurationException;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.logging.log4j.LogManager;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
+import org.jsoup.nodes.TextNode;
 import org.jsoup.select.Elements;
 
 import io.micheal.debaterank.Debater;
 import io.micheal.debaterank.Tournament;
 import io.micheal.debaterank.UnsupportedNameException;
-import io.micheal.debaterank.helpers.DebateHelper;
-import io.micheal.debaterank.helpers.JsoupHelper;
-import io.micheal.debaterank.helpers.Round;
-import io.micheal.debaterank.helpers.SQLHelper;
 import io.micheal.debaterank.modules.Module;
 import io.micheal.debaterank.modules.WorkerPool;
+import io.micheal.debaterank.util.DebateHelper;
+import io.micheal.debaterank.util.JsoupHelper;
+import io.micheal.debaterank.util.Round;
+import io.micheal.debaterank.util.SQLHelper;
 
 public class LD extends Module {
 
@@ -58,6 +60,7 @@ public class LD extends Module {
 		
 		// Scrape events per tournament
 		for(Tournament t : tournaments) {
+			if(t.getName().contains("La Vernia"))
 			manager.newModule(new Runnable() {
 				public void run() {
 					try {
@@ -199,7 +202,7 @@ public class LD extends Module {
 									
 									matcher.reset();
 									ArrayList<Object> args = new ArrayList<Object>();
-									String query = "INSERT INTO ld_rounds (tournament, absUrl, debater, against, round, side, speaks, decision) VALUES ";
+									String query = "INSERT INTO ld_rounds (tournament, absUrl, debater, against, round, side, decision) VALUES ";
 									while(matcher.find()) {
 										try {
 											// First debater
@@ -210,17 +213,16 @@ public class LD extends Module {
 											a.add(DebateHelper.getDebaterID(sql, new Debater(matcher.group(5), matcher.group(7))));
 											a.add(Round.DOUBLE_OCTOS);
 											a.add(matcher.group(4).equals("Aff") ? new Character('A') : new Character('N'));
-											a.add(null);
 											a.add("1-0");
 											if(!overwrite) {
-												ResultSet exists = sql.executeQueryPreparedStatement("SELECT * FROM ld_rounds WHERE tournament=(SELECT id FROM tournaments WHERE link=?) AND absUrl<=>? AND debater=? AND against=? AND round<=>? AND side<=>? AND speaks<=>? AND decision<=>?", a.get(0), a.get(1), a.get(2), a.get(3), a.get(4), a.get(5), a.get(6), a.get(7));
+												ResultSet exists = sql.executeQueryPreparedStatement("SELECT * FROM ld_rounds WHERE tournament=(SELECT id FROM tournaments WHERE link=?) AND absUrl<=>? AND debater=? AND against=? AND round<=>? AND side<=>? AND decision<=>?", a.get(0), a.get(1), a.get(2), a.get(3), a.get(4), a.get(5), a.get(6));
 												if(!exists.next()) {
-													query += "((SELECT id FROM tournaments WHERE link=?), ?, ?, ?, ?, ?, ?, ?), ";
+													query += "((SELECT id FROM tournaments WHERE link=?), ?, ?, ?, ?, ?, ?), ";
 													args.addAll(a);
 												}
 											}
 											else {
-												query += "((SELECT id FROM tournaments WHERE link=?), ?, ?, ?, ?, ?, ?, ?), ";
+												query += "((SELECT id FROM tournaments WHERE link=?), ?, ?, ?, ?, ?, ?), ";
 												args.addAll(a);
 											}
 											
@@ -232,24 +234,23 @@ public class LD extends Module {
 											a.add(DebateHelper.getDebaterID(sql, new Debater(matcher.group(1), matcher.group(3))));
 											a.add(Round.DOUBLE_OCTOS);
 											a.add(matcher.group(8).equals("Aff") ? new Character('A') : new Character('N'));
-											a.add(null);
 											a.add("0-1");
 											if(!overwrite) {
-												ResultSet exists = sql.executeQueryPreparedStatement("SELECT * FROM ld_rounds WHERE tournament=(SELECT id FROM tournaments WHERE link=?) AND absUrl<=>? AND debater=? AND against=? AND round<=>? AND side<=>? AND speaks<=>? AND decision<=>?", a.get(0), a.get(1), a.get(2), a.get(3), a.get(4), a.get(5), a.get(6), a.get(7));
+												ResultSet exists = sql.executeQueryPreparedStatement("SELECT * FROM ld_rounds WHERE tournament=(SELECT id FROM tournaments WHERE link=?) AND absUrl<=>? AND debater=? AND against=? AND round<=>? AND side<=>? AND decision<=>?", a.get(0), a.get(1), a.get(2), a.get(3), a.get(4), a.get(5), a.get(6), a.get(7));
 												if(!exists.next()) {
-													query += "((SELECT id FROM tournaments WHERE link=?), ?, ?, ?, ?, ?, ?, ?), ";
+													query += "((SELECT id FROM tournaments WHERE link=?), ?, ?, ?, ?, ?, ?), ";
 													args.addAll(a);
 												}
 											}
 											else {
-												query += "((SELECT id FROM tournaments WHERE link=?), ?, ?, ?, ?, ?, ?, ?), ";
+												query += "((SELECT id FROM tournaments WHERE link=?), ?, ?, ?, ?, ?, ?), ";
 												args.addAll(a);
 											}
 										}
 										catch(UnsupportedNameException une) {}
 									}
 	
-									if(!query.equals("INSERT INTO ld_rounds (tournament, absUrl, debater, against, round, side, speaks, decision) VALUES ")) {
+									if(!query.equals("INSERT INTO ld_rounds (tournament, absUrl, debater, against, round, side, decision) VALUES ")) {
 										query = query.substring(0, query.lastIndexOf(", "));
 										sql.executePreparedStatement(query, args.toArray());
 										log.log(DebateHelper.JOT, t.getName() + " double octos updated.");
@@ -265,13 +266,59 @@ public class LD extends Module {
 							if(bracket != null) {
 								Document doc = JsoupHelper.retryIfTimeout(bracket.absUrl("href"), 3);
 								
-								int index = 0;
-								Round round = null;
-								while((round = getBracketRound(doc, index++)) != null) {
-									System.out.println(round);
-									Elements col = doc.select("table[cellspacing=0] > tbody > tr > td:eq(" + index + "):not(:contains(\u00a0))");
+								Round round = null, last = null;
+								ArrayList<Pair<Debater, Debater>> matchup = new ArrayList<Pair<Debater, Debater>>();
+								for(int i = 0;(round = getBracketRound(doc, i)) != null;i++) {
+									
+									// Check if this round is the final results
+									if(last == Round.FINALS) {
+										
+									}
+
+									// Add all debaters to an arraylist of pairs
+									Elements col = doc.select("table[cellspacing=0] > tbody > tr > td:eq(" + i + ")");
+									Element left = null;
+									ArrayList<Pair<Debater, Debater>> currentMatchup = new ArrayList<Pair<Debater, Debater>>();
+									for(Element element : col) {
+										Element debater = null;
+										if(element.hasClass("btm") || element.hasClass("botr"))
+											debater = element;
+										else if(element.hasClass("top") || element.hasClass("topr"))
+											debater = element.parent().previousElementSibling().select("td:eq(" + i + ")").first();
+										else
+											continue;
+										if(left == null)
+											left = debater;
+										else {
+											String leftSchool = null,
+													rightSchool = null,
+													leftText = left.childNode(0).toString(),
+													rightText = debater.childNode(0).toString();
+											if(left.childNodeSize() > 2)
+												if(left.childNode(2) instanceof TextNode)
+													leftSchool = left.childNode(2).toString();
+												else
+													leftSchool = left.childNode(2).unwrap().toString();
+											if(debater.childNodeSize() > 2)
+												if(debater.childNode(2) instanceof TextNode)
+													rightSchool = debater.childNode(2).toString();
+												else
+													rightSchool = debater.childNode(2).unwrap().toString();
+											try {
+												currentMatchup.add(Pair.of(new Debater(leftText.substring(leftText.indexOf(' ') + 1), leftSchool), new Debater(rightText.substring(rightText.indexOf(' ') + 1), rightSchool)));
+											} catch (UnsupportedNameException e) {}
+											left = null;
+										}
+									}
+									
+									if(matchup != null && last != null) {
+										ArrayList<Object> args = new ArrayList<Object>();
+										String query = "INSERT INTO ld_rounds (tournament, absUrl, debater, against, round, decision) VALUES ";
+									}
+									
+									last = round;
+									matchup = currentMatchup;
 								}
-								System.exit(0);
 							}
 						}
 					} catch(IOException ioe) {
@@ -305,14 +352,11 @@ public class LD extends Module {
 	}
 	
 	private Round getBracketRound(Document doc, int col) {
-		int elements = doc.select("table[cellspacing=0] > tbody > tr > td.topr:eq(" + col + "), table[cellspacing=0] > tbody > tr > td.botr:eq(" + col + "), table[cellspacing=0] > tbody > tr > td.top:eq(" + col + ")").size();
-		int topr = doc.select("table[cellspacing=0] > tbody > tr > td.topr:eq(" + col + ")").size();
-		int botr = doc.select("table[cellspacing=0] > tbody > tr > td.botr:eq(" + col + ")").size();
-		int size;
-		if((size = elements) % 2 == 0 || (size = topr) % 2 == 0 || (size = botr) % 2 == 0 ) {
-			if(size == topr || size == botr)
-				size *= 2;
-			switch(size) {
+		int sel = doc.select("table[cellspacing=0] > tbody > tr > td.botr:eq(" + col + "), table[cellspacing=0] > tbody > tr > td.topr:eq(" + col + "), table[cellspacing=0] > tbody > tr > td.top:eq(" + col + "), table[cellspacing=0] > tbody > tr > td.btm:eq(" + col + ")").size();
+		if(sel % 2 == 0 || sel == 1) {
+			switch(sel) {
+				case 1:
+					return Round.FINALS;
 				case 2:
 					return Round.FINALS;
 				case 4:
@@ -325,8 +369,6 @@ public class LD extends Module {
 					return Round.DOUBLE_OCTOS;
 			}
 		}
-		else if(elements == 1)
-			return Round.FINALS;
 		return null;
 	}
 
