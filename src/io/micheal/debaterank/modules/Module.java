@@ -2,7 +2,7 @@ package io.micheal.debaterank.modules;
 
 import org.apache.logging.log4j.Logger;
 
-import io.micheal.debaterank.helpers.SQLHelper;
+import io.micheal.debaterank.util.SQLHelper;
 
 public abstract class Module implements Runnable {
 

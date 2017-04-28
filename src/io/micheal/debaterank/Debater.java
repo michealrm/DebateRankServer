@@ -3,7 +3,7 @@ package io.micheal.debaterank;
 import java.util.ArrayList;
 import java.util.Arrays;
 
-import io.micheal.debaterank.helpers.SQLHelper;
+import io.micheal.debaterank.util.SQLHelper;
 
 public class Debater {
 
@@ -107,6 +107,20 @@ public class Debater {
 	
 	public Integer getID() {
 		return id;
+	}
+	
+	public String toString() {
+		String str = "";
+		str += first;
+		if(middle != null)
+			str += " " + middle;
+		if(last != null)
+			str += " " + last;
+		if(surname != null)
+			str += " " + surname;
+		if(school != null)
+			str += " (" + school + ")";
+		return str;
 	}
 	
 }

@@ -14,12 +14,12 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
-import io.micheal.debaterank.helpers.SQLHelper;
 import io.micheal.debaterank.modules.ModuleManager;
 import io.micheal.debaterank.modules.PoolSizeException;
 import io.micheal.debaterank.modules.WorkerPool;
 import io.micheal.debaterank.modules.WorkerPoolManager;
 import io.micheal.debaterank.modules.jot.LD;
+import io.micheal.debaterank.util.SQLHelper;
 
 public class Main {
 
