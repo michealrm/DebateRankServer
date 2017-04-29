@@ -75,6 +75,7 @@ public class Debater {
 				this.last = debater.getLast();
 				this.surname = debater.getSurname();
 				this.school = debater.getSchool();
+				this.id = debater.getID();
 			}
 			return true;
 		}
