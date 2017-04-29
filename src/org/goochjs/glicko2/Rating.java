@@ -17,7 +17,7 @@ package org.goochjs.glicko2;
  */
 public class Rating {
 
-	private String uid; // not actually used by the calculation engine but useful to track whose rating is whose
+	private int id; // not actually used by the calculation engine but useful to track whose rating is whose
 	private double rating;
 	private double ratingDeviation;
 	private double volatility;
@@ -33,15 +33,15 @@ public class Rating {
 	 * @param uid           An value through which you want to identify the rating (not actually used by the algorithm)
 	 * @param ratingSystem  An instance of the RatingCalculator object
 	 */
-	public Rating(String uid, RatingCalculator ratingSystem) {
-		this.uid = uid;
+	public Rating(int id, RatingCalculator ratingSystem) {
+		this.id = id;
 		this.rating = ratingSystem.getDefaultRating();
 		this.ratingDeviation = ratingSystem.getDefaultRatingDeviation();
 		this.volatility = ratingSystem.getDefaultVolatility();
 	}
 
-	public Rating(String uid, RatingCalculator ratingSystem, double initRating, double initRatingDeviation, double initVolatility) {
-		this.uid = uid;
+	public Rating(int id, RatingCalculator ratingSystem, double initRating, double initRatingDeviation, double initVolatility) {
+		this.id = id;
 		this.rating = initRating;
 		this.ratingDeviation = initRatingDeviation;
 		this.volatility = initVolatility;
@@ -135,7 +135,7 @@ public class Rating {
 	 */
 	@Override
 	public String toString() {
-		return uid + " / " +
+		return id + " / " +
 				rating + " / " +
 				ratingDeviation + " / " +
 				volatility + " / " +
@@ -150,8 +150,8 @@ public class Rating {
 		this.numberOfResults = numberOfResults + increment;
 	}
 
-	public String getUid() {
-		return uid;
+	public int getId() {
+		return id;
 	}
 
 	public void setWorkingVolatility(double workingVolatility) {
