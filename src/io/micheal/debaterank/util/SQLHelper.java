@@ -22,7 +22,7 @@ public class SQLHelper {
 		Class.forName("com.mysql.cj.jdbc.Driver");
 		sql = DriverManager.getConnection("jdbc:mysql://" + host + ":" + port + "/" + name + "?user=" + user + "&password=" + pass);
 		st = sql.createStatement();
-		st.setFetchSize(Integer.MIN_VALUE);
+		st.setFetchSize(5000);
 	}
 	
 	public ResultSet executeQuery(String query) throws SQLException {
@@ -75,8 +75,12 @@ public class SQLHelper {
 		log.debug("Executing --> " + ps);
 		ps.executeUpdate();
 		ResultSet rs = ps.getGeneratedKeys();
-        if(rs.next())
-            return rs.getInt(1);
+        if(rs.next()) {
+        	int ret = rs.getInt(1);
+        	rs.close();
+            return ret;
+        }
+        rs.close();
 		return -1;
 	}
 	

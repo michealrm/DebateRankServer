@@ -161,6 +161,7 @@ public class LD extends Module {
 													query += "((SELECT id FROM tournaments WHERE link=?), ?, ?, ?, ?, ?, ?, ?), ";
 													args.addAll(a);
 												}
+												exists.close();
 											}
 											else {
 												query += "((SELECT id FROM tournaments WHERE link=?), ?, ?, ?, ?, ?, ?, ?), ";
@@ -219,6 +220,7 @@ public class LD extends Module {
 													query += "((SELECT id FROM tournaments WHERE link=?), ?, ?, ?, ?, ?, ?), ";
 													args.addAll(a);
 												}
+												exists.close();
 											}
 											else {
 												query += "((SELECT id FROM tournaments WHERE link=?), ?, ?, ?, ?, ?, ?), ";
@@ -314,6 +316,7 @@ public class LD extends Module {
 														query += "((SELECT id FROM tournaments WHERE link=?), ?, ?, ?, ?, ?), ";
 														args.addAll(a);
 													}
+													exists.close();
 												}
 												else {
 													query += "((SELECT id FROM tournaments WHERE link=?), ?, ?, ?, ?, ?), ";
@@ -336,6 +339,7 @@ public class LD extends Module {
 														query += "((SELECT id FROM tournaments WHERE link=?), ?, ?, ?, ?, ?), ";
 														args.addAll(a);
 													}
+													exists.close();
 												}
 												else {
 													query += "((SELECT id FROM tournaments WHERE link=?), ?, ?, ?, ?, ?), ";

@@ -50,15 +50,16 @@ public class DebateHelper {
 	 * @throws SQLException
 	 */
 	public static ArrayList<Debater> getDebaters(SQLHelper sql) throws SQLException {
-		ResultSet debatersSet = sql.executeQuery("SELECT first, last, school FROM debaters");
+		ResultSet debatersSet = sql.executeQuery("SELECT id, first, middle, last, surname, school FROM debaters");
 		ArrayList<Debater> debaters = new ArrayList<Debater>();
 		while(debatersSet.next()) {
 			try {
-				Debater debater = new Debater(debatersSet.getString(1) + " " + debatersSet.getString(2), debatersSet.getString(3));
-				debater.setID(DebateHelper.getDebaterID(sql, debater));
+				Debater debater = new Debater(debatersSet.getString(2), debatersSet.getString(3), debatersSet.getString(4), debatersSet.getString(5), debatersSet.getString(6));
+				debater.setID(debatersSet.getInt(1));
 				debaters.add(debater);
-			} catch (UnsupportedNameException | SQLException e) {}
+			} catch (SQLException e) {}
 		}
+		debatersSet.close();
 		return debaters;
 	}
 	
