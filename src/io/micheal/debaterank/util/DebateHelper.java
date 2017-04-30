@@ -30,10 +30,13 @@ public class DebateHelper {
 			do {
 				Debater d = new Debater(index.getString(2) + " " + index.getString(3), index.getString(4));
 				if(debater.equals(d)) {
-					return index.getInt(1);
+					int ret = index.getInt(1);
+					index.close();
+					return ret;
 				}
 			} while(index.next());
 		}
+		index.close();
 		return sql.executePreparedStatementArgs("INSERT INTO debaters (first, middle, last, surname, school, first_clean, middle_clean, last_clean, surname_clean, school_clean) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", debater.getFirst(), debater.getMiddle(), debater.getLast(), debater.getSurname(), debater.getSchool(), SQLHelper.cleanString(debater.getFirst()), SQLHelper.cleanString(debater.getMiddle()), SQLHelper.cleanString(debater.getLast()), SQLHelper.cleanString(debater.getSurname()), SQLHelper.cleanString(debater.getSchool()));
 	}
 	
