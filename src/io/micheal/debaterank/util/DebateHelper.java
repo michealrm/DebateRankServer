@@ -7,6 +7,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.logging.log4j.Level;
+import org.jsoup.nodes.Document;
 
 import io.micheal.debaterank.Debater;
 import io.micheal.debaterank.UnsupportedNameException;
@@ -64,6 +65,32 @@ public class DebateHelper {
 		}
 		debatersSet.close();
 		return debaters;
+	}
+	
+	public static Round getBracketRound(Document doc, int col) {
+		int sel = doc.select("table[cellspacing=0] > tbody > tr > td.botr:eq(" + col + "), table[cellspacing=0] > tbody > tr > td.topr:eq(" + col + "), table[cellspacing=0] > tbody > tr > td.top:eq(" + col + "), table[cellspacing=0] > tbody > tr > td.btm:eq(" + col + ")").size();
+		if(sel % 2 == 0 || sel == 1) {
+			switch(sel) {
+				case 1:
+					return Round.FINALS;
+				case 2:
+					return Round.FINALS;
+				case 4:
+					return Round.SEMIS;
+				case 8:
+					return Round.QUARTERS;
+				case 16:
+					return Round.OCTOS;
+				case 32:
+					return Round.DOUBLE_OCTOS;
+			}
+		}
+		return null;
+	}
+	
+	public static boolean tournamentExists(String absUrl, int rounds, SQLHelper sql) throws SQLException {
+		ResultSet tournamentExists = sql.executeQueryPreparedStatement("SELECT id FROM ld_rounds WHERE absUrl=?", absUrl);
+		return tournamentExists.last() && tournamentExists.getRow() == rounds;
 	}
 	
 }
