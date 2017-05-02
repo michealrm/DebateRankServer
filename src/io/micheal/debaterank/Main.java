@@ -21,6 +21,7 @@ import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
 import io.micheal.debaterank.modules.ModuleManager;
+import io.micheal.debaterank.modules.PoolSizeException;
 import io.micheal.debaterank.modules.WorkerPool;
 import io.micheal.debaterank.modules.WorkerPoolManager;
 import io.micheal.debaterank.modules.jot.LD;
@@ -152,14 +153,26 @@ public class Main {
 			// Tabroom //
 			/////////////
 			
-			while(moduleManager.getActiveCount() != 0) {
+			/////////////
+			// Execute //
+			/////////////
+				
+			try {
+				workerManager.start();
+			} catch (PoolSizeException e) {
+				log.error(e);
+				log.fatal("Not enough threads!");
+				System.exit(1);
+			}
+			
+			do {
 				try {
 					Thread.sleep(5000);
 				} catch (InterruptedException e) {
 					log.error(e);
 					System.exit(1);
 				}
-			}
+			} while(moduleManager.getActiveCount() != 0 || workerManager.getActiveCount() != 0);
 			
 			//////////
 			// NSDA //
@@ -178,18 +191,6 @@ public class Main {
 			///////////////
 			// NDCA Wiki //
 			///////////////
-			
-			/////////////
-			// Execute //
-			/////////////
-				
-//			try {
-//				workerManager.start();
-//			} catch (PoolSizeException e) {
-//				log.error(e);
-//				log.fatal("Not enough threads!");
-//				System.exit(1);
-//			}
 			
 			// Begin tasks that are not multi-threaded / order dependent
 			
