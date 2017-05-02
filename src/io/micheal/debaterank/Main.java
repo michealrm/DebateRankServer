@@ -260,6 +260,11 @@ public class Main {
 				} 
 				debates.close();
 
+				// Remove debaters with less than 10 rounds
+				for(int i = 0;i<debaters.size();i++)
+					if(debaters.get(i).getNumberOfResults() <= 10)
+						debaters.remove(i--);
+				
 				// Sort by ratings
 				Collections.sort(debaters, new RatingsComparator());
 				ArrayList<Debater> debatersList = DebateHelper.getDebaters(sql);
@@ -268,7 +273,7 @@ public class Main {
 					for(Debater d : debatersList)
 						if(d.getID().intValue() == debaters.get(i-1).getId())
 							debater = d;
-					log.info(i + ". " + debater + " - " + debaters.get(i-1).getRating());
+					log.info(i + ". " + debater + " - " + debaters.get(i-1).getRating() + " / " + debaters.get(i-1).getNumberOfResults());
 				}
 				
 			} catch (SQLException e) {
