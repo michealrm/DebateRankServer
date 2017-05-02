@@ -40,4 +40,11 @@ public class WorkerPoolManager {
 			manager.start(count);
 	}
 	
+	public int getActiveCount() {
+		int active = 0;
+		for(WorkerPool pool : managers)
+			active += pool.getActiveCount();
+		return active;
+	}
+	
 }
