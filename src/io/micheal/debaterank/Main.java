@@ -9,7 +9,6 @@ import java.util.Collections;
 
 import org.apache.commons.configuration2.Configuration;
 import org.apache.commons.configuration2.builder.fluent.Configurations;
-import org.apache.commons.lang3.tuple.Pair;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.goochjs.glicko2.Rating;
@@ -220,25 +219,14 @@ public class Main {
 					}
 				}
 				
-				ResultSet debates = sql.executeQuery("SELECT t.date, round, debater, against, decision from ld_rounds ld JOIN tournaments AS t ON ld.tournament=t.id  WHERE tournament IN (SELECT id FROM tournaments WHERE date>'2016-07-01 00:00:00.000') ORDER BY t.date, round");
-				ArrayList<Pair<Integer, Integer>> pastDebates = new ArrayList<Pair<Integer, Integer>>();
+				ResultSet debates = sql.executeQuery("SELECT t.date, round, debater, against, decision from ld_rounds ld JOIN tournaments AS t ON ld.tournament=t.id  WHERE tournament IN (SELECT id FROM tournaments WHERE date>'2016-07-01 00:00:00.000') AND NOT debater=against GROUP BY CONCAT(date, \"-\", round, \"-\", LEAST(debater, against), \"-\", GREATEST(debater, against)) HAVING count(*) > 0 ORDER BY t.date, round");
 				ArrayList<Rating> debaters = new ArrayList<Rating>();
 				int index = 0;
 				RatingCalculator ratingSystem = new RatingCalculator(0.06, 0.5);
 				RatingPeriodResults results = new RatingPeriodResults();
-				while(debates.next()) {
-					do {
-						
-						// Check to see if the round is a duplicate or a bye round
-						boolean found = false;
-						for(Pair<Integer, Integer> pair : pastDebates)
-							if((debates.getInt(3) == pair.getLeft().intValue() && debates.getInt(4) == pair.getRight().intValue()) || (debates.getInt(3) == pair.getRight().intValue() && debates.getInt(4) == pair.getLeft().intValue())) {
-								found = true;
-								break;
-							}
-						if(found || (debates.getInt(3) == debates.getInt(4)))
-							continue;
-						
+				while(true) {
+					boolean next = false;
+					while((next = debates.next()) && !(new DateTime(debates.getDate(1)).withTimeAtStartOfDay().getMillis() > newWeeks.get(index).getMillis())) {
 						// Check to see if we have this debater stored
 						Rating debater = null, against = null;
 						for(Rating rating : debaters) {
@@ -246,6 +234,8 @@ public class Main {
 								debater = rating;
 							if(rating.getId() == debates.getInt(4))
 								against = rating;
+							if(debater != null && against != null)
+								break;
 						}
 						if(debater == null) {
 							debater = new Rating(debates.getInt(3), ratingSystem);
@@ -261,20 +251,17 @@ public class Main {
 							results.addResult(debater, against);
 						else
 							results.addResult(against, debater);
-
-						// Add to past rounds
-						pastDebates.add(Pair.of(debates.getInt(3), debates.getInt(4)));
-						
-					} while(debates.next() && !(new DateTime(debates.getDate(1)).withTimeAtStartOfDay().getMillis() > newWeeks.get(index).getMillis()));
+					}
 					index++;
 					ratingSystem.updateRatings(results);
 					System.out.println("Updated results");
+					if(!next)
+						break;
 				} 
 				debates.close();
-				
+
 				// Sort by ratings
 				Collections.sort(debaters, new RatingsComparator());
-				
 				for(int i = 1;i<=100;i++)
 					System.out.println(i + ". " + debaters.get(i-1));
 //				for(int i = 1;i<=100;i++)
