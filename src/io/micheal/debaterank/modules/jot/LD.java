@@ -31,8 +31,6 @@ import io.micheal.debaterank.util.Round;
 import io.micheal.debaterank.util.SQLHelper;
 
 public class LD extends Module {
-
-	// TODO: Multi-thread the tournaments / add a tournament in the thread pool
 	
 	private ArrayList<Tournament> tournaments;
 	private WorkerPool manager;
