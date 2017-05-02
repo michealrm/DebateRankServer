@@ -1,12 +1,17 @@
 package io.micheal.debaterank.modules.jot;
 
+import static io.micheal.debaterank.util.DebateHelper.JOT;
+import static io.micheal.debaterank.util.DebateHelper.getBracketRound;
+import static io.micheal.debaterank.util.DebateHelper.getDebaterID;
+import static io.micheal.debaterank.util.DebateHelper.tournamentExists;
+import static io.micheal.debaterank.util.DebateHelper.updateDebaterIDs;
+
 import java.io.File;
 import java.io.IOException;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -25,7 +30,6 @@ import io.micheal.debaterank.Tournament;
 import io.micheal.debaterank.UnsupportedNameException;
 import io.micheal.debaterank.modules.Module;
 import io.micheal.debaterank.modules.WorkerPool;
-import io.micheal.debaterank.util.DebateHelper;
 import io.micheal.debaterank.util.JsoupHelper;
 import io.micheal.debaterank.util.Round;
 import io.micheal.debaterank.util.SQLHelper;
@@ -61,7 +65,7 @@ public class LD extends Module {
 			manager.newModule(new Runnable() {
 				public void run() {
 					try {
-						log.log(DebateHelper.JOT, "Updating " + t.getName());
+						log.log(JOT, "Updating " + t.getName());
 						Document tPage = JsoupHelper.retryIfTimeout(t.getLink(), 3);
 						Elements eventRows = tPage.select("tr:has(td:matches(LD|Lincoln|L-D)");
 						
@@ -86,11 +90,11 @@ public class LD extends Module {
 								}
 								
 								// If we have the same amount of entries, then do not check
-								if(tournamentExists(p.baseUri(), table.select("[colspan=2].rec:not(:containsOwn(F))").size()))
-									log.log(DebateHelper.JOT, t.getName() + " prelims is up to date.");
+								if(tournamentExists(p.baseUri(), table.select("[colspan=2].rec:not(:containsOwn(F))").size(), sql))
+									log.log(JOT, t.getName() + " prelims is up to date.");
 								else {
 									// Update DB with debaters
-									updateCompetitorsIDs(sql, competitors);
+									updateDebaterIDs(sql, competitors);
 									
 									// Overwrite
 									if(overwrite)
@@ -170,10 +174,10 @@ public class LD extends Module {
 									if(!query.equals("INSERT INTO ld_rounds (tournament, absUrl, debater, against, round, side, speaks, decision) VALUES ")) {
 										query = query.substring(0, query.lastIndexOf(", "));
 										sql.executePreparedStatement(query, args.toArray());
-										log.log(DebateHelper.JOT, t.getName() + " prelims updated.");
+										log.log(JOT, t.getName() + " prelims updated.");
 									}
 									else {
-										log.log(DebateHelper.JOT, t.getName() + " prelims is up to date.");
+										log.log(JOT, t.getName() + " prelims is up to date.");
 									}
 								}
 							}
@@ -190,8 +194,8 @@ public class LD extends Module {
 								int count = 0;
 								while(matcher.find())
 									count += 2;
-								if(tournamentExists(doc.baseUri(), count))
-									log.log(DebateHelper.JOT, t.getName() + " double octos is up to date.");
+								if(tournamentExists(doc.baseUri(), count, sql))
+									log.log(JOT, t.getName() + " double octos is up to date.");
 								else {
 									
 									// Overwrite
@@ -207,8 +211,8 @@ public class LD extends Module {
 											ArrayList<Object> a = new ArrayList<Object>();
 											a.add(t.getLink());
 											a.add(doc.baseUri());
-											a.add(DebateHelper.getDebaterID(sql, new Debater(matcher.group(1), matcher.group(3))));
-											a.add(DebateHelper.getDebaterID(sql, new Debater(matcher.group(5), matcher.group(7))));
+											a.add(getDebaterID(sql, new Debater(matcher.group(1), matcher.group(3))));
+											a.add(getDebaterID(sql, new Debater(matcher.group(5), matcher.group(7))));
 											a.add(Round.DOUBLE_OCTOS);
 											a.add(matcher.group(4).equals("Aff") ? new Character('A') : new Character('N'));
 											a.add("1-0");
@@ -229,8 +233,8 @@ public class LD extends Module {
 											a.clear();
 											a.add(t.getLink());
 											a.add(doc.baseUri());
-											a.add(DebateHelper.getDebaterID(sql, new Debater(matcher.group(5), matcher.group(7))));
-											a.add(DebateHelper.getDebaterID(sql, new Debater(matcher.group(1), matcher.group(3))));
+											a.add(getDebaterID(sql, new Debater(matcher.group(5), matcher.group(7))));
+											a.add(getDebaterID(sql, new Debater(matcher.group(1), matcher.group(3))));
 											a.add(Round.DOUBLE_OCTOS);
 											a.add(matcher.group(8).equals("Aff") ? new Character('A') : new Character('N'));
 											a.add("0-1");
@@ -252,10 +256,10 @@ public class LD extends Module {
 									if(!query.equals("INSERT INTO ld_rounds (tournament, absUrl, debater, against, round, side, decision) VALUES ")) {
 										query = query.substring(0, query.lastIndexOf(", "));
 										sql.executePreparedStatement(query, args.toArray());
-										log.log(DebateHelper.JOT, t.getName() + " double octos updated.");
+										log.log(JOT, t.getName() + " double octos updated.");
 									}
 									else {
-										log.log(DebateHelper.JOT, t.getName() + " double octos is up to date.");
+										log.log(JOT, t.getName() + " double octos is up to date.");
 									}
 								}
 							}
@@ -266,8 +270,8 @@ public class LD extends Module {
 								Document doc = JsoupHelper.retryIfTimeout(bracket.absUrl("href"), 3);
 								
 								// If we have the same amount of entries, then do not check
-								if(tournamentExists(doc.baseUri(), doc.select("table[cellspacing=0] > tbody > tr > td.botr, table[cellspacing=0] > tbody > tr > td.topr, table[cellspacing=0] > tbody > tr > td.top, table[cellspacing=0] > tbody > tr > td.btm").size() - 1))
-									log.log(DebateHelper.JOT, t.getName() + " bracket is up to date.");
+								if(tournamentExists(doc.baseUri(), doc.select("table[cellspacing=0] > tbody > tr > td.botr, table[cellspacing=0] > tbody > tr > td.topr, table[cellspacing=0] > tbody > tr > td.top, table[cellspacing=0] > tbody > tr > td.btm").size() - 1, sql))
+									log.log(JOT, t.getName() + " bracket is up to date.");
 								else {
 									// Overwrite
 									if(overwrite)
@@ -399,8 +403,8 @@ public class LD extends Module {
 											// Update IDs
 											for(Pair<Debater, Debater> pair : currentMatchup) {
 												try {
-													pair.getLeft().setID(DebateHelper.getDebaterID(sql, pair.getLeft()));
-													pair.getRight().setID(DebateHelper.getDebaterID(sql, pair.getRight()));
+													pair.getLeft().setID(getDebaterID(sql, pair.getLeft()));
+													pair.getRight().setID(getDebaterID(sql, pair.getRight()));
 												} catch (UnsupportedNameException e) {}
 											}
 										}
@@ -409,10 +413,10 @@ public class LD extends Module {
 											if(!query.equals("INSERT INTO ld_rounds (tournament, absUrl, debater, against, round, decision) VALUES ")) {
 												query = query.substring(0, query.lastIndexOf(", "));
 												sql.executePreparedStatement(query, args.toArray());
-												log.log(DebateHelper.JOT, t.getName() + " bracket updated.");
+												log.log(JOT, t.getName() + " bracket updated.");
 											}
 											else {
-												log.log(DebateHelper.JOT, t.getName() + " bracket is up to date.");
+												log.log(JOT, t.getName() + " bracket is up to date.");
 											}
 											break;
 										}
@@ -433,45 +437,6 @@ public class LD extends Module {
 				}
 			});
 		}
-	}
-	
-	/**
-	 * Updates competitors' IDs if they haven't been updated yet
-	 * @throws SQLException
-	 */
-	private void updateCompetitorsIDs(SQLHelper sql, HashMap<String, Debater> competitors) throws SQLException {
-		boolean updated = false;
-		for(Map.Entry<String, Debater> entry : competitors.entrySet())
-			if(entry.getValue().getID() != null)
-				updated = true;
-		if(!updated)
-			DebateHelper.updateDebaterIDs(sql, competitors);
-	}
-	
-	private boolean tournamentExists(String absUrl, int rounds) throws SQLException {
-		ResultSet tournamentExists = sql.executeQueryPreparedStatement("SELECT id FROM ld_rounds WHERE absUrl=?", absUrl);
-		return tournamentExists.last() && tournamentExists.getRow() == rounds;
-	}
-	
-	private Round getBracketRound(Document doc, int col) {
-		int sel = doc.select("table[cellspacing=0] > tbody > tr > td.botr:eq(" + col + "), table[cellspacing=0] > tbody > tr > td.topr:eq(" + col + "), table[cellspacing=0] > tbody > tr > td.top:eq(" + col + "), table[cellspacing=0] > tbody > tr > td.btm:eq(" + col + ")").size();
-		if(sel % 2 == 0 || sel == 1) {
-			switch(sel) {
-				case 1:
-					return Round.FINALS;
-				case 2:
-					return Round.FINALS;
-				case 4:
-					return Round.SEMIS;
-				case 8:
-					return Round.QUARTERS;
-				case 16:
-					return Round.OCTOS;
-				case 32:
-					return Round.DOUBLE_OCTOS;
-			}
-		}
-		return null;
 	}
 
 }
