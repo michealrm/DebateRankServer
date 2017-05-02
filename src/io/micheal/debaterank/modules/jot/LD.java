@@ -271,7 +271,6 @@ public class LD extends Module {
 								if(tournamentExists(doc.baseUri(), doc.select("table[cellspacing=0] > tbody > tr > td.botr, table[cellspacing=0] > tbody > tr > td.topr, table[cellspacing=0] > tbody > tr > td.top, table[cellspacing=0] > tbody > tr > td.btm").size() - 1))
 									log.log(DebateHelper.JOT, t.getName() + " bracket is up to date.");
 								else {
-									
 									// Overwrite
 									if(overwrite)
 										sql.executePreparedStatementArgs("DELETE FROM ld_rounds WHERE absUrl=?", doc.baseUri());
@@ -396,6 +395,18 @@ public class LD extends Module {
 													pair.getRight().setID(DebateHelper.getDebaterID(sql, pair.getRight()));
 												} catch (UnsupportedNameException e) {}
 											}
+										}
+										
+										if(last == Round.FINALS) {
+											if(!query.equals("INSERT INTO ld_rounds (tournament, absUrl, debater, against, round, decision) VALUES ")) {
+												query = query.substring(0, query.lastIndexOf(", "));
+												sql.executePreparedStatement(query, args.toArray());
+												log.log(DebateHelper.JOT, t.getName() + " bracket updated.");
+											}
+											else {
+												log.log(DebateHelper.JOT, t.getName() + " bracket is up to date.");
+											}
+											break;
 										}
 										
 										last = round;
