@@ -259,11 +259,6 @@ public class Main {
 						break;
 				} 
 				debates.close();
-
-				// Remove debaters with less than 10 rounds
-				for(int i = 0;i<debaters.size();i++)
-					if(debaters.get(i).getNumberOfResults() <= 10)
-						debaters.remove(i--);
 				
 				// Sort by ratings
 				Collections.sort(debaters, new RatingsComparator());
