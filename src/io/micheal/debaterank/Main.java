@@ -24,6 +24,7 @@ import io.micheal.debaterank.modules.ModuleManager;
 import io.micheal.debaterank.modules.WorkerPool;
 import io.micheal.debaterank.modules.WorkerPoolManager;
 import io.micheal.debaterank.modules.jot.LD;
+import io.micheal.debaterank.util.DebateHelper;
 import io.micheal.debaterank.util.RatingsComparator;
 import io.micheal.debaterank.util.SQLHelper;
 
@@ -254,7 +255,6 @@ public class Main {
 					}
 					index++;
 					ratingSystem.updateRatings(results);
-					System.out.println("Updated results");
 					if(!next)
 						break;
 				} 
@@ -262,10 +262,14 @@ public class Main {
 
 				// Sort by ratings
 				Collections.sort(debaters, new RatingsComparator());
-				for(int i = 1;i<=100;i++)
-					System.out.println(i + ". " + debaters.get(i-1));
-//				for(int i = 1;i<=100;i++)
-//					System.out.println(i + ". " + debaters.get(i));
+				ArrayList<Debater> debatersList = DebateHelper.getDebaters(sql);
+				for(int i = 1;i<=debaters.size();i++) {
+					Debater debater = null;
+					for(Debater d : debatersList)
+						if(d.getID().intValue() == debaters.get(i-1).getId())
+							debater = d;
+					log.info(i + ". " + debater + " - " + debaters.get(i-1).getRating());
+				}
 				
 			} catch (SQLException e) {
 				log.error(e);
