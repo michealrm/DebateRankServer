@@ -295,7 +295,7 @@ public class LD extends Module {
 											// Add all debaters to an arraylist of pairs
 											Elements col = doc.select("table[cellspacing=0] > tbody > tr > td:eq(" + i + ")");
 											Element left = null;
-											for (Element element : col) {
+											for(Element element : col) {
 												Element debater = null;
 												if (element.hasClass("btm") || element.hasClass("botr"))
 													debater = element;
@@ -321,7 +321,17 @@ public class LD extends Module {
 														else
 															rightSchool = debater.childNode(2).unwrap().toString();
 													try {
-														currentMatchup.add(Pair.of(new Debater(leftText.substring(leftText.indexOf(' ') + 1), leftSchool), new Debater(rightText.substring(rightText.indexOf(' ') + 1), rightSchool)));
+														Debater l;
+														if(leftText.contains("&nbsp;"))
+															l = null;
+														else
+															l = new Debater(leftText.substring(leftText.indexOf(' ') + 1), leftSchool);
+														Debater r;
+														if(rightText.contains("&nbsp;"))
+															r = null;
+														else
+															r = new Debater(rightText.substring(rightText.indexOf(' ') + 1), rightSchool);
+														currentMatchup.add(Pair.of(l, r));
 													} catch (UnsupportedNameException e) {
 													}
 													left = null;
