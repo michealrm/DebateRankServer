@@ -199,7 +199,7 @@ public class PF extends Module {
 											}
 										}
 									}
-									if(!query.equals("INSERT INTO ld_rounds (tournament, absUrl, debater, against, round, side, speaks1, speaks2, place1, place2, decision) VALUES ")) {
+									if(!query.equals("INSERT INTO pf_rounds (tournament, absUrl, debater, against, round, side, speaks1, speaks2, place1, place2, decision) VALUES ")) {
 										query = query.substring(0, query.lastIndexOf(", "));
 										sql.executePreparedStatement(query, args.toArray());
 										log.log(JOT, t.getName() + " prelims updated.");
