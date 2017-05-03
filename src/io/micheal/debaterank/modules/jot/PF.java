@@ -38,7 +38,7 @@ public class PF extends Module {
 	private final boolean overwrite;
 	
 	public PF(ArrayList<Tournament> tournaments, SQLHelper sql, WorkerPool manager) {
-		super(sql, LogManager.getLogger(LD.class));
+		super(sql, LogManager.getLogger(PF.class));
 		this.tournaments = tournaments;
 		this.manager = manager;
 		
@@ -59,6 +59,7 @@ public class PF extends Module {
 		
 		// Scrape events per tournament
 		for(Tournament t : tournaments) {
+			if(t.getName().contains("Bell"))
 			manager.newModule(new Runnable() {
 				public void run() {
 					try {
@@ -216,72 +217,81 @@ public class PF extends Module {
 								Document doc = JsoupHelper.retryIfTimeout(doubleOctos.absUrl("href"), 3);
 								
 								// If we have the same amount of entries, then do not check
-								Pattern pattern = Pattern.compile("[^\\s]+ (.+?)( \\((.+?)\\))? \\((Aff|Neg)\\) def. [^\\s]+ (.+?)( \\((.+?)\\))? \\((Aff|Neg)\\)");
+								Pattern pattern = Pattern.compile("[^\\s]+ ([A-Za-z]+?) - ([A-Za-z]+?)( \\((.+?)\\))? \\((Aff|Neg)\\) def. [^\\s]+ ([A-Za-z]+?) - ([A-Za-z]+?)( \\((.+?)\\))? \\((Aff|Neg)\\)");
 								doc.getElementsByTag("font").unwrap();
 								Matcher matcher = pattern.matcher(doc.toString().replaceAll("<br>", ""));
 								int count = 0;
 								while(matcher.find())
 									count += 2;
+								System.out.println(count);
 								if(tournamentExists(doc.baseUri(), count, sql))
 									log.log(JOT, t.getName() + " double octos is up to date.");
 								else {
 									
 									// Overwrite
 									if(overwrite)
-										sql.executePreparedStatementArgs("DELETE FROM ld_rounds WHERE absUrl=?", doc.baseUri());
+										sql.executePreparedStatementArgs("DELETE FROM pf_rounds WHERE absUrl=?", doc.baseUri());
 									
 									matcher.reset();
 									ArrayList<Object> args = new ArrayList<Object>();
-									String query = "INSERT INTO ld_rounds (tournament, absUrl, debater, against, round, side, decision) VALUES ";
+									String query = "INSERT INTO pf_rounds (tournament, absUrl, debater, against, round, side, decision) VALUES ";
 									while(matcher.find()) {
-										try {
-											// First debater
-											ArrayList<Object> a = new ArrayList<Object>();
-											a.add(t.getLink());
-											a.add(doc.baseUri());
-											a.add(getDebaterID(sql, new Debater(matcher.group(1), matcher.group(3))));
-											a.add(getDebaterID(sql, new Debater(matcher.group(5), matcher.group(7))));
-											a.add(Round.DOUBLE_OCTOS);
-											a.add(matcher.group(4).equals("Aff") ? new Character('A') : new Character('N'));
-											a.add("1-0");
-											if(!overwrite) {
-												ResultSet exists = sql.executeQueryPreparedStatement("SELECT * FROM ld_rounds WHERE tournament=(SELECT id FROM tournaments WHERE link=?) AND absUrl<=>? AND debater=? AND against=? AND round<=>? AND side<=>? AND decision<=>?", a.get(0), a.get(1), a.get(2), a.get(3), a.get(4), a.get(5), a.get(6));
-												if(!exists.next()) {
-													query += "((SELECT id FROM tournaments WHERE link=?), ?, ?, ?, ?, ?, ?), ";
-													args.addAll(a);
-												}
-												exists.close();
-											}
-											else {
+										// First debater
+										ArrayList<Object> a = new ArrayList<Object>();
+										a.add(t.getLink());
+										a.add(doc.baseUri());
+										
+										Debater leftDebater = getDebaterFromLastName(sql, matcher.group(1), matcher.group(4));
+										Debater rightDebater = getDebaterFromLastName(sql, matcher.group(2), matcher.group(4));
+										Debater leftAgainst = getDebaterFromLastName(sql, matcher.group(6), matcher.group(9));
+										Debater rightAgainst = getDebaterFromLastName(sql, matcher.group(7), matcher.group(9));
+										if(leftDebater == null || rightDebater == null || leftAgainst == null || rightAgainst == null)
+											continue;
+										Team team = new Team(leftDebater, rightDebater);
+										team.setID(getTeamID(sql, team, "PF"));
+										Team against = new Team(leftAgainst, rightAgainst);
+										against.setID(getTeamID(sql, against, "PF"));
+										
+										a.add(team.getID());
+										a.add(against.getID());
+										a.add(Round.DOUBLE_OCTOS);
+										a.add(matcher.group(5).equals("Aff") ? new Character('A') : new Character('N'));
+										a.add("1-0");
+										if(!overwrite) {
+											ResultSet exists = sql.executeQueryPreparedStatement("SELECT * FROM pf_rounds WHERE tournament=(SELECT id FROM tournaments WHERE link=?) AND absUrl<=>? AND debater=? AND against=? AND round<=>? AND side<=>? AND decision<=>?", a.get(0), a.get(1), a.get(2), a.get(3), a.get(4), a.get(5), a.get(6));
+											if(!exists.next()) {
 												query += "((SELECT id FROM tournaments WHERE link=?), ?, ?, ?, ?, ?, ?), ";
 												args.addAll(a);
 											}
-											
-											// Second debater
-											a.clear();
-											a.add(t.getLink());
-											a.add(doc.baseUri());
-											a.add(getDebaterID(sql, new Debater(matcher.group(5), matcher.group(7))));
-											a.add(getDebaterID(sql, new Debater(matcher.group(1), matcher.group(3))));
-											a.add(Round.DOUBLE_OCTOS);
-											a.add(matcher.group(8).equals("Aff") ? new Character('A') : new Character('N'));
-											a.add("0-1");
-											if(!overwrite) {
-												ResultSet exists = sql.executeQueryPreparedStatement("SELECT * FROM ld_rounds WHERE tournament=(SELECT id FROM tournaments WHERE link=?) AND absUrl<=>? AND debater=? AND against=? AND round<=>? AND side<=>? AND decision<=>?", a.get(0), a.get(1), a.get(2), a.get(3), a.get(4), a.get(5), a.get(6), a.get(7));
-												if(!exists.next()) {
-													query += "((SELECT id FROM tournaments WHERE link=?), ?, ?, ?, ?, ?, ?), ";
-													args.addAll(a);
-												}
-											}
-											else {
+											exists.close();
+										}
+										else {
+											query += "((SELECT id FROM tournaments WHERE link=?), ?, ?, ?, ?, ?, ?), ";
+											args.addAll(a);
+										}
+										
+										// Second debater
+										a.clear();
+										a.add(t.getLink());
+										a.add(doc.baseUri());
+										a.add(against.getID());
+										a.add(team.getID());
+										a.add(Round.DOUBLE_OCTOS);
+										a.add(matcher.group(10).equals("Aff") ? new Character('A') : new Character('N'));
+										a.add("0-1");
+										if(!overwrite) {
+											ResultSet exists = sql.executeQueryPreparedStatement("SELECT * FROM pf_rounds WHERE tournament=(SELECT id FROM tournaments WHERE link=?) AND absUrl<=>? AND debater=? AND against=? AND round<=>? AND side<=>? AND decision<=>?", a.get(0), a.get(1), a.get(2), a.get(3), a.get(4), a.get(5), a.get(6), a.get(7));
+											if(!exists.next()) {
 												query += "((SELECT id FROM tournaments WHERE link=?), ?, ?, ?, ?, ?, ?), ";
 												args.addAll(a);
 											}
 										}
-										catch(UnsupportedNameException une) {}
+										else {
+											query += "((SELECT id FROM tournaments WHERE link=?), ?, ?, ?, ?, ?, ?), ";
+											args.addAll(a);
+										}
 									}
-	
-									if(!query.equals("INSERT INTO ld_rounds (tournament, absUrl, debater, against, round, side, decision) VALUES ")) {
+									if(!query.equals("INSERT INTO pf_rounds (tournament, absUrl, debater, against, round, side, decision) VALUES ")) {
 										query = query.substring(0, query.lastIndexOf(", "));
 										sql.executePreparedStatement(query, args.toArray());
 										log.log(JOT, t.getName() + " double octos updated.");
