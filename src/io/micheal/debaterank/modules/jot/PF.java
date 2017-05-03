@@ -59,16 +59,15 @@ public class PF extends Module {
 		
 		// Scrape events per tournament
 		for(Tournament t : tournaments) {
-			if(t.getName().contains("Bell"))
 			manager.newModule(new Runnable() {
 				public void run() {
 					try {
 						log.log(JOT, "Updating " + t.getName());
 						Document tPage = JsoupHelper.retryIfTimeout(t.getLink(), 3);
 						Elements eventRows = tPage.select("tr:has(td:matches(PF|Public F|P-F)");
-						
+
 						for(Element eventRow : eventRows) {
-							
+
 							// Prelims
 							Element prelim = eventRow.select("a[href]:contains(Prelims)").first();
 							if(prelim != null) {
@@ -313,67 +312,69 @@ public class PF extends Module {
 								else {
 									// Overwrite
 									if(overwrite)
-										sql.executePreparedStatementArgs("DELETE FROM ld_rounds WHERE absUrl=?", doc.baseUri());
+										sql.executePreparedStatementArgs("DELETE FROM pf_rounds WHERE absUrl=?", doc.baseUri());
 									
 									// Parse rounds
 									ArrayList<Object> args = new ArrayList<Object>();
-									String query = "INSERT INTO ld_rounds (tournament, absUrl, debater, against, round, decision) VALUES ";
+									String query = "INSERT INTO pf_rounds (tournament, absUrl, team, against, round, decision) VALUES ";
 									Round round = null, last = null;
-									ArrayList<Pair<Debater, Debater>> matchup = new ArrayList<Pair<Debater, Debater>>();
+									ArrayList<Pair<Team, Team>> matchup = new ArrayList<Pair<Team, Team>>();
 									for(int i = 0;(round = getBracketRound(doc, i)) != null;i++) {
 
-										ArrayList<Pair<Debater, Debater>> currentMatchup = new ArrayList<Pair<Debater, Debater>>();
+										ArrayList<Pair<Team, Team>> currentMatchup = new ArrayList<Pair<Team, Team>>();
 
 										if(last == Round.FINALS) {
 											Element element = doc.select("table[cellspacing=0] > tbody > tr > td.top:eq(" + i + ")").first();
-											Element debater = element.parent().previousElementSibling().select("td:eq(" + i + ")").first();
-											try {
-												currentMatchup.add(Pair.of(new Debater(debater.text().substring(debater.text().indexOf(' ') + 1), null), null));
-											} catch(UnsupportedNameException une) {}
+											Element team = element.parent().previousElementSibling().select("td:eq(" + i + ")").first();
+											String[] names = team.text().substring(team.text().indexOf(' ') + 1).split(" - ");
+											if(names.length != 2)
+												continue;
+											currentMatchup.add(Pair.of(new Team(new Debater(null, null, names[0], null, null), new Debater(null, null, names[1], null, null)), null));
 										}
 										else {
 											// Add all debaters to an arraylist of pairs
 											Elements col = doc.select("table[cellspacing=0] > tbody > tr > td:eq(" + i + ")");
 											Element left = null;
 											for(Element element : col) {
-												Element debater = null;
+												Element team = null;
 												if (element.hasClass("btm") || element.hasClass("botr"))
-													debater = element;
+													team = element;
 												else if (element.hasClass("top") || element.hasClass("topr"))
-													debater = element.parent().previousElementSibling().select("td:eq(" + i + ")").first();
+													team = element.parent().previousElementSibling().select("td:eq(" + i + ")").first();
 												else
 													continue;
 												if (left == null)
-													left = debater;
+													left = team;
 												else {
 													String leftSchool = null,
 															rightSchool = null,
 															leftText = left.childNode(0).toString(),
-															rightText = debater.childNode(0).toString();
+															rightText = team.childNode(0).toString();
 													if (left.childNodeSize() > 2)
 														if (left.childNode(2) instanceof TextNode)
 															leftSchool = left.childNode(2).toString();
 														else
 															leftSchool = left.childNode(2).unwrap().toString();
-													if (debater.childNodeSize() > 2)
-														if (debater.childNode(2) instanceof TextNode)
-															rightSchool = debater.childNode(2).toString();
+													if (team.childNodeSize() > 2)
+														if (team.childNode(2) instanceof TextNode)
+															rightSchool = team.childNode(2).toString();
 														else
-															rightSchool = debater.childNode(2).unwrap().toString();
-													try {
-														Debater l;
-														if(leftText.contains("&nbsp;"))
-															l = null;
-														else
-															l = new Debater(leftText.substring(leftText.indexOf(' ') + 1), leftSchool);
-														Debater r;
-														if(rightText.contains("&nbsp;"))
-															r = null;
-														else
-															r = new Debater(rightText.substring(rightText.indexOf(' ') + 1), rightSchool);
-														currentMatchup.add(Pair.of(l, r));
-													} catch (UnsupportedNameException e) {
-													}
+															rightSchool = team.childNode(2).unwrap().toString();
+													String[] leftNames = leftText.substring(leftText.indexOf(' ') + 1).split(" - ");
+													String[] rightNames = rightText.substring(rightText.indexOf(' ') + 1).split(" - ");
+													if(leftNames.length != 2 || rightNames.length != 2)
+														continue;
+													Team l;
+													if(leftText.contains("&nbsp;"))
+														l = null;
+													else
+														l = new Team(new Debater(null, null, leftNames[0], null, leftSchool), new Debater(null, null, leftNames[1], null, leftSchool));
+													Team r;
+													if(rightText.contains("&nbsp;"))
+														r = null;
+													else
+														r = new Team(new Debater(null, null, rightNames[0], null, rightSchool), new Debater(null, null, rightNames[1], null, rightSchool));
+													currentMatchup.add(Pair.of(l, r));
 													left = null;
 												}
 											}
@@ -382,15 +383,15 @@ public class PF extends Module {
 										if(matchup != null && last != null) {
 											
 											// Sort matchups into winner/loser pairs
-											ArrayList<Pair<Debater, Debater>> winnerLoser = new ArrayList<Pair<Debater, Debater>>();
-											for(Pair<Debater, Debater> winners : currentMatchup)
-												for(Pair<Debater, Debater> matchups : matchup)
-													if((winners.getLeft() != null && matchups.getLeft() != null && winners.getLeft().equals(matchups.getLeft())) || (winners.getRight() != null && matchups.getRight() != null && winners.getRight().equals(matchups.getLeft())))
+											ArrayList<Pair<Team, Team>> winnerLoser = new ArrayList<Pair<Team, Team>>();
+											for(Pair<Team, Team> winners : currentMatchup)
+												for(Pair<Team, Team> matchups : matchup)
+													if((winners.getLeft() != null && matchups.getLeft() != null && winners.getLeft().equalsByLast(matchups.getLeft())) || (winners.getRight() != null && matchups.getRight() != null && winners.getRight().equalsByLast(matchups.getLeft())))
 														winnerLoser.add(matchups);
-													else if((winners.getLeft() != null && matchups.getRight() != null && winners.getLeft().equals(matchups.getRight())) || (winners.getRight() != null && matchups.getRight() != null && winners.getRight().equals(matchups.getRight())))
+													else if((winners.getLeft() != null && matchups.getRight() != null && winners.getLeft().equalsByLast(matchups.getRight())) || (winners.getRight() != null && matchups.getRight() != null && winners.getRight().equalsByLast(matchups.getRight())))
 														winnerLoser.add(Pair.of(matchups.getRight(), matchups.getLeft()));
 											
-											for(Pair<Debater, Debater> pair : winnerLoser) {
+											for(Pair<Team, Team> pair : winnerLoser) {
 												
 												// Winner
 												
@@ -403,7 +404,7 @@ public class PF extends Module {
 												a.add("1-0");
 												
 												if(!overwrite) {
-													ResultSet exists = sql.executeQueryPreparedStatement("SELECT * FROM ld_rounds WHERE tournament=(SELECT id FROM tournaments WHERE link=?) AND absUrl<=>? AND debater=? AND against=? AND round<=>? AND decision<=>?", a.get(0), a.get(1), a.get(2), a.get(3), a.get(4), a.get(5));
+													ResultSet exists = sql.executeQueryPreparedStatement("SELECT * FROM pf_rounds WHERE tournament=(SELECT id FROM tournaments WHERE link=?) AND absUrl<=>? AND team=? AND against=? AND round<=>? AND decision<=>?", a.get(0), a.get(1), a.get(2), a.get(3), a.get(4), a.get(5));
 													if(!exists.next()) {
 														query += "((SELECT id FROM tournaments WHERE link=?), ?, ?, ?, ?, ?), ";
 														args.addAll(a);
@@ -425,7 +426,7 @@ public class PF extends Module {
 												a.add("0-1");
 												
 												if(!overwrite) {
-													ResultSet exists = sql.executeQueryPreparedStatement("SELECT * FROM ld_rounds WHERE tournament=(SELECT id FROM tournaments WHERE link=?) AND absUrl<=>? AND debater=? AND against=? AND round<=>? AND decision<=>?", a.get(0), a.get(1), a.get(2), a.get(3), a.get(4), a.get(5));
+													ResultSet exists = sql.executeQueryPreparedStatement("SELECT * FROM pf_rounds WHERE tournament=(SELECT id FROM tournaments WHERE link=?) AND absUrl<=>? AND team=? AND against=? AND round<=>? AND decision<=>?", a.get(0), a.get(1), a.get(2), a.get(3), a.get(4), a.get(5));
 													if(!exists.next()) {
 														query += "((SELECT id FROM tournaments WHERE link=?), ?, ?, ?, ?, ?), ";
 														args.addAll(a);
@@ -439,14 +440,14 @@ public class PF extends Module {
 										}
 										else {
 											// Update IDs
-											for(Pair<Debater, Debater> pair : currentMatchup) {
-												pair.getLeft().setID(getDebaterID(sql, pair.getLeft()));
-												pair.getRight().setID(getDebaterID(sql, pair.getRight()));
+											for(Pair<Team, Team> pair : currentMatchup) {
+												pair.getLeft().setID(getTeamID(sql, pair.getLeft(), "PF"));
+												pair.getRight().setID(getTeamID(sql, pair.getRight(), "PF"));
 											}
 										}
 										
 										if(last == Round.FINALS) {
-											if(!query.equals("INSERT INTO ld_rounds (tournament, absUrl, debater, against, round, decision) VALUES ")) {
+											if(!query.equals("INSERT INTO pf_rounds (tournament, absUrl, team, against, round, decision) VALUES ")) {
 												query = query.substring(0, query.lastIndexOf(", "));
 												sql.executePreparedStatement(query, args.toArray());
 												log.log(JOT, t.getName() + " bracket updated.");
