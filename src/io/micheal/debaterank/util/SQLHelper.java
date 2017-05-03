@@ -51,7 +51,7 @@ public class SQLHelper {
 		return ps.executeQuery();
 	}
 	
-	public int executePreparedStatementArgs(String query, String... values) throws SQLException {
+	public int executePreparedStatementArgs(String query, Object... values) throws SQLException {
 		return executePreparedStatement(query, values);
 	}
 	
