@@ -24,7 +24,7 @@ import io.micheal.debaterank.modules.ModuleManager;
 import io.micheal.debaterank.modules.PoolSizeException;
 import io.micheal.debaterank.modules.WorkerPool;
 import io.micheal.debaterank.modules.WorkerPoolManager;
-import io.micheal.debaterank.modules.jot.LD;
+import io.micheal.debaterank.modules.jot.PF;
 import io.micheal.debaterank.util.DebateHelper;
 import io.micheal.debaterank.util.RatingsComparator;
 import io.micheal.debaterank.util.SQLHelper;
@@ -62,7 +62,7 @@ public class Main {
 	}
 	
 	public void run() {
-		
+
 		while(active) {
 			active = false;
 			// TODO: Change to next update time
@@ -143,9 +143,13 @@ public class Main {
 			
 			// Modules //
 			
-			WorkerPool ld = new WorkerPool();
-			workerManager.add(ld);
-			moduleManager.newModule(new LD(tournaments, sql, ld));
+			//WorkerPool ld = new WorkerPool();
+			//workerManager.add(ld);
+			//moduleManager.newModule(new LD(tournaments, sql, ld));
+			
+			WorkerPool pf = new WorkerPool();
+			workerManager.add(pf);
+			moduleManager.newModule(new PF(tournaments, sql, pf));
 			// TODO: Policy
 			// TODO: PF
 				
