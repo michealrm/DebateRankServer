@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.logging.log4j.Level;
 import org.jsoup.nodes.Document;
 
@@ -45,6 +46,15 @@ public class DebateHelper {
 		for(Map.Entry<String, Debater> entry : competitors.entrySet()) {
 			try {
 				entry.getValue().setID(DebateHelper.getDebaterID(sql, entry.getValue()));
+			} catch (UnsupportedNameException une) {}
+		}
+	}
+	
+	public static void updateTeamIDs(SQLHelper sql, HashMap<String, Pair<Debater, Debater>> competitors) throws SQLException {
+		for(Map.Entry<String, Pair<Debater, Debater>> entry : competitors.entrySet()) {
+			try {
+				entry.getValue().getLeft().setID(getDebaterID(sql, entry.getValue().getLeft()));
+				entry.getValue().getRight().setID(getDebaterID(sql, entry.getValue().getRight()));
 			} catch (UnsupportedNameException une) {}
 		}
 	}
