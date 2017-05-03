@@ -31,5 +31,14 @@ public class Team {
 	public Debater getRight() {
 		return pair.getRight();
 	}
-	
+
+	public boolean equals(Team team) {
+		return ((pair.getLeft().equals(team.getLeft()) && pair.getRight().equals(pair.getRight())) ||
+				(pair.getLeft().equals(team.getRight()) && pair.getRight().equals(pair.getLeft())));
+	}
+
+	public boolean equalsByLast(Team team) {
+		return (pair.getLeft().equals(team.getLeft()) && pair.getRight().equals(team.getRight())) || (pair.getLeft().equals(team.getRight()) && pair.getRight().equals(team.getLeft()));
+	}
+
 }

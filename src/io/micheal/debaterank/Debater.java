@@ -81,6 +81,16 @@ public class Debater {
 		}
 		return false;
 	}
+
+	public boolean equalsByLast(Debater debater) {
+		String first = getFirst() == null ? debater.getFirst() : getFirst();
+		Debater tempLocal = new Debater(first, getMiddle(), getLast(), getSurname(), getSchool());
+		Debater tempAgainst = new Debater(first, debater.getMiddle(), debater.getLast(), debater.getSurname(), debater.getSchool());
+		if(tempLocal.equals(tempAgainst))
+			return equals(tempLocal);
+		else
+			return false;
+	}
 	
 	public String getFirst() {
 		return first;
