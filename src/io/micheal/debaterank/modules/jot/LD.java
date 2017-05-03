@@ -1,10 +1,6 @@
 package io.micheal.debaterank.modules.jot;
 
-import static io.micheal.debaterank.util.DebateHelper.JOT;
-import static io.micheal.debaterank.util.DebateHelper.getBracketRound;
-import static io.micheal.debaterank.util.DebateHelper.getDebaterID;
-import static io.micheal.debaterank.util.DebateHelper.tournamentExists;
-import static io.micheal.debaterank.util.DebateHelper.updateDebaterIDs;
+import static io.micheal.debaterank.util.DebateHelper.*;
 
 import java.io.File;
 import java.io.IOException;
@@ -12,6 +8,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -30,6 +27,7 @@ import io.micheal.debaterank.Tournament;
 import io.micheal.debaterank.UnsupportedNameException;
 import io.micheal.debaterank.modules.Module;
 import io.micheal.debaterank.modules.WorkerPool;
+import io.micheal.debaterank.util.DebateHelper;
 import io.micheal.debaterank.util.JsoupHelper;
 import io.micheal.debaterank.util.Round;
 import io.micheal.debaterank.util.SQLHelper;
@@ -94,7 +92,8 @@ public class LD extends Module {
 									log.log(JOT, t.getName() + " prelims is up to date.");
 								else {
 									// Update DB with debaters
-									updateDebaterIDs(sql, competitors);
+									for(Map.Entry<String, Debater> entry : competitors.entrySet())
+										entry.getValue().setID(DebateHelper.getDebaterID(sql, entry.getValue()));
 									
 									// Overwrite
 									if(overwrite)
@@ -402,10 +401,8 @@ public class LD extends Module {
 										else {
 											// Update IDs
 											for(Pair<Debater, Debater> pair : currentMatchup) {
-												try {
-													pair.getLeft().setID(getDebaterID(sql, pair.getLeft()));
-													pair.getRight().setID(getDebaterID(sql, pair.getRight()));
-												} catch (UnsupportedNameException e) {}
+												pair.getLeft().setID(getDebaterID(sql, pair.getLeft()));
+												pair.getRight().setID(getDebaterID(sql, pair.getRight()));
 											}
 										}
 										
