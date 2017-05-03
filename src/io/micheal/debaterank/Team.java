@@ -41,7 +41,7 @@ public class Team {
 	}
 
 	public boolean equalsByLast(Team team) {
-		boolean ret = (pair.getLeft().equals(team.getLeft()) && pair.getRight().equals(team.getRight())) || (pair.getLeft().equals(team.getRight()) && pair.getRight().equals(team.getLeft()));
+		boolean ret = (pair.getLeft().equalsByLast(team.getLeft()) && pair.getRight().equalsByLast(team.getRight())) || (pair.getLeft().equalsByLast(team.getRight()) && pair.getRight().equalsByLast(team.getLeft()));
 		if(ret && team.getID() != null)
 			id = team.getID();
 		return ret;

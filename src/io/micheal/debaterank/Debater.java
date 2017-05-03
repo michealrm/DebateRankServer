@@ -86,8 +86,13 @@ public class Debater {
 		String first = getFirst() == null ? debater.getFirst() : getFirst();
 		Debater tempLocal = new Debater(first, getMiddle(), getLast(), getSurname(), getSchool());
 		Debater tempAgainst = new Debater(first, debater.getMiddle(), debater.getLast(), debater.getSurname(), debater.getSchool());
-		if(tempLocal.equals(tempAgainst))
-			return equals(tempLocal);
+		if(debater.getID() != null)
+			tempAgainst.setID(debater.getID());
+		if(tempLocal.equals(tempAgainst)) {
+			if(debater.getID() != null)
+				id = debater.getID();
+			return true;
+		}
 		else
 			return false;
 	}
