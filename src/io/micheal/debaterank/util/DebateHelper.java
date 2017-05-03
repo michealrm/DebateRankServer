@@ -63,12 +63,8 @@ public class DebateHelper {
 	}
 	
 	public static void updateTeamIDs(SQLHelper sql, HashMap<String, Team> competitors, String event) throws SQLException {
-		for(Map.Entry<String, Team> entry : competitors.entrySet()) {
-			entry.getValue().getLeft().setID(getDebaterID(sql, entry.getValue().getLeft())); // In case IDs are not set
-			entry.getValue().getRight().setID(getDebaterID(sql, entry.getValue().getRight()));
-			
+		for(Map.Entry<String, Team> entry : competitors.entrySet())
 			entry.getValue().setID(getTeamID(sql, entry.getValue(), event));
-		}
 	}
 	
 	/**
@@ -87,6 +83,23 @@ public class DebateHelper {
 		}
 		debatersSet.close();
 		return debaters;
+	}
+	
+	public static Debater getDebaterFromLastName(SQLHelper sql, String last, String school) throws SQLException {
+		ResultSet index = sql.executeQueryPreparedStatement("SELECT id, first, middle, last, surname, school FROM debaters WHERE last_clean<=>?", SQLHelper.cleanString(last));
+		if(index.next()) {
+			do {
+				Debater debater = new Debater(index.getString(2), index.getString(3), index.getString(4), index.getString(5), school);
+				Debater clone = new Debater(index.getString(2), index.getString(3), index.getString(4), index.getString(5), index.getString(6));
+				if(debater.equals(clone)) {
+					debater.setID(index.getInt(1));
+					index.close();
+					return debater;
+				}
+			} while(index.next());
+		}
+		index.close();
+		return null;
 	}
 	
 	public static Round getBracketRound(Document doc, int col) {
