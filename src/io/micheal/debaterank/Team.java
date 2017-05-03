@@ -33,12 +33,18 @@ public class Team {
 	}
 
 	public boolean equals(Team team) {
-		return ((pair.getLeft().equals(team.getLeft()) && pair.getRight().equals(pair.getRight())) ||
+		boolean ret = ((pair.getLeft().equals(team.getLeft()) && pair.getRight().equals(pair.getRight())) ||
 				(pair.getLeft().equals(team.getRight()) && pair.getRight().equals(pair.getLeft())));
+		if(ret && team.getID() != null)
+			id = team.getID();
+		return ret;
 	}
 
 	public boolean equalsByLast(Team team) {
-		return (pair.getLeft().equals(team.getLeft()) && pair.getRight().equals(team.getRight())) || (pair.getLeft().equals(team.getRight()) && pair.getRight().equals(team.getLeft()));
+		boolean ret = (pair.getLeft().equals(team.getLeft()) && pair.getRight().equals(team.getRight())) || (pair.getLeft().equals(team.getRight()) && pair.getRight().equals(team.getLeft()));
+		if(ret && team.getID() != null)
+			id = team.getID();
+		return ret;
 	}
 
 }

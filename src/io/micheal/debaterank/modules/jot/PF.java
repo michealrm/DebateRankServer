@@ -386,10 +386,11 @@ public class PF extends Module {
 											ArrayList<Pair<Team, Team>> winnerLoser = new ArrayList<Pair<Team, Team>>();
 											for(Pair<Team, Team> winners : currentMatchup)
 												for(Pair<Team, Team> matchups : matchup)
-													if((winners.getLeft() != null && matchups.getLeft() != null && winners.getLeft().equalsByLast(matchups.getLeft())) || (winners.getRight() != null && matchups.getRight() != null && winners.getRight().equalsByLast(matchups.getLeft())))
-														winnerLoser.add(matchups);
-													else if((winners.getLeft() != null && matchups.getRight() != null && winners.getLeft().equalsByLast(matchups.getRight())) || (winners.getRight() != null && matchups.getRight() != null && winners.getRight().equalsByLast(matchups.getRight())))
-														winnerLoser.add(Pair.of(matchups.getRight(), matchups.getLeft()));
+													if(winners != null)
+														if((winners.getLeft() != null && matchups.getLeft() != null && winners.getLeft().equalsByLast(matchups.getLeft())) || (winners.getRight() != null && matchups.getRight() != null && winners.getRight().equalsByLast(matchups.getLeft())))
+															winnerLoser.add(matchups);
+														else if((winners.getLeft() != null && matchups.getRight() != null && winners.getLeft().equalsByLast(matchups.getRight())) || (winners.getRight() != null && matchups.getRight() != null && winners.getRight().equalsByLast(matchups.getRight())))
+															winnerLoser.add(Pair.of(matchups.getRight(), matchups.getLeft()));
 											
 											for(Pair<Team, Team> pair : winnerLoser) {
 												
@@ -447,6 +448,8 @@ public class PF extends Module {
 										}
 										
 										if(last == Round.FINALS) {
+											System.out.println(args);
+											System.exit(0);
 											if(!query.equals("INSERT INTO pf_rounds (tournament, absUrl, team, against, round, decision) VALUES ")) {
 												query = query.substring(0, query.lastIndexOf(", "));
 												sql.executePreparedStatement(query, args.toArray());
