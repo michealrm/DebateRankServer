@@ -66,17 +66,20 @@ public class Debater {
 		}
 		else if(this.school == null && school != null)
 			replaceThis = true;
-		
 		if(((first == null && this.first == null) || (SQLHelper.cleanString(this.first).equals(SQLHelper.cleanString(first)))) &&
 				(((this.last == null || last == null) || SQLHelper.cleanString(this.last).equals(SQLHelper.cleanString(last))))) {
-			if(replaceThis) {
+			if(this.first == null)
 				this.first = debater.getFirst();
+			if(this.middle == null)
 				this.middle = debater.getMiddle();
+			if(this.last == null)
 				this.last = debater.getLast();
+			if(this.surname == null)
 				this.surname = debater.getSurname();
+			if(replaceThis)
 				this.school = debater.getSchool();
+			if(this.id == null)
 				this.id = debater.getID();
-			}
 			return true;
 		}
 		return false;
