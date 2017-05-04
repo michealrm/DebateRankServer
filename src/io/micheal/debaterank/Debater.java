@@ -12,7 +12,10 @@ public class Debater {
 	
 	public Debater(String name, String school) throws UnsupportedNameException {
 		name = name.replaceAll(" \\(.+?\\)", "");
-		this.school = school;
+		if(school != null)
+			this.school = school.trim();
+		else
+			this.school = school;
 		String[] blocks = name.split(" ");
 		if(blocks.length == 0)
 			throw new UnsupportedNameException(name);
@@ -41,7 +44,10 @@ public class Debater {
 		this.middle = middle;
 		this.last = last;
 		this.surname = surname;
-		this.school = school;
+		if(school != null)
+			this.school = school.trim();
+		else
+			this.school = school;
 	}
 	
 	public boolean equals(Debater debater) {
