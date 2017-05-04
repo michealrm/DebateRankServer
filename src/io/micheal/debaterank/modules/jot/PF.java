@@ -59,6 +59,7 @@ public class PF extends Module {
 		
 		// Scrape events per tournament
 		for(Tournament t : tournaments) {
+			if(t.getName().contains("Oak Grove"))
 			manager.newModule(new Runnable() {
 				public void run() {
 					try {
@@ -83,7 +84,7 @@ public class PF extends Module {
 										String left = info.select("tr:eq(0)").text();
 										String second = info.select("tr:eq(1)").text().replaceAll("\u00a0|&nbsp", " ");
 										String key = second.split(" ")[0];
-										String school = second.split(" ").length > 1 ? second.substring(second.indexOf(' ') + 1) : null;
+										String school = second.split(" ").length > 1 ? (second.substring(second.indexOf(' ') + 1)).trim() : null;
 										String right = info.select("tr:eq(2)").text();
 										competitors.put(key, new Team(new Debater(left, school), new Debater(right, school)));
 									} catch (UnsupportedNameException e) {
@@ -363,10 +364,8 @@ public class PF extends Module {
 															rightSchool = team.childNode(2).unwrap().toString();
 													String[] leftNames = leftText.substring(leftText.indexOf(' ') + 1).split(" - ");
 													String[] rightNames = rightText.substring(rightText.indexOf(' ') + 1).split(" - ");
-													if((leftNames.length != 2 && !rightText.contains("&nbsp;")) || (rightNames.length != 2 && !rightText.contains("&nbsp;"))) {
-														System.out.println(leftText + "\n" + rightText + "\n\n");
+													if((leftNames.length != 2 && !rightText.contains("&nbsp;")) || (rightNames.length != 2 && !rightText.contains("&nbsp;")))
 														continue;
-													}
 													Team l;
 													if(leftText.contains("&nbsp;"))
 														l = null;
@@ -384,16 +383,25 @@ public class PF extends Module {
 										}
 
 										if(matchup != null && last != null) {
-
+											
 											// Sort matchups into winner/loser pairs
 											ArrayList<Pair<Team, Team>> winnerLoser = new ArrayList<Pair<Team, Team>>();
 											for(Pair<Team, Team> winners : currentMatchup)
-												for(Pair<Team, Team> matchups : matchup)
-													if(matchups.getLeft() != null && ((winners.getLeft() != null && winners.getLeft().equalsByLast(matchups.getLeft())) || (winners.getRight() != null && winners.getRight().equalsByLast(matchups.getLeft()))))
-														winnerLoser.add(matchups);
-													else if(matchups.getRight() != null && ((winners.getLeft() != null && winners.getLeft().equalsByLast(matchups.getRight())) || (winners.getRight() != null && winners.getRight().equalsByLast(matchups.getRight()))))
-														winnerLoser.add(Pair.of(matchups.getRight(), matchups.getLeft()));
-											
+												for(Pair<Team, Team> matchups : matchup) {
+													if(matchups.getLeft() != null) {
+														if(winners.getLeft() != null && winners.getLeft().equalsByLast(matchups.getLeft()))
+															winnerLoser.add(matchups);
+														if(winners.getRight() != null && winners.getRight().equalsByLast(matchups.getLeft()))
+															winnerLoser.add(matchups);
+													}
+													if(matchups.getRight() != null) {
+														if(winners.getLeft() != null && winners.getLeft().equalsByLast(matchups.getRight()))
+															winnerLoser.add(Pair.of(matchups.getRight(), matchups.getLeft()));
+														if(winners.getRight() != null && winners.getRight().equalsByLast(matchups.getRight()))
+															winnerLoser.add(Pair.of(matchups.getRight(), matchups.getLeft()));
+													}
+												}
+
 											for(Pair<Team, Team> pair : winnerLoser) {
 
 												if(pair.getLeft() == null || pair.getRight() == null)
