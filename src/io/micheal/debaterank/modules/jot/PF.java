@@ -95,6 +95,7 @@ public class PF extends Module {
 								if(tournamentExists(p.baseUri(), table.select("[colspan=2].rec:not(:containsOwn(F))").size(), sql))
 									log.log(JOT, t.getName() + " prelims is up to date.");
 								else {
+									
 									// Update DB with debaters
 									updateTeamIDs(sql, competitors, "PF");
 									
@@ -362,8 +363,10 @@ public class PF extends Module {
 															rightSchool = team.childNode(2).unwrap().toString();
 													String[] leftNames = leftText.substring(leftText.indexOf(' ') + 1).split(" - ");
 													String[] rightNames = rightText.substring(rightText.indexOf(' ') + 1).split(" - ");
-													if(leftNames.length != 2 || rightNames.length != 2)
+													if((leftNames.length != 2 && !rightText.contains("&nbsp;")) || (rightNames.length != 2 && !rightText.contains("&nbsp;"))) {
+														System.out.println(leftText + "\n" + rightText + "\n\n");
 														continue;
+													}
 													Team l;
 													if(leftText.contains("&nbsp;"))
 														l = null;
@@ -381,18 +384,21 @@ public class PF extends Module {
 										}
 
 										if(matchup != null && last != null) {
-											
+
 											// Sort matchups into winner/loser pairs
 											ArrayList<Pair<Team, Team>> winnerLoser = new ArrayList<Pair<Team, Team>>();
 											for(Pair<Team, Team> winners : currentMatchup)
 												for(Pair<Team, Team> matchups : matchup)
-													if((winners.getLeft() != null && matchups.getLeft() != null && winners.getLeft().equalsByLast(matchups.getLeft())) || (winners.getRight() != null && matchups.getRight() != null && winners.getRight().equalsByLast(matchups.getLeft())))
+													if(matchups.getLeft() != null && ((winners.getLeft() != null && winners.getLeft().equalsByLast(matchups.getLeft())) || (winners.getRight() != null && winners.getRight().equalsByLast(matchups.getLeft()))))
 														winnerLoser.add(matchups);
-													else if((winners.getLeft() != null && matchups.getRight() != null && winners.getLeft().equalsByLast(matchups.getRight())) || (winners.getRight() != null && matchups.getRight() != null && winners.getRight().equalsByLast(matchups.getRight())))
+													else if(matchups.getRight() != null && ((winners.getLeft() != null && winners.getLeft().equalsByLast(matchups.getRight())) || (winners.getRight() != null && winners.getRight().equalsByLast(matchups.getRight()))))
 														winnerLoser.add(Pair.of(matchups.getRight(), matchups.getLeft()));
 											
 											for(Pair<Team, Team> pair : winnerLoser) {
 
+												if(pair.getLeft() == null || pair.getRight() == null)
+													continue;
+												
 												// Winner
 												
 												ArrayList<Object> a = new ArrayList<Object>();
@@ -441,14 +447,14 @@ public class PF extends Module {
 										else {
 											// Update IDs
 											for(Pair<Team, Team> pair : currentMatchup) {
-												pair.getLeft().setID(getTeamID(sql, pair.getLeft(), "PF"));
-												pair.getRight().setID(getTeamID(sql, pair.getRight(), "PF"));
+												if(pair.getLeft() != null)
+													updateTeamWithLastNames(sql, pair.getLeft(), "PF");
+												if(pair.getRight() != null)
+													updateTeamWithLastNames(sql, pair.getRight(), "PF");
 											}
 										}
 										
 										if(last == Round.FINALS) {
-											System.out.println(args);
-											System.exit(0);
 											if(!query.equals("INSERT INTO pf_rounds (tournament, absUrl, team, against, round, decision) VALUES ")) {
 												query = query.substring(0, query.lastIndexOf(", "));
 												sql.executePreparedStatement(query, args.toArray());
