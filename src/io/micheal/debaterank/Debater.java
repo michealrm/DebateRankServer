@@ -49,7 +49,7 @@ public class Debater {
 		String first = debater.getFirst();
 		String last = debater.getLast();
 		String school = debater.getSchool();
-		if(school != null && this.school != null) { // TODO: Make this not look terrible
+		if(school != null && this.school != null) {
 			
 			ArrayList<String> compare = new ArrayList<String>(Arrays.asList(SQLHelper.cleanString(this.school).split(" ")));
 			ArrayList<String> against = new ArrayList<String>(Arrays.asList(SQLHelper.cleanString(school).split(" ")));
