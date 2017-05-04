@@ -1,6 +1,6 @@
 package io.micheal.debaterank.util;
 
-import static io.micheal.debaterank.util.SQLHelper.*;
+import static io.micheal.debaterank.util.SQLHelper.cleanString;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -56,7 +56,7 @@ public class DebateHelper {
 		ResultSet index = sql.executeQueryPreparedStatement("SELECT tm.id, d1.school, d2.school FROM teams tm JOIN debaters AS d1 ON d1.id=tm.debater1 JOIN debaters AS d2 ON d2.id=tm.debater2 WHERE ((d1.first_clean<=>? AND d1.middle_clean<=>? AND d1.last_clean<=>? AND d1.surname_clean<=>? AND d2.first_clean<=>? AND d2.middle_clean<=>? AND d2.last_clean<=>? AND d2.surname_clean<=>?) OR (d2.first_clean<=>? AND d2.middle_clean<=>? AND d2.last_clean<=>? AND d2.surname_clean<=>? AND d1.first_clean<=>? AND d1.middle_clean<=>? AND d1.last_clean<=>? AND d1.surname_clean<=>?)) AND event<=>?", cleanString(team.getLeft().getFirst()), cleanString(team.getLeft().getMiddle()), cleanString(team.getLeft().getLast()), cleanString(team.getLeft().getSurname()), cleanString(team.getRight().getFirst()), cleanString(team.getRight().getMiddle()), cleanString(team.getRight().getLast()), cleanString(team.getRight().getSurname()), cleanString(team.getLeft().getFirst()), cleanString(team.getLeft().getMiddle()), cleanString(team.getLeft().getLast()), cleanString(team.getLeft().getSurname()), cleanString(team.getRight().getFirst()), cleanString(team.getRight().getMiddle()), cleanString(team.getRight().getLast()), cleanString(team.getRight().getSurname()), event);
 		if(index.next()) {
 			Debater clone1 = new Debater(team.getLeft().getFirst(), team.getLeft().getMiddle(), team.getLeft().getLast(), team.getLeft().getSurname(), index.getString(2));
-			Debater clone2 = new Debater(team.getLeft().getFirst(), team.getLeft().getMiddle(), team.getLeft().getLast(), team.getLeft().getSurname(), index.getString(3));
+			Debater clone2 = new Debater(team.getRight().getFirst(), team.getRight().getMiddle(), team.getRight().getLast(), team.getRight().getSurname(), index.getString(3));
 			if((team.getLeft().equals(clone1) && team.getRight().equals(clone2)) || (team.getLeft().equals(clone2) && team.getRight().equals(clone1))) {
 				int ret = index.getInt(1);
 				index.close();
@@ -106,6 +106,20 @@ public class DebateHelper {
 		}
 		index.close();
 		return null;
+	}
+	
+	/**
+	 * Updates debater objects in pairs, along with the team id for the <b>first</b> result from the last name and school.
+	 */
+	public static void updateTeamWithLastNames(SQLHelper sql, Team team, String event) throws SQLException {
+		ResultSet index = sql.executeQueryPreparedStatement("SELECT tm.id, d1.id, d1.first, d1.middle, d1.last, d1.surname, d1.school, d2.id, d2.first, d2.middle, d2.last, d2.surname, d2.school FROM teams tm JOIN debaters AS d1 ON d1.id=tm.debater1 JOIN debaters AS d2 ON d2.id=tm.debater2 WHERE ((d1.last=? AND d2.last=?) OR (d2.last=? AND d1.last=?)) AND ((d1.school=? AND d2.school=?) OR (d2.school=? AND d1.school=?)) AND event<=>?", team.getLeft().getLast(), team.getRight().getLast(), team.getLeft().getLast(), team.getRight().getLast(), team.getLeft().getSchool(), team.getRight().getSchool(), team.getLeft().getSchool(), team.getRight().getSchool(), event);
+		if(index.next()) {
+			team.newPair(new Debater(index.getString(3), index.getString(4), index.getString(5), index.getString(6), index.getString(7)), new Debater(index.getString(9), index.getString(10), index.getString(11), index.getString(12), index.getString(13)));
+			team.getLeft().setID(index.getInt(2));
+			team.getRight().setID(index.getInt(8));
+			team.setID(index.getInt(1));
+			index.close();
+		}
 	}
 	
 	public static Round getBracketRound(Document doc, int col) {
