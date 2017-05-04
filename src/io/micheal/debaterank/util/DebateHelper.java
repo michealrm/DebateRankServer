@@ -1,5 +1,7 @@
 package io.micheal.debaterank.util;
 
+import static io.micheal.debaterank.util.SQLHelper.*;
+
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -27,7 +29,7 @@ public class DebateHelper {
 	public static int getDebaterID(SQLHelper sql, Debater debater) throws SQLException {
 		if(debater.getID() != null)
 			return debater.getID();
-		ResultSet index = sql.executeQueryPreparedStatement("SELECT id, school FROM debaters WHERE first_clean<=>? AND middle_clean<=>? AND last_clean<=>? AND surname_clean<=>?", SQLHelper.cleanString(debater.getFirst()), SQLHelper.cleanString(debater.getMiddle()), SQLHelper.cleanString(debater.getLast()), SQLHelper.cleanString(debater.getSurname()));
+		ResultSet index = sql.executeQueryPreparedStatement("SELECT id, school FROM debaters WHERE first_clean<=>? AND middle_clean<=>? AND last_clean<=>? AND surname_clean<=>?", cleanString(debater.getFirst()), cleanString(debater.getMiddle()), cleanString(debater.getLast()), cleanString(debater.getSurname()));
 		if(index.next()) {
 			do {
 				Debater clone = new Debater(debater.getFirst(), debater.getMiddle(), debater.getLast(), debater.getSurname(), index.getString(2));
@@ -39,11 +41,11 @@ public class DebateHelper {
 			} while(index.next());
 		}
 		index.close();
-		return sql.executePreparedStatementArgs("INSERT INTO debaters (first, middle, last, surname, school, first_clean, middle_clean, last_clean, surname_clean, school_clean) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", debater.getFirst(), debater.getMiddle(), debater.getLast(), debater.getSurname(), debater.getSchool(), SQLHelper.cleanString(debater.getFirst()), SQLHelper.cleanString(debater.getMiddle()), SQLHelper.cleanString(debater.getLast()), SQLHelper.cleanString(debater.getSurname()), SQLHelper.cleanString(debater.getSchool()));
+		return sql.executePreparedStatementArgs("INSERT INTO debaters (first, middle, last, surname, school, first_clean, middle_clean, last_clean, surname_clean, school_clean) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", debater.getFirst(), debater.getMiddle(), debater.getLast(), debater.getSurname(), debater.getSchool(), cleanString(debater.getFirst()), cleanString(debater.getMiddle()), cleanString(debater.getLast()), cleanString(debater.getSurname()), cleanString(debater.getSchool()));
 	}
 	
 	/**
-	 * Searches the SQL tables for the specified team, returning the <b>first</b> result. If no match is found, a debater will be created and returned
+	 * Searches the SQL tables for the specified team. If no match is found, a debater will be created and returned
 	 * @return
 	 * @throws SQLException 
 	 * @throws UnsupportedNameException 
@@ -51,14 +53,18 @@ public class DebateHelper {
 	public static int getTeamID(SQLHelper sql, Team team, String event) throws SQLException {
 		if(team.getID() != null)
 			return team.getID();
+		ResultSet index = sql.executeQueryPreparedStatement("SELECT tm.id, d1.school, d2.school FROM teams tm JOIN debaters AS d1 ON d1.id=tm.debater1 JOIN debaters AS d2 ON d2.id=tm.debater2 WHERE ((d1.first_clean<=>? AND d1.middle_clean<=>? AND d1.last_clean<=>? AND d1.surname_clean<=>? AND d2.first_clean<=>? AND d2.middle_clean<=>? AND d2.last_clean<=>? AND d2.surname_clean<=>?) OR (d2.first_clean<=>? AND d2.middle_clean<=>? AND d2.last_clean<=>? AND d2.surname_clean<=>? AND d1.first_clean<=>? AND d1.middle_clean<=>? AND d1.last_clean<=>? AND d1.surname_clean<=>?)) AND event<=>?", cleanString(team.getLeft().getFirst()), cleanString(team.getLeft().getMiddle()), cleanString(team.getLeft().getLast()), cleanString(team.getLeft().getSurname()), cleanString(team.getRight().getFirst()), cleanString(team.getRight().getMiddle()), cleanString(team.getRight().getLast()), cleanString(team.getRight().getSurname()), cleanString(team.getLeft().getFirst()), cleanString(team.getLeft().getMiddle()), cleanString(team.getLeft().getLast()), cleanString(team.getLeft().getSurname()), cleanString(team.getRight().getFirst()), cleanString(team.getRight().getMiddle()), cleanString(team.getRight().getLast()), cleanString(team.getRight().getSurname()), event);
+		if(index.next()) {
+			Debater clone1 = new Debater(team.getLeft().getFirst(), team.getLeft().getMiddle(), team.getLeft().getLast(), team.getLeft().getSurname(), index.getString(2));
+			Debater clone2 = new Debater(team.getLeft().getFirst(), team.getLeft().getMiddle(), team.getLeft().getLast(), team.getLeft().getSurname(), index.getString(3));
+			if((team.getLeft().equals(clone1) && team.getRight().equals(clone2)) || (team.getLeft().equals(clone2) && team.getRight().equals(clone1))) {
+				int ret = index.getInt(1);
+				index.close();
+				return ret;
+			}
+		}
 		int left = getDebaterID(sql, team.getLeft());
 		int right = getDebaterID(sql, team.getRight());
-		ResultSet index = sql.executeQueryPreparedStatement("SELECT id FROM teams WHERE ((debater1=? AND debater2=?) OR (debater2=? AND debater1=?)) AND event<=>?", left, right, left, right, event);
-		if(index.next()) {
-			int ret = index.getInt(1);
-			index.close();
-			return ret; // Should only return one team
-		}
 		return sql.executePreparedStatementArgs("INSERT INTO teams (debater1, debater2, event) VALUES (?, ?, ?)", left, right, event);
 	}
 	
@@ -86,7 +92,7 @@ public class DebateHelper {
 	}
 	
 	public static Debater getDebaterFromLastName(SQLHelper sql, String last, String school) throws SQLException {
-		ResultSet index = sql.executeQueryPreparedStatement("SELECT id, first, middle, last, surname, school FROM debaters WHERE last_clean<=>?", SQLHelper.cleanString(last));
+		ResultSet index = sql.executeQueryPreparedStatement("SELECT id, first, middle, last, surname, school FROM debaters WHERE last_clean<=>?", cleanString(last));
 		if(index.next()) {
 			do {
 				Debater debater = new Debater(index.getString(2), index.getString(3), index.getString(4), index.getString(5), school);
