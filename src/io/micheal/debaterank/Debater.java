@@ -66,8 +66,8 @@ public class Debater {
 		}
 		else if(this.school == null && school != null)
 			replaceThis = true;
-		if(((first == null && this.first == null) || (SQLHelper.cleanString(this.first).equals(SQLHelper.cleanString(first)))) &&
-				(((this.last == null || last == null) || SQLHelper.cleanString(this.last).equals(SQLHelper.cleanString(last))))) {
+		if(((first == null && this.first == null) || (this.first != null && SQLHelper.cleanString(this.first).equals(SQLHelper.cleanString(first)))) &&
+				(((this.last == null || last == null) || (this.last != null && SQLHelper.cleanString(this.last).equals(SQLHelper.cleanString(last)))))) {
 			if(this.first == null)
 				this.first = debater.getFirst();
 			if(this.middle == null)
