@@ -353,6 +353,9 @@ public class LD extends Module {
 											
 											for(Pair<Debater, Debater> pair : winnerLoser) {
 												
+												if(pair.getLeft() == null || pair.getRight() == null)
+													continue;
+												
 												// Winner
 												
 												ArrayList<Object> a = new ArrayList<Object>();
