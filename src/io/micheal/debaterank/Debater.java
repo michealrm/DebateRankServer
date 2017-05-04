@@ -92,8 +92,18 @@ public class Debater {
 		if(debater.getID() != null)
 			tempAgainst.setID(debater.getID());
 		if(tempLocal.equals(tempAgainst)) {
-			if(debater.getID() != null)
-				id = debater.getID();
+			if(this.first == null)
+				this.first = debater.getFirst();
+			if(this.middle == null)
+				this.middle = debater.getMiddle();
+			if(this.last == null)
+				this.last = debater.getLast();
+			if(this.surname == null)
+				this.surname = debater.getSurname();
+			if(this.school == null)
+				this.school = debater.getSchool();
+			if(this.id == null)
+				this.id = debater.getID();
 			return true;
 		}
 		else
