@@ -99,7 +99,7 @@ public class LD extends Module {
 									if(overwrite)
 										sql.executePreparedStatementArgs("DELETE FROM ld_rounds WHERE absUrl=?", p.baseUri());
 								
-									// Parse rounds, TODO: Needs optimizations / profiling
+									// Parse rounds
 									String query = "INSERT INTO ld_rounds (tournament, absUrl, debater, against, round, side, speaks, decision) VALUES ";
 									ArrayList<Object> args = new ArrayList<Object>();
 									for(int i = 0;i<rows.size();i++) {
