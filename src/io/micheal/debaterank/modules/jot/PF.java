@@ -339,26 +339,26 @@ public class PF extends Module {
 											Element left = null;
 											for(Element element : col) {
 												Element team = null;
-												if (element.hasClass("btm") || element.hasClass("botr"))
+												if(element.hasClass("btm") || element.hasClass("botr"))
 													team = element;
-												else if (element.hasClass("top") || element.hasClass("topr"))
+												else if(element.hasClass("top") || element.hasClass("topr"))
 													team = element.parent().previousElementSibling().select("td:eq(" + i + ")").first();
 												else
 													continue;
-												if (left == null)
+												if(left == null)
 													left = team;
 												else {
 													String leftSchool = null,
 															rightSchool = null,
 															leftText = left.childNode(0).toString(),
 															rightText = team.childNode(0).toString();
-													if (left.childNodeSize() > 2)
-														if (left.childNode(2) instanceof TextNode)
+													if(left.childNodeSize() > 2)
+														if(left.childNode(2) instanceof TextNode)
 															leftSchool = left.childNode(2).toString();
 														else
 															leftSchool = left.childNode(2).unwrap().toString();
-													if (team.childNodeSize() > 2)
-														if (team.childNode(2) instanceof TextNode)
+													if(team.childNodeSize() > 2)
+														if(team.childNode(2) instanceof TextNode)
 															rightSchool = team.childNode(2).toString();
 														else
 															rightSchool = team.childNode(2).unwrap().toString();

@@ -298,26 +298,26 @@ public class LD extends Module {
 											Element left = null;
 											for(Element element : col) {
 												Element debater = null;
-												if (element.hasClass("btm") || element.hasClass("botr"))
+												if(element.hasClass("btm") || element.hasClass("botr"))
 													debater = element;
-												else if (element.hasClass("top") || element.hasClass("topr"))
+												else if(element.hasClass("top") || element.hasClass("topr"))
 													debater = element.parent().previousElementSibling().select("td:eq(" + i + ")").first();
 												else
 													continue;
-												if (left == null)
+												if(left == null)
 													left = debater;
 												else {
 													String leftSchool = null,
 															rightSchool = null,
 															leftText = left.childNode(0).toString(),
 															rightText = debater.childNode(0).toString();
-													if (left.childNodeSize() > 2)
-														if (left.childNode(2) instanceof TextNode)
+													if(left.childNodeSize() > 2)
+														if(left.childNode(2) instanceof TextNode)
 															leftSchool = left.childNode(2).toString();
 														else
 															leftSchool = left.childNode(2).unwrap().toString();
-													if (debater.childNodeSize() > 2)
-														if (debater.childNode(2) instanceof TextNode)
+													if(debater.childNodeSize() > 2)
+														if(debater.childNode(2) instanceof TextNode)
 															rightSchool = debater.childNode(2).toString();
 														else
 															rightSchool = debater.childNode(2).unwrap().toString();
