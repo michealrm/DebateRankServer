@@ -364,7 +364,7 @@ public class PF extends Module {
 															rightSchool = team.childNode(2).unwrap().toString();
 													String[] leftNames = leftText.substring(leftText.indexOf(' ') + 1).split(" - ");
 													String[] rightNames = rightText.substring(rightText.indexOf(' ') + 1).split(" - ");
-													if((leftNames.length != 2 && !rightText.contains("&nbsp;")) || (rightNames.length != 2 && !rightText.contains("&nbsp;")))
+													if((leftNames.length != 2 && !leftText.contains("&nbsp;")) || (rightNames.length != 2 && !rightText.contains("&nbsp;")))
 														continue;
 													Team l;
 													if(leftText.contains("&nbsp;"))
@@ -381,7 +381,7 @@ public class PF extends Module {
 												}
 											}
 										}
-
+										System.exit(0);
 										if(matchup != null && last != null) {
 											
 											// Sort matchups into winner/loser pairs
