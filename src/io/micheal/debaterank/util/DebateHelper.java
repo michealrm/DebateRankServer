@@ -143,8 +143,8 @@ public class DebateHelper {
 		return null;
 	}
 	
-	public static boolean tournamentExists(String absUrl, int rounds, SQLHelper sql) throws SQLException {
-		ResultSet tournamentExists = sql.executeQueryPreparedStatement("SELECT id FROM ld_rounds WHERE absUrl=?", absUrl);
+	public static boolean tournamentExists(String absUrl, int rounds, SQLHelper sql, String table) throws SQLException {
+		ResultSet tournamentExists = sql.executeQueryPreparedStatement("SELECT id FROM " + table + " WHERE absUrl=?", absUrl);
 		return tournamentExists.last() && tournamentExists.getRow() == rounds;
 	}
 	

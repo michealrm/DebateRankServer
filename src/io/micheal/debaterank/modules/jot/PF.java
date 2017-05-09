@@ -93,7 +93,7 @@ public class PF extends Module {
 								}
 								
 								// If we have the same amount of entries, then do not check
-								if(tournamentExists(p.baseUri(), table.select("[colspan=2].rec:not(:containsOwn(F))").size(), sql))
+								if(tournamentExists(p.baseUri(), table.select("[colspan=2].rec:not(:containsOwn(F))").size(), sql, "pf_rounds"))
 									log.log(JOT, t.getName() + " prelims is up to date.");
 								else {
 									
@@ -225,7 +225,7 @@ public class PF extends Module {
 								while(matcher.find())
 									count += 2;
 								System.out.println(count);
-								if(tournamentExists(doc.baseUri(), count, sql))
+								if(tournamentExists(doc.baseUri(), count, sql, "pf_rounds"))
 									log.log(JOT, t.getName() + " double octos is up to date.");
 								else {
 									
@@ -309,7 +309,7 @@ public class PF extends Module {
 								Document doc = JsoupHelper.retryIfTimeout(bracket.absUrl("href"), 3);
 								
 								// If we have the same amount of entries, then do not check
-								if(tournamentExists(doc.baseUri(), doc.select("table[cellspacing=0] > tbody > tr > td.botr, table[cellspacing=0] > tbody > tr > td.topr, table[cellspacing=0] > tbody > tr > td.top, table[cellspacing=0] > tbody > tr > td.btm").size() - 1, sql))
+								if(tournamentExists(doc.baseUri(), doc.select("table[cellspacing=0] > tbody > tr > td.botr, table[cellspacing=0] > tbody > tr > td.topr, table[cellspacing=0] > tbody > tr > td.top, table[cellspacing=0] > tbody > tr > td.btm").size() - 1, sql, "pf_rounds"))
 									log.log(JOT, t.getName() + " bracket is up to date.");
 								else {
 									// Overwrite
