@@ -98,7 +98,7 @@ public class PF extends Module {
 								}
 								
 								// If we have the same amount of entries, then do not check
-								if(tournamentExists(p.baseUri(), table.select("[colspan=2].rec:not(:containsOwn(F))").size(), sql, "pf_rounds"))
+								if(tournamentExists(p.baseUri(), table.select("[colspan=3].rec:not(:containsOwn(F))").size(), sql, "pf_rounds"))
 									log.log(JOT, t.getName() + " prelims is up to date.");
 								else {
 									
