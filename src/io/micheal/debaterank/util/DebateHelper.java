@@ -91,16 +91,21 @@ public class DebateHelper {
 		return debaters;
 	}
 	
-	public static Debater getDebaterFromLastName(SQLHelper sql, String last, String school) throws SQLException {
-		ResultSet index = sql.executeQueryPreparedStatement("SELECT id, first, middle, last, surname, school FROM debaters WHERE last_clean<=>?", cleanString(last));
+	public static Team getTeamFromLastName(SQLHelper sql, String last1, String last2, String school) throws SQLException {
+		ResultSet index = sql.executeQueryPreparedStatement("SELECT team.id, o.id, o.first, o.middle, o.last, o.surname, o.school, t.id, t.first, t.middle, t.last, t.surname, t.school FROM teams team JOIN debaters AS o ON o.id=team.debater1 JOIN debaters AS t ON t.id=team.debater2 WHERE (o.last_clean<=>? OR t.last_clean<=>?) AND (o.last_clean<=>? OR t.last_clean<=>?)", cleanString(last1), cleanString(last2), cleanString(last1), cleanString(last2));
 		if(index.next()) {
 			do {
-				Debater debater = new Debater(index.getString(2), index.getString(3), index.getString(4), index.getString(5), school);
-				Debater clone = new Debater(index.getString(2), index.getString(3), index.getString(4), index.getString(5), index.getString(6));
-				if(debater.equals(clone)) {
+				Debater debater = new Debater(index.getString(3), index.getString(4), index.getString(5), index.getString(6), school);
+				Debater clone = new Debater(index.getString(3), index.getString(4), index.getString(5), index.getString(6), index.getString(7));
+				Debater debater2 = new Debater(index.getString(9), index.getString(10), index.getString(11), index.getString(12), school);
+				Debater clone2 = new Debater(index.getString(9), index.getString(10), index.getString(11), index.getString(12), index.getString(13));
+				if(debater.equals(clone) && debater2.equals(clone2)) {
 					debater.setID(index.getInt(1));
+					debater2.setID(index.getInt(8));
+					Team team = new Team(debater, debater2);
+					team.setID(index.getInt(1));
 					index.close();
-					return debater;
+					return team;
 				}
 			} while(index.next());
 		}
@@ -146,6 +151,18 @@ public class DebateHelper {
 	public static boolean tournamentExists(String absUrl, int rounds, SQLHelper sql, String table) throws SQLException {
 		ResultSet tournamentExists = sql.executeQueryPreparedStatement("SELECT id FROM " + table + " WHERE absUrl=?", absUrl);
 		return tournamentExists.last() && tournamentExists.getRow() == rounds;
+	}
+	
+	/**
+	 * @return debater object by last e.g. "Tillerson III" would return -> Tillerson III
+	 */
+	public static Debater getDebaterObjectByLast(String debater, String school) {
+		if(debater.indexOf(", ") != -1)
+			return new Debater(null, null, debater.substring(0, debater.indexOf(", ")), debater.substring(debater.indexOf(", ")+2), school);
+		else if(debater.lastIndexOf(" ") != -1)
+			return new Debater(null, null, debater.substring(0, debater.lastIndexOf(" ")), debater.substring(debater.lastIndexOf(" ")+1), school);
+		else
+			return new Debater(null, null, debater, null, school);
 	}
 	
 }

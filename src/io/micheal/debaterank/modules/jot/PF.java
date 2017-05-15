@@ -1,6 +1,11 @@
 package io.micheal.debaterank.modules.jot;
 
-import static io.micheal.debaterank.util.DebateHelper.*;
+import static io.micheal.debaterank.util.DebateHelper.JOT;
+import static io.micheal.debaterank.util.DebateHelper.getBracketRound;
+import static io.micheal.debaterank.util.DebateHelper.getTeamID;
+import static io.micheal.debaterank.util.DebateHelper.tournamentExists;
+import static io.micheal.debaterank.util.DebateHelper.updateTeamIDs;
+import static io.micheal.debaterank.util.DebateHelper.updateTeamWithLastNames;
 
 import java.io.File;
 import java.io.IOException;
@@ -27,6 +32,7 @@ import io.micheal.debaterank.Tournament;
 import io.micheal.debaterank.UnsupportedNameException;
 import io.micheal.debaterank.modules.Module;
 import io.micheal.debaterank.modules.WorkerPool;
+import io.micheal.debaterank.util.DebateHelper;
 import io.micheal.debaterank.util.JsoupHelper;
 import io.micheal.debaterank.util.Round;
 import io.micheal.debaterank.util.SQLHelper;
@@ -59,7 +65,6 @@ public class PF extends Module {
 		
 		// Scrape events per tournament
 		for(Tournament t : tournaments) {
-			if(t.getName().contains("Oak Grove"))
 			manager.newModule(new Runnable() {
 				public void run() {
 					try {
@@ -224,7 +229,6 @@ public class PF extends Module {
 								int count = 0;
 								while(matcher.find())
 									count += 2;
-								System.out.println(count);
 								if(tournamentExists(doc.baseUri(), count, sql, "pf_rounds"))
 									log.log(JOT, t.getName() + " double octos is up to date.");
 								else {
@@ -242,15 +246,17 @@ public class PF extends Module {
 										a.add(t.getLink());
 										a.add(doc.baseUri());
 										
-										Debater leftDebater = getDebaterFromLastName(sql, matcher.group(1), matcher.group(4));
-										Debater rightDebater = getDebaterFromLastName(sql, matcher.group(2), matcher.group(4));
-										Debater leftAgainst = getDebaterFromLastName(sql, matcher.group(6), matcher.group(9));
-										Debater rightAgainst = getDebaterFromLastName(sql, matcher.group(7), matcher.group(9));
+										String leftDebater = matcher.group(1);
+										String rightDebater = matcher.group(2);
+										String debaterSchool = matcher.group(4);
+										String leftAgainst = matcher.group(6);
+										String rightAgainst = matcher.group(7);
+										String againstSchool = matcher.group(9);
 										if(leftDebater == null || rightDebater == null || leftAgainst == null || rightAgainst == null)
 											continue;
-										Team team = new Team(leftDebater, rightDebater);
+										Team team = DebateHelper.getTeamFromLastName(sql, leftDebater, rightDebater, debaterSchool);
 										team.setID(getTeamID(sql, team, "PF"));
-										Team against = new Team(leftAgainst, rightAgainst);
+										Team against = DebateHelper.getTeamFromLastName(sql, leftAgainst, rightAgainst, againstSchool);
 										against.setID(getTeamID(sql, against, "PF"));
 										
 										a.add(team.getID());
@@ -331,7 +337,7 @@ public class PF extends Module {
 											String[] names = team.text().substring(team.text().indexOf(' ') + 1).split(" - ");
 											if(names.length != 2)
 												continue;
-											currentMatchup.add(Pair.of(new Team(new Debater(null, null, names[0], null, null), new Debater(null, null, names[1], null, null)), null));
+											currentMatchup.add(Pair.of(new Team(DebateHelper.getDebaterObjectByLast(names[0], null), DebateHelper.getDebaterObjectByLast(names[1], null)), null));
 										}
 										else {
 											// Add all debaters to an arraylist of pairs
@@ -370,18 +376,18 @@ public class PF extends Module {
 													if(leftText.contains("&nbsp;"))
 														l = null;
 													else
-														l = new Team(new Debater(null, null, leftNames[0], null, leftSchool), new Debater(null, null, leftNames[1], null, leftSchool));
+														l = DebateHelper.getTeamFromLastName(sql, DebateHelper.getDebaterObjectByLast(leftNames[0], leftSchool).getLast(), DebateHelper.getDebaterObjectByLast(leftNames[1], leftSchool).getLast(), leftSchool);
 													Team r;
 													if(rightText.contains("&nbsp;"))
 														r = null;
 													else
-														r = new Team(new Debater(null, null, rightNames[0], null, rightSchool), new Debater(null, null, rightNames[1], null, rightSchool));
+														r = DebateHelper.getTeamFromLastName(sql, DebateHelper.getDebaterObjectByLast(rightNames[0], rightSchool).getLast(), DebateHelper.getDebaterObjectByLast(rightNames[1], rightSchool).getLast(), rightSchool);
 													currentMatchup.add(Pair.of(l, r));
 													left = null;
 												}
 											}
 										}
-										System.exit(0);
+
 										if(matchup != null && last != null) {
 											
 											// Sort matchups into winner/loser pairs
