@@ -65,6 +65,7 @@ public class PF extends Module {
 		
 		// Scrape events per tournament
 		for(Tournament t : tournaments) {
+			if(t.getName().contains("Parish Episcopal"))
 			manager.newModule(new Runnable() {
 				public void run() {
 					try {
@@ -240,7 +241,7 @@ public class PF extends Module {
 									
 									matcher.reset();
 									ArrayList<Object> args = new ArrayList<Object>();
-									String query = "INSERT INTO pf_rounds (tournament, absUrl, debater, against, round, side, decision) VALUES ";
+									String query = "INSERT INTO pf_rounds (tournament, absUrl, team, against, round, side, decision) VALUES ";
 									while(matcher.find()) {
 										// First debater
 										ArrayList<Object> a = new ArrayList<Object>();
@@ -266,7 +267,7 @@ public class PF extends Module {
 										a.add(matcher.group(5).equals("Aff") ? new Character('A') : new Character('N'));
 										a.add("1-0");
 										if(!overwrite) {
-											ResultSet exists = sql.executeQueryPreparedStatement("SELECT * FROM pf_rounds WHERE tournament=(SELECT id FROM tournaments WHERE link=?) AND absUrl<=>? AND debater=? AND against=? AND round<=>? AND side<=>? AND decision<=>?", a.get(0), a.get(1), a.get(2), a.get(3), a.get(4), a.get(5), a.get(6));
+											ResultSet exists = sql.executeQueryPreparedStatement("SELECT * FROM pf_rounds WHERE tournament=(SELECT id FROM tournaments WHERE link=?) AND absUrl<=>? AND team=? AND against=? AND round<=>? AND side<=>? AND decision<=>?", a.get(0), a.get(1), a.get(2), a.get(3), a.get(4), a.get(5), a.get(6));
 											if(!exists.next()) {
 												query += "((SELECT id FROM tournaments WHERE link=?), ?, ?, ?, ?, ?, ?), ";
 												args.addAll(a);
@@ -288,7 +289,7 @@ public class PF extends Module {
 										a.add(matcher.group(10).equals("Aff") ? new Character('A') : new Character('N'));
 										a.add("0-1");
 										if(!overwrite) {
-											ResultSet exists = sql.executeQueryPreparedStatement("SELECT * FROM pf_rounds WHERE tournament=(SELECT id FROM tournaments WHERE link=?) AND absUrl<=>? AND debater=? AND against=? AND round<=>? AND side<=>? AND decision<=>?", a.get(0), a.get(1), a.get(2), a.get(3), a.get(4), a.get(5), a.get(6), a.get(7));
+											ResultSet exists = sql.executeQueryPreparedStatement("SELECT * FROM pf_rounds WHERE tournament=(SELECT id FROM tournaments WHERE link=?) AND absUrl<=>? AND team=? AND against=? AND round<=>? AND side<=>? AND decision<=>?", a.get(0), a.get(1), a.get(2), a.get(3), a.get(4), a.get(5), a.get(6), a.get(7));
 											if(!exists.next()) {
 												query += "((SELECT id FROM tournaments WHERE link=?), ?, ?, ?, ?, ?, ?), ";
 												args.addAll(a);
@@ -299,7 +300,7 @@ public class PF extends Module {
 											args.addAll(a);
 										}
 									}
-									if(!query.equals("INSERT INTO pf_rounds (tournament, absUrl, debater, against, round, side, decision) VALUES ")) {
+									if(!query.equals("INSERT INTO pf_rounds (tournament, absUrl, team, against, round, side, decision) VALUES ")) {
 										query = query.substring(0, query.lastIndexOf(", "));
 										sql.executePreparedStatement(query, args.toArray());
 										log.log(JOT, t.getName() + " double octos updated.");
