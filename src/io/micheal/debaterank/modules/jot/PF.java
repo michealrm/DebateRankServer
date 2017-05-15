@@ -4,7 +4,6 @@ import static io.micheal.debaterank.util.DebateHelper.JOT;
 import static io.micheal.debaterank.util.DebateHelper.getBracketRound;
 import static io.micheal.debaterank.util.DebateHelper.getTeamID;
 import static io.micheal.debaterank.util.DebateHelper.tournamentExists;
-import static io.micheal.debaterank.util.DebateHelper.updateTeamIDs;
 import static io.micheal.debaterank.util.DebateHelper.updateTeamWithLastNames;
 
 import java.io.File;
@@ -13,6 +12,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -103,7 +103,8 @@ public class PF extends Module {
 								else {
 									
 									// Update DB with debaters
-									updateTeamIDs(sql, competitors, "PF");
+									for(Map.Entry<String, Team> entry : competitors.entrySet())
+										entry.getValue().setID(getTeamID(sql, entry.getValue(), "PF"));
 									
 									// Overwrite
 									if(overwrite)

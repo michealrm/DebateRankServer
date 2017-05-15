@@ -5,8 +5,6 @@ import static io.micheal.debaterank.util.SQLHelper.cleanString;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
 
 import org.apache.logging.log4j.Level;
 import org.jsoup.nodes.Document;
@@ -66,11 +64,6 @@ public class DebateHelper {
 		int left = getDebaterID(sql, team.getLeft());
 		int right = getDebaterID(sql, team.getRight());
 		return sql.executePreparedStatementArgs("INSERT INTO teams (debater1, debater2, event) VALUES (?, ?, ?)", left, right, event);
-	}
-	
-	public static void updateTeamIDs(SQLHelper sql, HashMap<String, Team> competitors, String event) throws SQLException {
-		for(Map.Entry<String, Team> entry : competitors.entrySet())
-			entry.getValue().setID(getTeamID(sql, entry.getValue(), event));
 	}
 	
 	/**
