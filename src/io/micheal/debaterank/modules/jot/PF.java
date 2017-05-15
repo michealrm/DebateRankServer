@@ -65,7 +65,6 @@ public class PF extends Module {
 		
 		// Scrape events per tournament
 		for(Tournament t : tournaments) {
-			if(t.getName().contains("Parish Episcopal"))
 			manager.newModule(new Runnable() {
 				public void run() {
 					try {
