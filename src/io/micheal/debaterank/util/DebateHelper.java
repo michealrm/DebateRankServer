@@ -84,6 +84,24 @@ public class DebateHelper {
 		return debaters;
 	}
 	
+	public static ArrayList<Team> getTeams(SQLHelper sql) throws SQLException {
+		ResultSet teamsSet = sql.executeQuery("SELECT d1.id, d1.first, d1.middle, d1.last, d1.surname, d1.school, d2.id, d2.first, d2.middle, d2.last, d2.surname, d2.school, tm.id FROM teams tm JOIN debaters AS d1 ON tm.debater1=d1.id JOIN debaters AS d2 ON tm.debater2=d2.id");
+		ArrayList<Team> teams = new ArrayList<Team>();
+		while(teamsSet.next()) {
+			try {
+				Debater d1 = new Debater(teamsSet.getString(2), teamsSet.getString(3), teamsSet.getString(4), teamsSet.getString(5), teamsSet.getString(6));
+				d1.setID(teamsSet.getInt(1));
+				Debater d2 = new Debater(teamsSet.getString(8), teamsSet.getString(9), teamsSet.getString(10), teamsSet.getString(11), teamsSet.getString(12));
+				d2.setID(teamsSet.getInt(7));
+				Team team = new Team(d1, d2);
+				team.setID(teamsSet.getInt(13));
+				teams.add(team);
+			}
+			catch(SQLException sqle) {}
+		}
+		teamsSet.close();
+		return teams;
+	}
 	public static Team getTeamFromLastName(SQLHelper sql, String last1, String last2, String school) throws SQLException {
 		ResultSet index = sql.executeQueryPreparedStatement("SELECT team.id, o.id, o.first, o.middle, o.last, o.surname, o.school, t.id, t.first, t.middle, t.last, t.surname, t.school FROM teams team JOIN debaters AS o ON o.id=team.debater1 JOIN debaters AS t ON t.id=team.debater2 WHERE (o.last_clean<=>? OR t.last_clean<=>?) AND (o.last_clean<=>? OR t.last_clean<=>?)", cleanString(last1), cleanString(last2), cleanString(last1), cleanString(last2));
 		if(index.next()) {

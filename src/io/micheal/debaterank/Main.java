@@ -21,10 +21,7 @@ import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
 import io.micheal.debaterank.modules.ModuleManager;
-import io.micheal.debaterank.modules.PoolSizeException;
-import io.micheal.debaterank.modules.WorkerPool;
 import io.micheal.debaterank.modules.WorkerPoolManager;
-import io.micheal.debaterank.modules.jot.PF;
 import io.micheal.debaterank.util.DebateHelper;
 import io.micheal.debaterank.util.RatingsComparator;
 import io.micheal.debaterank.util.SQLHelper;
@@ -342,21 +339,16 @@ public class Main {
 				
 				// Sort by ratings
 				Collections.sort(teams, new RatingsComparator());
-				ArrayList<Debater> debatersList = DebateHelper.getDebaters(sql);
+				ArrayList<Team> teamList = DebateHelper.getTeams(sql);
 				for(int i = 1;i<=teams.size();i++) {
-					ResultSet debaters = sql.executeQuery("SELECT debater1, debater2 FROM teams WHERE id=" + teams.get(i-1).getId());
-					Debater debater1 = null, debater2 = null;
-					Integer id1 = null, id2 = null;
-					if(debaters.next()) {
-						id1 = debaters.getInt(1);
-						id2 = debaters.getInt(2);
-					}
-					for(Debater d : debatersList) {
-						if(id1 != null && d.getID().intValue() == id1.intValue())
-							debater1 = d;
-						if(id2 != null && d.getID().intValue() == id2.intValue())
-							debater2 = d;
-					}
+					Team team = null;
+					for(Team t : teamList)
+						if(t.getID().intValue() == teams.get(i-1).getId()) {
+							team = t;
+							break;
+						}
+					Debater debater1 = team.getLeft();
+					Debater debater2 = team.getRight();
 					log.info(i + ". " + debater1.getFirst() + " " + debater1.getLast() + " and " + debater2.getFirst() + " " + debater2.getLast() + " (" + debater2.getSchool() + ") " + " - " + teams.get(i-1).getRating() + " / " + teams.get(i-1).getNumberOfResults());
 				}
 				
