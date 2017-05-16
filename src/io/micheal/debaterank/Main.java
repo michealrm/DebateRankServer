@@ -147,9 +147,9 @@ public class Main {
 			//workerManager.add(ld);
 			//moduleManager.newModule(new LD(tournaments, sql, ld));
 			
-			WorkerPool pf = new WorkerPool();
-			workerManager.add(pf);
-			moduleManager.newModule(new PF(tournaments, sql, pf));
+			//WorkerPool pf = new WorkerPool();
+			//workerManager.add(pf);
+			//moduleManager.newModule(new PF(tournaments, sql, pf));
 			// TODO: Policy
 			// TODO: PF
 				
@@ -161,13 +161,13 @@ public class Main {
 			// Execute //
 			/////////////
 				
-			try {
-				workerManager.start();
-			} catch (PoolSizeException e) {
-				log.error(e);
-				log.fatal("Not enough threads!");
-				System.exit(1);
-			}
+//			try {
+//				workerManager.start();
+//			} catch (PoolSizeException e) {
+//				log.error(e);
+//				log.fatal("Not enough threads!");
+//				System.exit(1);
+//			}
 			
 			do {
 				try {
@@ -208,7 +208,82 @@ public class Main {
 			
 			// Bids
 				
-			// Glicko-2
+			// Glicko-2 //
+			
+			// LD
+			
+			// Establish rating periods by tournaments
+//			try {
+//				ArrayList<DateTime> newWeeks = new ArrayList<DateTime>();
+//				ResultSet orderedTournaments = sql.executeQuery("SELECT date FROM tournaments WHERE date>'2016-07-01 00:00:00.000' ORDER BY date");
+//				DateTime last = null;
+//				while(orderedTournaments.next()) {
+//					DateTime date = new DateTime(orderedTournaments.getDate(1)).withTimeAtStartOfDay();
+//					if(last == null || date.equals(last) || date.minusDays(1).equals(last))
+//						last = date;
+//					else {
+//						newWeeks.add(date);
+//						last = date;
+//					}
+//				}
+//				
+//				ResultSet debates = sql.executeQuery("SELECT t.date, round, debater, against, decision from ld_rounds ld JOIN tournaments AS t ON ld.tournament=t.id  WHERE tournament IN (SELECT id FROM tournaments WHERE date>'2016-07-01 00:00:00.000') AND NOT debater=against GROUP BY CONCAT(date, \"-\", round, \"-\", LEAST(debater, against), \"-\", GREATEST(debater, against)) HAVING count(*) > 0 ORDER BY t.date, round");
+//				ArrayList<Rating> debaters = new ArrayList<Rating>();
+//				int index = 0;
+//				RatingCalculator ratingSystem = new RatingCalculator(0.06, 0.5);
+//				RatingPeriodResults results = new RatingPeriodResults();
+//				while(true) {
+//					boolean next = false;
+//					while((next = debates.next()) && !(new DateTime(debates.getDate(1)).withTimeAtStartOfDay().getMillis() > newWeeks.get(index).getMillis())) {
+//						// Check to see if we have this debater stored
+//						Rating debater = null, against = null;
+//						for(Rating rating : debaters) {
+//							if(rating.getId() == debates.getInt(3))
+//								debater = rating;
+//							if(rating.getId() == debates.getInt(4))
+//								against = rating;
+//							if(debater != null && against != null)
+//								break;
+//						}
+//						if(debater == null) {
+//							debater = new Rating(debates.getInt(3), ratingSystem);
+//							debaters.add(debater);
+//						}
+//						if(against == null) {
+//							against = new Rating(debates.getInt(4), ratingSystem);
+//							debaters.add(against);
+//						}
+//						
+//						// Add result
+//						if(debates.getString(5).equals("1-0"))
+//							results.addResult(debater, against);
+//						else
+//							results.addResult(against, debater);
+//					}
+//					index++;
+//					ratingSystem.updateRatings(results);
+//					if(!next)
+//						break;
+//				} 
+//				debates.close();
+//				
+//				// Sort by ratings
+//				Collections.sort(debaters, new RatingsComparator());
+//				ArrayList<Debater> debatersList = DebateHelper.getDebaters(sql);
+//				for(int i = 1;i<=debaters.size();i++) {
+//					Debater debater = null;
+//					for(Debater d : debatersList)
+//						if(d.getID().intValue() == debaters.get(i-1).getId())
+//							debater = d;
+//					log.info(i + ". " + debater + " - " + debaters.get(i-1).getRating() + " / " + debaters.get(i-1).getNumberOfResults());
+//				}
+//				
+//			} catch (SQLException e) {
+//				log.error(e);
+//				log.fatal("Could not update debater ratings.");
+//			}
+			
+			// PF
 			
 			// Establish rating periods by tournaments
 			try {
@@ -225,8 +300,8 @@ public class Main {
 					}
 				}
 				
-				ResultSet debates = sql.executeQuery("SELECT t.date, round, debater, against, decision from ld_rounds ld JOIN tournaments AS t ON ld.tournament=t.id  WHERE tournament IN (SELECT id FROM tournaments WHERE date>'2016-07-01 00:00:00.000') AND NOT debater=against GROUP BY CONCAT(date, \"-\", round, \"-\", LEAST(debater, against), \"-\", GREATEST(debater, against)) HAVING count(*) > 0 ORDER BY t.date, round");
-				ArrayList<Rating> debaters = new ArrayList<Rating>();
+				ResultSet debates = sql.executeQuery("SELECT t.date, round, team, against, decision from pf_rounds pf JOIN tournaments AS t ON pf.tournament=t.id  WHERE tournament IN (SELECT id FROM tournaments WHERE date>'2016-07-01 00:00:00.000') AND NOT team=against GROUP BY CONCAT(date, \"-\", round, \"-\", LEAST(team, against), \"-\", GREATEST(team, against)) HAVING count(*) > 0 ORDER BY t.date, round");
+				ArrayList<Rating> teams = new ArrayList<Rating>();
 				int index = 0;
 				RatingCalculator ratingSystem = new RatingCalculator(0.06, 0.5);
 				RatingPeriodResults results = new RatingPeriodResults();
@@ -234,29 +309,29 @@ public class Main {
 					boolean next = false;
 					while((next = debates.next()) && !(new DateTime(debates.getDate(1)).withTimeAtStartOfDay().getMillis() > newWeeks.get(index).getMillis())) {
 						// Check to see if we have this debater stored
-						Rating debater = null, against = null;
-						for(Rating rating : debaters) {
+						Rating team = null, against = null;
+						for(Rating rating : teams) {
 							if(rating.getId() == debates.getInt(3))
-								debater = rating;
+								team = rating;
 							if(rating.getId() == debates.getInt(4))
 								against = rating;
-							if(debater != null && against != null)
+							if(team != null && against != null)
 								break;
 						}
-						if(debater == null) {
-							debater = new Rating(debates.getInt(3), ratingSystem);
-							debaters.add(debater);
+						if(team == null) {
+							team = new Rating(debates.getInt(3), ratingSystem);
+							teams.add(team);
 						}
 						if(against == null) {
 							against = new Rating(debates.getInt(4), ratingSystem);
-							debaters.add(against);
+							teams.add(against);
 						}
 						
 						// Add result
 						if(debates.getString(5).equals("1-0"))
-							results.addResult(debater, against);
+							results.addResult(team, against);
 						else
-							results.addResult(against, debater);
+							results.addResult(against, team);
 					}
 					index++;
 					ratingSystem.updateRatings(results);
@@ -266,14 +341,23 @@ public class Main {
 				debates.close();
 				
 				// Sort by ratings
-				Collections.sort(debaters, new RatingsComparator());
+				Collections.sort(teams, new RatingsComparator());
 				ArrayList<Debater> debatersList = DebateHelper.getDebaters(sql);
-				for(int i = 1;i<=debaters.size();i++) {
-					Debater debater = null;
-					for(Debater d : debatersList)
-						if(d.getID().intValue() == debaters.get(i-1).getId())
-							debater = d;
-					log.info(i + ". " + debater + " - " + debaters.get(i-1).getRating() + " / " + debaters.get(i-1).getNumberOfResults());
+				for(int i = 1;i<=teams.size();i++) {
+					ResultSet debaters = sql.executeQuery("SELECT debater1, debater2 FROM teams WHERE id=" + teams.get(i-1).getId());
+					Debater debater1 = null, debater2 = null;
+					Integer id1 = null, id2 = null;
+					if(debaters.next()) {
+						id1 = debaters.getInt(1);
+						id2 = debaters.getInt(2);
+					}
+					for(Debater d : debatersList) {
+						if(id1 != null && d.getID().intValue() == id1.intValue())
+							debater1 = d;
+						if(id2 != null && d.getID().intValue() == id2.intValue())
+							debater2 = d;
+					}
+					log.info(i + ". " + debater1.getFirst() + " " + debater1.getLast() + " and " + debater2.getFirst() + " " + debater2.getLast() + " (" + debater2.getSchool() + ") " + " - " + teams.get(i-1).getRating() + " / " + teams.get(i-1).getNumberOfResults());
 				}
 				
 			} catch (SQLException e) {

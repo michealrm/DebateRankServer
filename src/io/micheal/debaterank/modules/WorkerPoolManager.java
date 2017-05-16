@@ -33,7 +33,7 @@ public class WorkerPoolManager {
 	}
 	
 	public void start() throws PoolSizeException {
-		int count = POOL_LENGTH / managers.size();
+		int count = managers.size() == 0 ? 0 : POOL_LENGTH / managers.size();
 		if(count == 0)
 			throw new PoolSizeException(count, POOL_LENGTH);
 		for(WorkerPool manager : managers)
