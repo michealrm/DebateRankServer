@@ -40,6 +40,12 @@ public class Tokenizer {
                 tokenized.put(SURNAME, split[3]);
             }
         }
+        else if(split.length > 4) {
+        	tokenized.put(FIRST, split[0]);
+        	for(int i = 1;i<split.length;i++) {
+        		
+        	}
+        }
         return null;
     }
 
