@@ -76,9 +76,9 @@ public class Main {
 			// JOT //
 			/////////
 			
-			ArrayList<Tournament> tournaments = null;
+			ArrayList<Tournament> jotTournaments = null;
 			try {
-				// Get seasons so we can iterate through all the tournaments
+				// Get seasons so we can iterate through all the jotTournaments
 				Document tlist = Jsoup.connect("http://www.joyoftournaments.com/results.asp").get();
 				ArrayList<String> years = new ArrayList<String>();
 				for(Element select : tlist.select("select"))
@@ -86,8 +86,8 @@ public class Main {
 						for(Element option : select.select("option"))
 							years.add(option.attr("value"));
 
-				// Get all the tournaments
-				tournaments = new ArrayList<Tournament>();
+				// Get all the jotTournaments
+				jotTournaments = new ArrayList<Tournament>();
 				for(String year : years) {
 					Document tournamentDoc = Jsoup.connect("http://www.joyoftournaments.com/results.asp")
 						.data("state","")
@@ -99,16 +99,23 @@ public class Main {
 					Elements rows = table.select("tr");
 					for(int i = 1;i<rows.size();i++) {
 						Elements cols = rows.get(i).select("td");
-						tournaments.add(new Tournament(cols.select("a").first().text(), cols.select("a").first().absUrl("href"), cols.select("[align=center]").first().text(), cols.select("[align=right]").first().text()));
+						jotTournaments.add(new Tournament(cols.select("a").first().text(), cols.select("a").first().absUrl("href"), cols.select("[align=center]").first().text(), cols.select("[align=right]").first().text()));
 					}
 				}
-				
-				// Update DB / Remove cached tournaments from the queue
-				log.debug(tournaments.size() + " tournaments scraped from JOT");
+				// Remove duplicates
+				for(int i = 0;i<jotTournaments.size();i++)
+					for(int k = 0;k<jotTournaments.size();k++)
+						if(jotTournaments.get(i).getLink().equals(jotTournaments.get(k).getLink()) && i != k) {
+							jotTournaments.remove(k);
+							i--;
+							k--;
+						}
+				// Update DB / Remove cached jotTournaments from the queue
+				log.debug(jotTournaments.size() + " tournaments scraped from JOT");
 				try {
 					String query = "INSERT IGNORE INTO tournaments (name, state, link, date) VALUES ";
 					ArrayList<String> args = new ArrayList<String>();
-					for(Tournament t : tournaments) {
+					for(Tournament t : jotTournaments) {
 						query += "(?,?,?,STR_TO_DATE(?, '%m/%d/%Y')), ";
 						args.add(t.getName());
 						args.add(t.getState());
@@ -123,16 +130,7 @@ public class Main {
 					log.fatal("DB could not be updated with JOT tournament info. " + e.getErrorCode());
 				}
 				
-				// Remove duplicates
-				for(int i = 0;i<tournaments.size();i++)
-					for(int k = 0;k<tournaments.size();k++)
-						if(tournaments.get(i).getLink().equals(tournaments.get(k).getLink()) && i != k) {
-							tournaments.remove(k);
-							i--;
-							k--;
-						}
-				
-				log.info(tournaments.size() + " tournaments queued from JOT");
+				log.info(jotTournaments.size() + " tournaments queued from JOT");
 			
 			} catch (IOException e) {
 				e.printStackTrace();
@@ -153,6 +151,78 @@ public class Main {
 			/////////////
 			// Tabroom //
 			/////////////
+			
+			ArrayList<Tournament> tabroomTournaments = null;
+			try {
+				// Get seasons so we can iterate through all the tournaments
+				Document tlist = Jsoup.connect("https://www.tabroom.com/index/results/").get();
+				ArrayList<String> years = new ArrayList<String>();
+				for(Element select : tlist.select("select[name=year] > option"))
+					years.add(select.attr("value"));
+				Collections.reverse(years);
+				// Get all the tournaments
+				tabroomTournaments = new ArrayList<Tournament>();
+				for(String year : years) {
+					Document tournamentDoc = Jsoup.connect("https://www.tabroom.com/index/results/")
+						.data("year", year)
+						.post();
+					ArrayList<String> circuits = new ArrayList<String>();
+					for(Element select : tournamentDoc.select("select[name=circuit_id] > option"))
+						circuits.add(select.attr("value"));
+					int count = 1;
+					for(String circuit : circuits) {
+						Document doc = Jsoup.connect("https://www.tabroom.com/index/results/")
+								.data("year", year)
+								.data("circuit_id", circuit)
+								.post();
+						System.out.println(year + " " + count++);
+						Element table = doc.select("table[id=results]").first();
+						Elements rows = table.select("tr");
+						for(int i = 0;i<rows.size();i++) {
+							Elements cols = rows.get(i).select("td");
+							if(cols.size() > 0 && cols.get(1).text().endsWith("/US"))
+								tabroomTournaments.add(new Tournament(cols.get(3).text(), cols.get(4).select("a").first().absUrl("href"), cols.get(1).text().substring(0,cols.get(1).text().indexOf("/US")), cols.get(0).text()));
+						}
+					}
+				}
+				
+				// Remove duplicates
+				for(int i = 0;i<tabroomTournaments.size();i++)
+					for(int k = 0;k<tabroomTournaments.size();k++)
+						if(tabroomTournaments.get(i).getLink().equals(tabroomTournaments.get(k).getLink()) && i != k) {
+							tabroomTournaments.remove(k);
+							i--;
+							k--;
+						}
+				
+				System.out.println(tabroomTournaments.size());
+				System.exit(0);
+				
+				// Update DB / Remove cached tournaments from the queue
+				log.debug(tabroomTournaments.size() + " tournaments scraped from JOT");
+				try {
+					String query = "INSERT IGNORE INTO tournaments (name, state, link, date) VALUES ";
+					ArrayList<String> args = new ArrayList<String>();
+					for(Tournament t : tabroomTournaments) {
+						query += "(?,?,?,STR_TO_DATE(?, '%m/%d/%Y')), ";
+						args.add(t.getName());
+						args.add(t.getState());
+						args.add(t.getLink());
+						args.add(t.getDate());
+					}
+					query = query.substring(0, query.lastIndexOf(", "));
+					sql.executePreparedStatement(query, args.toArray(new String[args.size()]));
+				} catch (SQLException e) {
+					e.printStackTrace();
+					log.error(e);
+					log.fatal("DB could not be updated with JOT tournament info. " + e.getErrorCode());
+				}
+				
+				log.info(tabroomTournaments.size() + " tournaments queued from JOT");
+			
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
 			
 			/////////////
 			// Execute //
