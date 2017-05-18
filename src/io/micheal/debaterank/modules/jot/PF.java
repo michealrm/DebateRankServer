@@ -21,6 +21,7 @@ import org.apache.commons.configuration2.builder.fluent.Configurations;
 import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.logging.log4j.LogManager;
+import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.nodes.TextNode;
@@ -33,7 +34,6 @@ import io.micheal.debaterank.UnsupportedNameException;
 import io.micheal.debaterank.modules.Module;
 import io.micheal.debaterank.modules.WorkerPool;
 import io.micheal.debaterank.util.DebateHelper;
-import io.micheal.debaterank.util.JsoupHelper;
 import io.micheal.debaterank.util.Round;
 import io.micheal.debaterank.util.SQLHelper;
 
@@ -69,7 +69,7 @@ public class PF extends Module {
 				public void run() {
 					try {
 						log.log(JOT, "Updating " + t.getName());
-						Document tPage = JsoupHelper.retryIfTimeout(t.getLink(), 3);
+						Document tPage = Jsoup.connect(t.getLink()).timeout(10*1000).get();
 						Elements eventRows = tPage.select("tr:has(td:matches(PF|Public F|P-F)");
 
 						for(Element eventRow : eventRows) {
@@ -77,7 +77,7 @@ public class PF extends Module {
 							// Prelims
 							Element prelim = eventRow.select("a[href]:contains(Prelims)").first();
 							if(prelim != null) {
-								Document p = JsoupHelper.retryIfTimeout(prelim.absUrl("href"), 3);
+								Document p = Jsoup.connect(prelim.absUrl("href")).timeout(10*1000).get();
 								Element table = p.select("table[border=1]").first();
 								Elements rows = table.select("tr:has(table)");
 								
@@ -221,7 +221,7 @@ public class PF extends Module {
 							// Double Octos
 							Element doubleOctos = eventRow.select("a[href]:contains(Double Octos)").first();
 							if(doubleOctos != null) {
-								Document doc = JsoupHelper.retryIfTimeout(doubleOctos.absUrl("href"), 3);
+								Document doc = Jsoup.connect(doubleOctos.absUrl("href")).timeout(10*1000).get();
 								
 								// If we have the same amount of entries, then do not check
 								Pattern pattern = Pattern.compile("[^\\s]+ ([A-Za-z]+?) - ([A-Za-z]+?)( \\((.+?)\\))? \\((Aff|Neg)\\) def. [^\\s]+ ([A-Za-z]+?) - ([A-Za-z]+?)( \\((.+?)\\))? \\((Aff|Neg)\\)");
@@ -313,7 +313,7 @@ public class PF extends Module {
 							//Bracket
 							Element bracket = eventRow.select("a[href]:contains(Bracket)").first();
 							if(bracket != null) {
-								Document doc = JsoupHelper.retryIfTimeout(bracket.absUrl("href"), 3);
+								Document doc = Jsoup.connect(bracket.absUrl("href")).timeout(10*1000).get();
 								
 								// If we have the same amount of entries, then do not check
 								if(tournamentExists(doc.baseUri(), doc.select("table[cellspacing=0] > tbody > tr > td.botr, table[cellspacing=0] > tbody > tr > td.topr, table[cellspacing=0] > tbody > tr > td.top, table[cellspacing=0] > tbody > tr > td.btm").size() - 1, sql, "pf_rounds"))
