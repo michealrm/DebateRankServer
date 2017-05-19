@@ -107,7 +107,6 @@ public class Main {
 					for(int k = 0;k<jotTournaments.size();k++)
 						if(jotTournaments.get(i).getLink().equals(jotTournaments.get(k).getLink()) && i != k) {
 							jotTournaments.remove(k);
-							i--;
 							k--;
 						}
 				// Update DB / Remove cached jotTournaments from the queue
@@ -191,7 +190,6 @@ public class Main {
 					for(int k = 0;k<tabroomTournaments.size();k++)
 						if(tabroomTournaments.get(i).getLink().equals(tabroomTournaments.get(k).getLink()) && i != k) {
 							tabroomTournaments.remove(k);
-							i--;
 							k--;
 						}
 				
