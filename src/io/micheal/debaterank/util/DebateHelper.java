@@ -16,6 +16,7 @@ import io.micheal.debaterank.UnsupportedNameException;
 public class DebateHelper {
 
 	public static final Level JOT = Level.forName("JOT", 400);
+	public static final Level TABROOM = Level.forName("TABROOM", 400);
 	public static final Level NSDA = Level.forName("NSDA", 400);
 	
 	/**
