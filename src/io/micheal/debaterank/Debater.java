@@ -7,11 +7,16 @@ import io.micheal.debaterank.util.SQLHelper;
 
 public class Debater {
 
-	private String first, middle, last, surname, school;
+	private String first, middle, last, surname, school, state;
 	private Integer id;
 	
 	public Debater(String name, String school) throws UnsupportedNameException {
+		this(name, school, null);
+	}
+	
+	public Debater(String name, String school, String state) throws UnsupportedNameException {
 		name = name.replaceAll(" \\(.+?\\)", "");
+		this.state = state;
 		if(school != null)
 			this.school = school.trim();
 		else
@@ -134,6 +139,10 @@ public class Debater {
 
 	public String getSchool() {
 		return school;
+	}
+	
+	public String getState() {
+		return state;
 	}
 	
 	public void setID(int id) {
