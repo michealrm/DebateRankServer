@@ -21,6 +21,8 @@ import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
 import io.micheal.debaterank.modules.ModuleManager;
+import io.micheal.debaterank.modules.PoolSizeException;
+import io.micheal.debaterank.modules.WorkerPool;
 import io.micheal.debaterank.modules.WorkerPoolManager;
 import io.micheal.debaterank.util.DebateHelper;
 import io.micheal.debaterank.util.RatingsComparator;
@@ -166,15 +168,14 @@ public class Main {
 						.data("year", year)
 						.post();
 					ArrayList<String> circuits = new ArrayList<String>();
-					for(Element select : tournamentDoc.select("select[name=circuit_id] > option"))
-						circuits.add(select.attr("value"));
-					int count = 1;
+//					for(Element select : tournamentDoc.select("select[name=circuit_id] > option"))
+//						circuits.add(select.attr("value"));
+					circuits.add("6"); // Testing for National Circuit
 					for(String circuit : circuits) {
 						Document doc = Jsoup.connect("https://www.tabroom.com/index/results/")
 								.data("year", year)
 								.data("circuit_id", circuit)
 								.post();
-						System.out.println(year + " " + count++);
 						Element table = doc.select("table[id=results]").first();
 						Elements rows = table.select("tr");
 						for(int i = 0;i<rows.size();i++) {
@@ -193,11 +194,8 @@ public class Main {
 							k--;
 						}
 				
-				System.out.println(tabroomTournaments.size());
-				System.exit(0);
-				
 				// Update DB / Remove cached tournaments from the queue
-				log.debug(tabroomTournaments.size() + " tournaments scraped from JOT");
+				log.debug(tabroomTournaments.size() + " tournaments scraped from tabroom");
 				try {
 					String query = "INSERT IGNORE INTO tournaments (name, state, link, date) VALUES ";
 					ArrayList<String> args = new ArrayList<String>();
@@ -213,26 +211,28 @@ public class Main {
 				} catch (SQLException e) {
 					e.printStackTrace();
 					log.error(e);
-					log.fatal("DB could not be updated with JOT tournament info. " + e.getErrorCode());
+					log.fatal("DB could not be updated with tabroom tournament info. " + e.getErrorCode());
 				}
 				
-				log.info(tabroomTournaments.size() + " tournaments queued from JOT");
+				log.info(tabroomTournaments.size() + " tournaments queued from tabroom");
 			
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
 			
+			// Modules //
+			
+			WorkerPool tabroomLD = new WorkerPool();
+			workerManager.add(tabroomLD);
+			moduleManager.newModule(new io.micheal.debaterank.modules.tabroom.LD(tabroomTournaments, sql, tabroomLD));
+			
 			/////////////
 			// Execute //
 			/////////////
 				
-//			try {
-//				workerManager.start();
-//			} catch (PoolSizeException e) {
-//				log.error(e);
-//				log.fatal("Not enough threads!");
-//				System.exit(1);
-//			}
+			try {
+				workerManager.start();
+			} catch (PoolSizeException e) {}
 			
 			do {
 				try {
