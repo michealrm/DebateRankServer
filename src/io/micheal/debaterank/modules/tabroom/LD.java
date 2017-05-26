@@ -72,127 +72,145 @@ public class LD extends Module {
 						Elements eventRows = tPage.select("option:matches(LD|Lincoln|L-D)");
 						
 						for(Element eventRow : eventRows) {
-
+							
+							
+							// Register all debaters from entries
+							HashMap<String, Debater> debaters = new HashMap<String, Debater>();
+							Document entries = Jsoup.connect(tPage.select("a:contains(Entries)").first().absUrl("href"))
+									.data("event_id", eventRow.attr("value"))
+									.post();
+							Element entriesTable = entries.select("table[id=sortme]").first();
+							Elements entriesRows = entriesTable.select("tbody > tr");
+							for(Element row : entriesRows) {
+								Elements cols = row.select("td");
+								try {
+									debaters.put(cols.get(3).text(), new Debater(cols.get(2).text(), cols.get(0).text(), cols.get(1).text().endsWith("/US") ? cols.get(1).text().substring(0, cols.get(1).text().indexOf("/US")) : null));
+								} catch (UnsupportedNameException e) {}
+							}
+							System.exit(0);
+							
 							Document page = Jsoup.connect(t.getLink())
 									.data("event_id", eventRow.attr("value"))
 									.post();
-							System.out.println(eventRow.attr("value"));
-							Elements menu = page.select("a.full");
-							for(Element mElement : menu)
-								System.out.println(mElement.text());
-							System.exit(0);
 							
-							// Prelims
-							Element prelim = eventRow.select("a[href]:contains(Prelims)").first();
-							if(prelim != null) {
-								Document p = Jsoup.connect(prelim.absUrl("href")).timeout(10*1000).get();
-								Element table = p.select("table[border=1]").first();
-								Elements rows = table.select("tr:has(table)");
-								
-								// Register all debaters
-								HashMap<String, Debater> competitors = new HashMap<String, Debater>();
-								for(Element row : rows) {
-									Elements infos = row.select("td").first().select("td");
-									try {
-										competitors.put(infos.get(2).text(), new Debater(infos.get(3).text(), infos.get(1).text()));
-									} catch (UnsupportedNameException e) {
-										log.error(e);
-									}
-								}
-								
-								// If we have the same amount of entries, then do not check
-								if(tournamentExists(p.baseUri(), table.select("[colspan=2].rec:not(:containsOwn(F))").size(), sql, "ld_rounds"))
-									log.log(JOT, t.getName() + " prelims is up to date.");
-								else {
-									// Update DB with debaters
-									for(Map.Entry<String, Debater> entry : competitors.entrySet())
-										entry.getValue().setID(DebateHelper.getDebaterID(sql, entry.getValue()));
+							Elements menu = page.select("a.full");
+							for(Element menuRow : menu) {
+								Pattern pattern = Pattern.compile("Round \\d Round results");
+								Matcher matcher = pattern.matcher(menuRow.text());
+								// Prelims
+								if(matcher.matches()) {
+									Document p = Jsoup.connect(menuRow.absUrl("href")).timeout(10*1000).get();
+									Element table = p.select("table[id=sortme]").first();
+									Elements rows = table.select("tr:has(tbody)");
 									
-									// Overwrite
-									if(overwrite)
-										sql.executePreparedStatementArgs("DELETE FROM ld_rounds WHERE absUrl=?", p.baseUri());
-								
-									// Parse rounds
-									String query = "INSERT INTO ld_rounds (tournament, absUrl, debater, against, round, side, speaks, decision) VALUES ";
-									ArrayList<Object> args = new ArrayList<Object>();
-									for(int i = 0;i<rows.size();i++) {
-										String key = rows.get(i).select("td").first().select("td").get(2).text();
-										Elements cols = rows.get(i).select("td[width=80]");
-										for(int k = 0;k<cols.size();k++) {
-											Element speaks = cols.get(k).select("[width=50%][align=left]").first();
-											Element side = cols.get(k).select("[width=50%][align=right]").first();
-											Element win = cols.get(k).select("[colspan=2].rec").first();
-											Element against = cols.get(k).select("[colspan=2][align=right]").first();
-											try {
-												win.text();
-												against.text();
-											}
-											catch(Exception e) {
-												continue;
-											}
-											ArrayList<Object> a = new ArrayList<Object>();
-											a.add(t.getLink());
-											a.add(p.baseUri());
-											a.add(competitors.get(key).getID());
-											if(win.text().equals("F") || win.text().equals("B")) {
-												a.add(competitors.get(key).getID());
-												a.add(Character.forDigit(k+1, 10));
-												a.add(null);
-												a.add(null);
-												a.add(win.text());
-												if(win.text().equals("F"))
-													continue;
-											}
-											else {
-												if(against.text() != null && competitors.get(against.text()) != null)
-													a.add(competitors.get(against.text()).getID());
-												else
-													a.add(competitors.get(key).getID());
-												a.add(Character.forDigit(k+1, 10));
-												if(side != null)
-													a.add(side.text().equals("Aff") ? new Character('A') : new Character('N'));
-												else
-													a.add(null);
+									
+									HashMap<String, Debater> competitors = new HashMap<String, Debater>();
+									for(Element row : rows) {
+										Elements infos = row.select("td").first().select("td");
+										try {
+											competitors.put(infos.get(2).text(), new Debater(infos.get(3).text(), infos.get(1).text()));
+										} catch (UnsupportedNameException e) {
+											log.error(e);
+										}
+									}
+									
+									// If we have the same amount of entries, then do not check
+									if(tournamentExists(p.baseUri(), table.select("[colspan=2].rec:not(:containsOwn(F))").size(), sql, "ld_rounds"))
+										log.log(JOT, t.getName() + " prelims is up to date.");
+									else {
+										// Update DB with debaters
+										for(Map.Entry<String, Debater> entry : competitors.entrySet())
+											entry.getValue().setID(DebateHelper.getDebaterID(sql, entry.getValue()));
+										
+										// Overwrite
+										if(overwrite)
+											sql.executePreparedStatementArgs("DELETE FROM ld_rounds WHERE absUrl=?", p.baseUri());
+									
+										// Parse rounds
+										String query = "INSERT INTO ld_rounds (tournament, absUrl, debater, against, round, side, speaks, decision) VALUES ";
+										ArrayList<Object> args = new ArrayList<Object>();
+										for(int i = 0;i<rows.size();i++) {
+											String key = rows.get(i).select("td").first().select("td").get(2).text();
+											Elements cols = rows.get(i).select("td[width=80]");
+											for(int k = 0;k<cols.size();k++) {
+												Element speaks = cols.get(k).select("[width=50%][align=left]").first();
+												Element side = cols.get(k).select("[width=50%][align=right]").first();
+												Element win = cols.get(k).select("[colspan=2].rec").first();
+												Element against = cols.get(k).select("[colspan=2][align=right]").first();
 												try {
-													a.add(Double.parseDouble(speaks.text().replaceAll("\\\\*", "")));
+													win.text();
+													against.text();
 												}
 												catch(Exception e) {
-													a.add(null);
+													continue;
 												}
-												if(win.text().equals("W"))
-													a.add("1-0");
-												else if(win.text().equals("L"))
-													a.add("0-1");
-												else
+												ArrayList<Object> a = new ArrayList<Object>();
+												a.add(t.getLink());
+												a.add(p.baseUri());
+												a.add(competitors.get(key).getID());
+												if(win.text().equals("F") || win.text().equals("B")) {
+													a.add(competitors.get(key).getID());
+													a.add(Character.forDigit(k+1, 10));
+													a.add(null);
+													a.add(null);
 													a.add(win.text());
+													if(win.text().equals("F"))
+														continue;
+												}
+												else {
+													if(against.text() != null && competitors.get(against.text()) != null)
+														a.add(competitors.get(against.text()).getID());
+													else
+														a.add(competitors.get(key).getID());
+													a.add(Character.forDigit(k+1, 10));
+													if(side != null)
+														a.add(side.text().equals("Aff") ? new Character('A') : new Character('N'));
+													else
+														a.add(null);
+													try {
+														a.add(Double.parseDouble(speaks.text().replaceAll("\\\\*", "")));
+													}
+													catch(Exception e) {
+														a.add(null);
+													}
+													if(win.text().equals("W"))
+														a.add("1-0");
+													else if(win.text().equals("L"))
+														a.add("0-1");
+													else
+														a.add(win.text());
+													
+												}
 												
-											}
-											
-											// Check if exists
-											if(!overwrite) {
-												ResultSet exists = sql.executeQueryPreparedStatement("SELECT * FROM ld_rounds WHERE tournament=(SELECT id FROM tournaments WHERE link=?) AND absUrl<=>? AND debater=? AND against=? AND round<=>? AND side<=>? AND speaks<=>? AND decision<=>?", a.get(0), a.get(1), a.get(2), a.get(3), a.get(4), a.get(5), a.get(6), a.get(7));
-												if(!exists.next()) {
+												// Check if exists
+												if(!overwrite) {
+													ResultSet exists = sql.executeQueryPreparedStatement("SELECT * FROM ld_rounds WHERE tournament=(SELECT id FROM tournaments WHERE link=?) AND absUrl<=>? AND debater=? AND against=? AND round<=>? AND side<=>? AND speaks<=>? AND decision<=>?", a.get(0), a.get(1), a.get(2), a.get(3), a.get(4), a.get(5), a.get(6), a.get(7));
+													if(!exists.next()) {
+														query += "((SELECT id FROM tournaments WHERE link=?), ?, ?, ?, ?, ?, ?, ?), ";
+														args.addAll(a);
+													}
+													exists.close();
+												}
+												else {
 													query += "((SELECT id FROM tournaments WHERE link=?), ?, ?, ?, ?, ?, ?, ?), ";
 													args.addAll(a);
 												}
-												exists.close();
-											}
-											else {
-												query += "((SELECT id FROM tournaments WHERE link=?), ?, ?, ?, ?, ?, ?, ?), ";
-												args.addAll(a);
 											}
 										}
-									}
-									if(!query.equals("INSERT INTO ld_rounds (tournament, absUrl, debater, against, round, side, speaks, decision) VALUES ")) {
-										query = query.substring(0, query.lastIndexOf(", "));
-										sql.executePreparedStatement(query, args.toArray());
-										log.log(JOT, t.getName() + " prelims updated.");
-									}
-									else {
-										log.log(JOT, t.getName() + " prelims is up to date.");
+										if(!query.equals("INSERT INTO ld_rounds (tournament, absUrl, debater, against, round, side, speaks, decision) VALUES ")) {
+											query = query.substring(0, query.lastIndexOf(", "));
+											sql.executePreparedStatement(query, args.toArray());
+											log.log(JOT, t.getName() + " prelims updated.");
+										}
+										else {
+											log.log(JOT, t.getName() + " prelims is up to date.");
+										}
 									}
 								}
 							}
+							
+							
+
 								
 							// Double Octos
 							Element doubleOctos = eventRow.select("a[href]:contains(Double Octos)").first();
