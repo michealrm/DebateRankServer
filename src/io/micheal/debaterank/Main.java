@@ -6,6 +6,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 
 import org.apache.commons.configuration2.Configuration;
 import org.apache.commons.configuration2.builder.fluent.Configurations;
@@ -34,6 +35,7 @@ public class Main {
 	public boolean active = true;
 	private SQLHelper sql;
 	private Configuration config;
+	public static HashMap<Debater, Debater> pointers;
 	
 	public static void main(String[] args) {
 		new Main().run();
@@ -58,6 +60,11 @@ public class Main {
 			log.error(e);
 			System.exit(1);
 		}
+		try {
+			pointers = new HashMap<Debater, Debater>();
+			ResultSet set = sql.executeQuery("SELECT first, middle, last, surname, school, to, old_first, old_middle, old_last, old_surname, old_school FROM pointers p JOIN debaters as d ON d.id=p.to");
+		} catch (SQLException e) {}
+		
 	}
 	
 	public void run() {
