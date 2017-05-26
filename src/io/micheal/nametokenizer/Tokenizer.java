@@ -5,6 +5,8 @@ import java.util.HashMap;
 
 public class Tokenizer {
 
+	public static final int SUB_CHAR_THRESHOLD = 3;
+	
     public static HashMap<Name, String> tokenize(String name) {
         return tokenize(name, LAST);
     }
@@ -42,8 +44,10 @@ public class Tokenizer {
         }
         else if(split.length > 4) {
         	tokenized.put(FIRST, split[0]);
+        	Name lastToken = FIRST;
+        	boolean[] subCurrent = new boolean[split.length];
         	for(int i = 1;i<split.length;i++) {
-        		
+        		if(split[i-1].length() < SUB_CHAR_THRESHOLD);
         	}
         }
         return null;
