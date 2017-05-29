@@ -146,15 +146,14 @@ public class Main {
 			
 			// Modules //
 			
-			//WorkerPool ld = new WorkerPool();
-			//workerManager.add(ld);
-			//moduleManager.newModule(new LD(tournaments, sql, ld));
+			WorkerPool jotLD = new WorkerPool();
+			//workerManager.add(jotLD);
+			//moduleManager.newModule(new io.micheal.debaterank.modules.jot.LD(jotTournaments, sql, jotLD));
 			
-			//WorkerPool pf = new WorkerPool();
-			//workerManager.add(pf);
-			//moduleManager.newModule(new PF(tournaments, sql, pf));
+			WorkerPool jotPF = new WorkerPool();
+			workerManager.add(jotPF);
+			moduleManager.newModule(new io.micheal.debaterank.modules.jot.PF(jotTournaments, sql, jotPF));
 			// TODO: Policy
-			// TODO: PF
 				
 			/////////////
 			// Tabroom //
@@ -193,7 +192,7 @@ public class Main {
 					}
 				}
 				
-				// Remove duplicates
+				// Remove duplicates TODO: Add a better method. This doesn't work I think
 				for(int i = 0;i<tabroomTournaments.size();i++)
 					for(int k = 0;k<tabroomTournaments.size();k++)
 						if(tabroomTournaments.get(i).getLink().equals(tabroomTournaments.get(k).getLink()) && i != k) {
@@ -230,8 +229,8 @@ public class Main {
 			// Modules //
 			
 			WorkerPool tabroomLD = new WorkerPool();
-			workerManager.add(tabroomLD);
-			moduleManager.newModule(new io.micheal.debaterank.modules.tabroom.LD(tabroomTournaments, sql, tabroomLD));
+			//workerManager.add(tabroomLD);
+			//moduleManager.newModule(new io.micheal.debaterank.modules.tabroom.LD(tabroomTournaments, sql, tabroomLD));
 			
 			/////////////
 			// Execute //
