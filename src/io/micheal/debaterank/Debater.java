@@ -16,7 +16,10 @@ public class Debater {
 	
 	public Debater(String name, String school, String state) throws UnsupportedNameException {
 		name = name.trim().replaceAll(" \\(.+?\\)", "");
-		this.state = state.trim();
+		if(state != null)
+			this.state = state.trim();
+		else
+			this.state = null;
 		if(school != null)
 			this.school = school.trim();
 		else
