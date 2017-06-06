@@ -10,11 +10,11 @@ public class Debater {
 	private String first, middle, last, surname, school, state;
 	private Integer id;
 	
-	public Debater(String name, String school) throws UnsupportedNameException {
+	public Debater(String name, String school){
 		this(name, school, null);
 	}
 	
-	public Debater(String name, String school, String state) throws UnsupportedNameException {
+	public Debater(String name, String school, String state) {
 		name = name.trim().replaceAll(" \\(.+?\\)", "");
 		if(state != null)
 			this.state = state.trim();
@@ -26,8 +26,9 @@ public class Debater {
 			this.school = school;
 		String[] blocks = name.split(" ");
 		if(blocks.length == 0)
-			throw new UnsupportedNameException(name);
-		first = blocks[0];
+			first = "";
+		else
+			first = blocks[0];
 		if(blocks.length == 2)
 			last = blocks[1];
 		else if(blocks.length == 3) {

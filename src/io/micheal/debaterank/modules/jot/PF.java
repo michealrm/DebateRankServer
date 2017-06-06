@@ -30,7 +30,6 @@ import org.jsoup.select.Elements;
 import io.micheal.debaterank.Debater;
 import io.micheal.debaterank.Team;
 import io.micheal.debaterank.Tournament;
-import io.micheal.debaterank.UnsupportedNameException;
 import io.micheal.debaterank.modules.Module;
 import io.micheal.debaterank.modules.WorkerPool;
 import io.micheal.debaterank.util.DebateHelper;
@@ -85,16 +84,12 @@ public class PF extends Module {
 								HashMap<String, Team> competitors = new HashMap<String, Team>();
 								for(Element row : rows) {
 									Element info = row.select("td").first();
-									try {
-										String left = info.select("tr:eq(0)").text();
-										String second = info.select("tr:eq(1)").text().replaceAll("\u00a0|&nbsp", " ");
-										String key = second.split(" ")[0];
-										String school = second.split(" ").length > 1 ? (second.substring(second.indexOf(' ') + 1)).trim() : null;
-										String right = info.select("tr:eq(2)").text();
-										competitors.put(key, new Team(new Debater(left, school), new Debater(right, school)));
-									} catch (UnsupportedNameException e) {
-										log.error(e);
-									}
+									String left = info.select("tr:eq(0)").text();
+									String second = info.select("tr:eq(1)").text().replaceAll("\u00a0|&nbsp", " ");
+									String key = second.split(" ")[0];
+									String school = second.split(" ").length > 1 ? (second.substring(second.indexOf(' ') + 1)).trim() : null;
+									String right = info.select("tr:eq(2)").text();
+									competitors.put(key, new Team(new Debater(left, school), new Debater(right, school)));
 								}
 								
 								// If we have the same amount of entries, then do not check

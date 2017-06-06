@@ -1,6 +1,9 @@
 package io.micheal.debaterank.modules.jot;
 
-import static io.micheal.debaterank.util.DebateHelper.*;
+import static io.micheal.debaterank.util.DebateHelper.JOT;
+import static io.micheal.debaterank.util.DebateHelper.getBracketRound;
+import static io.micheal.debaterank.util.DebateHelper.getDebaterID;
+import static io.micheal.debaterank.util.DebateHelper.tournamentExists;
 
 import java.io.File;
 import java.io.IOException;
@@ -25,7 +28,6 @@ import org.jsoup.select.Elements;
 
 import io.micheal.debaterank.Debater;
 import io.micheal.debaterank.Tournament;
-import io.micheal.debaterank.UnsupportedNameException;
 import io.micheal.debaterank.modules.Module;
 import io.micheal.debaterank.modules.WorkerPool;
 import io.micheal.debaterank.util.DebateHelper;
@@ -80,11 +82,7 @@ public class LD extends Module {
 								HashMap<String, Debater> competitors = new HashMap<String, Debater>();
 								for(Element row : rows) {
 									Elements infos = row.select("td").first().select("td");
-									try {
-										competitors.put(infos.get(2).text(), new Debater(infos.get(3).text(), infos.get(1).text()));
-									} catch (UnsupportedNameException e) {
-										log.error(e);
-									}
+									competitors.put(infos.get(2).text(), new Debater(infos.get(3).text(), infos.get(1).text()));
 								}
 								
 								// If we have the same amount of entries, then do not check
@@ -205,51 +203,48 @@ public class LD extends Module {
 									ArrayList<Object> args = new ArrayList<Object>();
 									String query = "INSERT INTO ld_rounds (tournament, absUrl, debater, against, round, side, decision) VALUES ";
 									while(matcher.find()) {
-										try {
-											// First debater
-											ArrayList<Object> a = new ArrayList<Object>();
-											a.add(t.getLink());
-											a.add(doc.baseUri());
-											a.add(getDebaterID(sql, new Debater(matcher.group(1), matcher.group(3))));
-											a.add(getDebaterID(sql, new Debater(matcher.group(5), matcher.group(7))));
-											a.add(Round.DOUBLE_OCTOS);
-											a.add(matcher.group(4).equals("Aff") ? new Character('A') : new Character('N'));
-											a.add("1-0");
-											if(!overwrite) {
-												ResultSet exists = sql.executeQueryPreparedStatement("SELECT * FROM ld_rounds WHERE tournament=(SELECT id FROM tournaments WHERE link=?) AND absUrl<=>? AND debater=? AND against=? AND round<=>? AND side<=>? AND decision<=>?", a.get(0), a.get(1), a.get(2), a.get(3), a.get(4), a.get(5), a.get(6));
-												if(!exists.next()) {
-													query += "((SELECT id FROM tournaments WHERE link=?), ?, ?, ?, ?, ?, ?), ";
-													args.addAll(a);
-												}
-												exists.close();
-											}
-											else {
+										// First debater
+										ArrayList<Object> a = new ArrayList<Object>();
+										a.add(t.getLink());
+										a.add(doc.baseUri());
+										a.add(getDebaterID(sql, new Debater(matcher.group(1), matcher.group(3))));
+										a.add(getDebaterID(sql, new Debater(matcher.group(5), matcher.group(7))));
+										a.add(Round.DOUBLE_OCTOS);
+										a.add(matcher.group(4).equals("Aff") ? new Character('A') : new Character('N'));
+										a.add("1-0");
+										if(!overwrite) {
+											ResultSet exists = sql.executeQueryPreparedStatement("SELECT * FROM ld_rounds WHERE tournament=(SELECT id FROM tournaments WHERE link=?) AND absUrl<=>? AND debater=? AND against=? AND round<=>? AND side<=>? AND decision<=>?", a.get(0), a.get(1), a.get(2), a.get(3), a.get(4), a.get(5), a.get(6));
+											if(!exists.next()) {
 												query += "((SELECT id FROM tournaments WHERE link=?), ?, ?, ?, ?, ?, ?), ";
 												args.addAll(a);
 											}
-											
-											// Second debater
-											a.clear();
-											a.add(t.getLink());
-											a.add(doc.baseUri());
-											a.add(getDebaterID(sql, new Debater(matcher.group(5), matcher.group(7))));
-											a.add(getDebaterID(sql, new Debater(matcher.group(1), matcher.group(3))));
-											a.add(Round.DOUBLE_OCTOS);
-											a.add(matcher.group(8).equals("Aff") ? new Character('A') : new Character('N'));
-											a.add("0-1");
-											if(!overwrite) {
-												ResultSet exists = sql.executeQueryPreparedStatement("SELECT * FROM ld_rounds WHERE tournament=(SELECT id FROM tournaments WHERE link=?) AND absUrl<=>? AND debater=? AND against=? AND round<=>? AND side<=>? AND decision<=>?", a.get(0), a.get(1), a.get(2), a.get(3), a.get(4), a.get(5), a.get(6), a.get(7));
-												if(!exists.next()) {
-													query += "((SELECT id FROM tournaments WHERE link=?), ?, ?, ?, ?, ?, ?), ";
-													args.addAll(a);
-												}
-											}
-											else {
+											exists.close();
+										}
+										else {
+											query += "((SELECT id FROM tournaments WHERE link=?), ?, ?, ?, ?, ?, ?), ";
+											args.addAll(a);
+										}
+										
+										// Second debater
+										a.clear();
+										a.add(t.getLink());
+										a.add(doc.baseUri());
+										a.add(getDebaterID(sql, new Debater(matcher.group(5), matcher.group(7))));
+										a.add(getDebaterID(sql, new Debater(matcher.group(1), matcher.group(3))));
+										a.add(Round.DOUBLE_OCTOS);
+										a.add(matcher.group(8).equals("Aff") ? new Character('A') : new Character('N'));
+										a.add("0-1");
+										if(!overwrite) {
+											ResultSet exists = sql.executeQueryPreparedStatement("SELECT * FROM ld_rounds WHERE tournament=(SELECT id FROM tournaments WHERE link=?) AND absUrl<=>? AND debater=? AND against=? AND round<=>? AND side<=>? AND decision<=>?", a.get(0), a.get(1), a.get(2), a.get(3), a.get(4), a.get(5), a.get(6), a.get(7));
+											if(!exists.next()) {
 												query += "((SELECT id FROM tournaments WHERE link=?), ?, ?, ?, ?, ?, ?), ";
 												args.addAll(a);
 											}
 										}
-										catch(UnsupportedNameException une) {}
+										else {
+											query += "((SELECT id FROM tournaments WHERE link=?), ?, ?, ?, ?, ?, ?), ";
+											args.addAll(a);
+										}
 									}
 	
 									if(!query.equals("INSERT INTO ld_rounds (tournament, absUrl, debater, against, round, side, decision) VALUES ")) {
@@ -288,9 +283,7 @@ public class LD extends Module {
 										if(last == Round.FINALS) {
 											Element element = doc.select("table[cellspacing=0] > tbody > tr > td.top:eq(" + i + ")").first();
 											Element debater = element.parent().previousElementSibling().select("td:eq(" + i + ")").first();
-											try {
-												currentMatchup.add(Pair.of(new Debater(debater.text().substring(debater.text().indexOf(' ') + 1), null), null));
-											} catch(UnsupportedNameException une) {}
+											currentMatchup.add(Pair.of(new Debater(debater.text().substring(debater.text().indexOf(' ') + 1), null), null));
 										}
 										else {
 											// Add all debaters to an arraylist of pairs
@@ -321,20 +314,17 @@ public class LD extends Module {
 															rightSchool = debater.childNode(2).toString();
 														else
 															rightSchool = debater.childNode(2).unwrap().toString();
-													try {
-														Debater l;
-														if(leftText.contains("&nbsp;"))
-															l = null;
-														else
-															l = new Debater(leftText.substring(leftText.indexOf(' ') + 1), leftSchool);
-														Debater r;
-														if(rightText.contains("&nbsp;"))
-															r = null;
-														else
-															r = new Debater(rightText.substring(rightText.indexOf(' ') + 1), rightSchool);
-														currentMatchup.add(Pair.of(l, r));
-													} catch (UnsupportedNameException e) {
-													}
+													Debater l;
+													if(leftText.contains("&nbsp;"))
+														l = null;
+													else
+														l = new Debater(leftText.substring(leftText.indexOf(' ') + 1), leftSchool);
+													Debater r;
+													if(rightText.contains("&nbsp;"))
+														r = null;
+													else
+														r = new Debater(rightText.substring(rightText.indexOf(' ') + 1), rightSchool);
+													currentMatchup.add(Pair.of(l, r));
 													left = null;
 												}
 											}
