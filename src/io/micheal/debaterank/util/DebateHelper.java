@@ -133,6 +133,10 @@ public class DebateHelper {
 		return sql.executePreparedStatementArgs("INSERT INTO debaters (first, middle, last, surname, school, first_clean, middle_clean, last_clean, surname_clean, school_clean, state, year) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", debater.getFirst(), debater.getMiddle(), debater.getLast(), debater.getSurname(), debater.getSchool(), cleanString(debater.getFirst()), cleanString(debater.getMiddle()), cleanString(debater.getLast()), cleanString(debater.getSurname()), cleanString(debater.getSchool()), debater.getState(), debater.getYear());
 	}
 	
+	public static int deleteDebater(SQLHelper sql, Debater debater) throws SQLException {
+		debater.setID(getDebaterID(sql, debater));
+		return sql.executePreparedStatementArgs("DELETE FROM debaters WHERE id=?", debater.getID());
+	}
 	/**
 	 * Updates debater objects in pairs, along with the team id for the <b>first</b> result from the last name and school.
 	 */
