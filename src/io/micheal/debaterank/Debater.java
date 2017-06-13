@@ -8,6 +8,7 @@ import io.micheal.debaterank.util.SQLHelper;
 public class Debater {
 
 	private String first, middle, last, surname, school, state;
+	private String year; // Format: FR (Freshman), SM (Sophomore), JR (Junior), SR (Senior), Year (Grad Year)
 	private Integer id;
 	
 	public Debater(String name, String school){
@@ -46,6 +47,7 @@ public class Debater {
 			last = blocks[2];
 			surname = blocks[3];
 		}
+		changeInfoIfMatchesPointer();
 	}
 
 	public Debater(String first, String middle, String last, String surname, String school) {
@@ -57,9 +59,32 @@ public class Debater {
 			this.school = school.trim();
 		else
 			this.school = school;
+		changeInfoIfMatchesPointer();
+	}
+	
+	public void changeInfoIfMatchesPointer() {
+		if(Main.pointers != null) {
+			Debater replace = Main.pointers.get(this);
+			if(replace != null) {
+				// Replace all info here
+				first = replace.getFirst();
+				middle = replace.getMiddle();
+				last = replace.getLast();
+				surname = replace.getSurname();
+				school = replace.getSchool();
+				state = replace.getState();
+			}
+		}
 	}
 	
 	public boolean equals(Debater debater) {
+		if(id != null && debater.getID() != null)
+			return id.intValue() == debater.getID().intValue();
+		else
+			return equalsIgnoreID(debater);
+	}
+	
+	public boolean equalsIgnoreID(Debater debater) {
 		boolean replaceThis = false;
 		String first = debater.getFirst();
 		String last = debater.getLast();
@@ -155,6 +180,10 @@ public class Debater {
 	
 	public Integer getID() {
 		return id;
+	}
+	
+	public String getYear() {
+		return year;
 	}
 	
 	public String toString() {
