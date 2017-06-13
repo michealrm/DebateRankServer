@@ -35,7 +35,7 @@ public class Main {
 	public boolean active = true;
 	private SQLHelper sql;
 	private Configuration config;
-	public static HashMap<Debater, Debater> pointers;
+	public static HashMap<Debater, Debater> pointers; // From, To
 	
 	public static void main(String[] args) {
 		new Main().run();
@@ -62,7 +62,13 @@ public class Main {
 		}
 		try {
 			pointers = new HashMap<Debater, Debater>();
-			ResultSet set = sql.executeQuery("SELECT first, middle, last, surname, school, to, old_first, old_middle, old_last, old_surname, old_school FROM pointers p JOIN debaters as d ON d.id=p.to");
+			ResultSet set = sql.executeQuery("SELECT old_first, old_middle, old_last, old_surname, old_school, first, middle, last, surname, school, to FROM pointers p JOIN debaters AS d ON d.id=p.to");
+			while(set.next()) {
+				Debater one = new Debater(set.getString(1), set.getString(2), set.getString(3), set.getString(4), set.getString(5));
+				Debater two = new Debater(set.getString(6), set.getString(7), set.getString(8), set.getString(9), set.getString(10));
+				two.setID(set.getInt(11));
+				pointers.put(one, two);
+			}
 		} catch (SQLException e) {}
 		
 	}
