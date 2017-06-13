@@ -11,7 +11,6 @@ import org.jsoup.nodes.Document;
 
 import io.micheal.debaterank.Debater;
 import io.micheal.debaterank.Team;
-import io.micheal.debaterank.UnsupportedNameException;
 
 public class DebateHelper {
 
@@ -40,7 +39,7 @@ public class DebateHelper {
 			} while(index.next());
 		}
 		index.close();
-		return sql.executePreparedStatementArgs("INSERT INTO debaters (first, middle, last, surname, school, first_clean, middle_clean, last_clean, surname_clean, school_clean) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", debater.getFirst(), debater.getMiddle(), debater.getLast(), debater.getSurname(), debater.getSchool(), cleanString(debater.getFirst()), cleanString(debater.getMiddle()), cleanString(debater.getLast()), cleanString(debater.getSurname()), cleanString(debater.getSchool()));
+		return insertDebater(sql, debater);
 	}
 	
 	/**
@@ -123,6 +122,15 @@ public class DebateHelper {
 		}
 		index.close();
 		return null;
+	}
+	
+	/**
+	 * Inserts a debater into the database
+	 * @return
+	 * @throws SQLException 
+	 */
+	public static int insertDebater(SQLHelper sql, Debater debater) throws SQLException {
+		return sql.executePreparedStatementArgs("INSERT INTO debaters (first, middle, last, surname, school, first_clean, middle_clean, last_clean, surname_clean, school_clean, state, year) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", debater.getFirst(), debater.getMiddle(), debater.getLast(), debater.getSurname(), debater.getSchool(), cleanString(debater.getFirst()), cleanString(debater.getMiddle()), cleanString(debater.getLast()), cleanString(debater.getSurname()), cleanString(debater.getSchool()), debater.getState(), debater.getYear());
 	}
 	
 	/**
