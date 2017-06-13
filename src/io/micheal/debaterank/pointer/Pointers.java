@@ -1,4 +1,4 @@
-package pointer;
+package io.micheal.debaterank.pointer;
 
 import java.sql.SQLException;
 
