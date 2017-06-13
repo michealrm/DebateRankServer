@@ -30,6 +30,11 @@ public class SQLHelper {
 		return st.executeQuery(query);
 	}
 	
+	public void executeStatement(String query) throws SQLException {
+		log.debug("Executing query --> " + query);
+		st.execute(query);
+	}
+	
 	public ResultSet executeQueryPreparedStatement(String query, Object... values) throws SQLException {
 		PreparedStatement ps = sql.prepareStatement(query);
 		ps.setFetchSize(5000);
