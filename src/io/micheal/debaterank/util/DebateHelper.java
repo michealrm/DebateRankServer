@@ -135,7 +135,10 @@ public class DebateHelper {
 	
 	public static int deleteDebater(SQLHelper sql, Debater debater) throws SQLException {
 		debater.setID(getDebaterID(sql, debater));
-		return sql.executePreparedStatementArgs("DELETE FROM debaters WHERE id=?", debater.getID());
+		sql.executeStatement("SET FOREIGN_KEY_CHECKS=0");
+		int id = sql.executePreparedStatementArgs("DELETE FROM debaters WHERE id=?", debater.getID());
+		sql.executeStatement("SET FOREIGN_KEY_CHECKS=1");
+		return id;
 	}
 	/**
 	 * Updates debater objects in pairs, along with the team id for the <b>first</b> result from the last name and school.
