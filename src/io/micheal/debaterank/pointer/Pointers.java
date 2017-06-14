@@ -9,7 +9,7 @@ import io.micheal.debaterank.util.SQLHelper;
 public class Pointers {
 	
 	public static void changeDebaterID(SQLHelper sql, String table, String column, int from, int to) throws SQLException {
-		sql.executePreparedStatementArgs("UPDATE ? SET ? = ? WHERE ? = ?", table, column, to, column, from);
+		sql.executePreparedStatementArgs("UPDATE " + table + " SET " + column + " = ? WHERE " + column + " = ?", to, from);
 	}
 	
 	/**
@@ -53,6 +53,6 @@ public class Pointers {
 	 */
 	private static void newPointer(SQLHelper sql, Debater to, Debater from) throws SQLException {
 		to.setID(DebateHelper.getDebaterID(sql, to));
-		sql.executePreparedStatementArgs("INSERT INTO pointers (to, old_first, old_middle, old_last, old_surname, old_school) VALUES ", to.getID(), from.getFirst(), from.getMiddle(), from.getLast(), from.getSurname(), from.getSchool());
+		sql.executePreparedStatementArgs("INSERT INTO pointers (`to`, old_first, old_middle, old_last, old_surname, old_school) VALUES (?, ?, ?, ?, ?, ?)", to.getID(), from.getFirst(), from.getMiddle(), from.getLast(), from.getSurname(), from.getSchool());
 	}
 }
