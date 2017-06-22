@@ -7,7 +7,6 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.Map;
 
 import org.apache.commons.configuration2.Configuration;
 import org.apache.commons.configuration2.builder.fluent.Configurations;
@@ -24,7 +23,6 @@ import org.jsoup.select.Elements;
 
 import io.micheal.debaterank.modules.ModuleManager;
 import io.micheal.debaterank.modules.PoolSizeException;
-import io.micheal.debaterank.modules.WorkerPool;
 import io.micheal.debaterank.modules.WorkerPoolManager;
 import io.micheal.debaterank.util.DebateHelper;
 import io.micheal.debaterank.util.RatingsComparator;
@@ -152,17 +150,17 @@ public class Main {
 			
 			// Modules //
 			
-			WorkerPool jotLD = new WorkerPool();
-			//workerManager.add(jotLD);
-			//moduleManager.newModule(new io.micheal.debaterank.modules.jot.LD(jotTournaments, sql, jotLD));
+//			WorkerPool jotLD = new WorkerPool();
+//			workerManager.add(jotLD);
+//			moduleManager.newModule(new io.micheal.debaterank.modules.jot.LD(jotTournaments, sql, jotLD));
 			
-			WorkerPool jotPF = new WorkerPool();
-			//workerManager.add(jotPF);
-			//moduleManager.newModule(new io.micheal.debaterank.modules.jot.PF(jotTournaments, sql, jotPF));
+//			WorkerPool jotPF = new WorkerPool();
+//			workerManager.add(jotPF);
+//			moduleManager.newModule(new io.micheal.debaterank.modules.jot.PF(jotTournaments, sql, jotPF));
 			
-			WorkerPool jotCX = new WorkerPool();
-			//workerManager.add(jotCX);
-			//moduleManager.newModule(new io.micheal.debaterank.modules.jot.CX(jotTournaments, sql, jotCX));
+//			WorkerPool jotCX = new WorkerPool();
+//			workerManager.add(jotCX);
+//			moduleManager.newModule(new io.micheal.debaterank.modules.jot.CX(jotTournaments, sql, jotCX));
 				
 			/////////////
 			// Tabroom //
@@ -179,9 +177,9 @@ public class Main {
 				// Get all the tournaments
 				tabroomTournaments = new ArrayList<Tournament>();
 				for(String year : years) {
-					Document tournamentDoc = Jsoup.connect("https://www.tabroom.com/index/results/")
-						.data("year", year)
-						.post();
+//					Document tournamentDoc = Jsoup.connect("https://www.tabroom.com/index/results/")
+//						.data("year", year)
+//						.post();
 					ArrayList<String> circuits = new ArrayList<String>();
 //					for(Element select : tournamentDoc.select("select[name=circuit_id] > option"))
 //						circuits.add(select.attr("value"));
@@ -237,9 +235,9 @@ public class Main {
 			
 			// Modules //
 			
-			WorkerPool tabroomLD = new WorkerPool();
-			//workerManager.add(tabroomLD);
-			//moduleManager.newModule(new io.micheal.debaterank.modules.tabroom.LD(tabroomTournaments, sql, tabroomLD));
+//			WorkerPool tabroomLD = new WorkerPool();
+//			workerManager.add(tabroomLD);
+//			moduleManager.newModule(new io.micheal.debaterank.modules.tabroom.LD(tabroomTournaments, sql, tabroomLD));
 			
 			/////////////
 			// Execute //
