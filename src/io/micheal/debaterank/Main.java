@@ -62,7 +62,7 @@ public class Main {
 		}
 		try {
 			pointers = new HashMap<Debater, Debater>();
-			ResultSet set = sql.executeQuery("SELECT old_first, old_middle, old_last, old_surname, old_school, first, middle, last, surname, school, to FROM pointers p JOIN debaters AS d ON d.id=p.to");
+			ResultSet set = sql.executeQuery("SELECT old_first, old_middle, old_last, old_surname, old_school, first, middle, last, surname, school, `to` FROM pointers p JOIN debaters AS d ON d.id=p.to");
 			while(set.next()) {
 				Debater one = new Debater(set.getString(1), set.getString(2), set.getString(3), set.getString(4), set.getString(5));
 				Debater two = new Debater(set.getString(6), set.getString(7), set.getString(8), set.getString(9), set.getString(10));
@@ -70,7 +70,7 @@ public class Main {
 				pointers.put(one, two);
 			}
 		} catch (SQLException e) {}
-		
+		System.exit(0);
 	}
 	
 	public void run() {
@@ -157,9 +157,12 @@ public class Main {
 			//moduleManager.newModule(new io.micheal.debaterank.modules.jot.LD(jotTournaments, sql, jotLD));
 			
 			WorkerPool jotPF = new WorkerPool();
-			workerManager.add(jotPF);
-			moduleManager.newModule(new io.micheal.debaterank.modules.jot.PF(jotTournaments, sql, jotPF));
-			// TODO: Policy
+			//workerManager.add(jotPF);
+			//moduleManager.newModule(new io.micheal.debaterank.modules.jot.PF(jotTournaments, sql, jotPF));
+			
+			WorkerPool jotCX = new WorkerPool();
+			//workerManager.add(jotCX);
+			//moduleManager.newModule(new io.micheal.debaterank.modules.jot.CX(jotTournaments, sql, jotCX));
 				
 			/////////////
 			// Tabroom //
@@ -360,7 +363,84 @@ public class Main {
 //				log.fatal("Could not update debater ratings.");
 //			}
 			
-			// PF
+//			// PF
+//			
+//			// Establish rating periods by tournaments
+//			try {
+//				ArrayList<DateTime> newWeeks = new ArrayList<DateTime>();
+//				ResultSet orderedTournaments = sql.executeQuery("SELECT date FROM tournaments WHERE date>'2016-07-01 00:00:00.000' ORDER BY date");
+//				DateTime last = null;
+//				while(orderedTournaments.next()) {
+//					DateTime date = new DateTime(orderedTournaments.getDate(1)).withTimeAtStartOfDay();
+//					if(last == null || date.equals(last) || date.minusDays(1).equals(last))
+//						last = date;
+//					else {
+//						newWeeks.add(date);
+//						last = date;
+//					}
+//				}
+//				
+//				ResultSet debates = sql.executeQuery("SELECT t.date, round, team, against, decision from pf_rounds pf JOIN tournaments AS t ON pf.tournament=t.id  WHERE tournament IN (SELECT id FROM tournaments WHERE date>'2016-07-01 00:00:00.000') AND NOT team=against GROUP BY CONCAT(date, \"-\", round, \"-\", LEAST(team, against), \"-\", GREATEST(team, against)) HAVING count(*) > 0 ORDER BY t.date, round");
+//				ArrayList<Rating> teams = new ArrayList<Rating>();
+//				int index = 0;
+//				RatingCalculator ratingSystem = new RatingCalculator(0.06, 0.5);
+//				RatingPeriodResults results = new RatingPeriodResults();
+//				while(true) {
+//					boolean next = false;
+//					while((next = debates.next()) && !(new DateTime(debates.getDate(1)).withTimeAtStartOfDay().getMillis() > newWeeks.get(index).getMillis())) {
+//						// Check to see if we have this debater stored
+//						Rating team = null, against = null;
+//						for(Rating rating : teams) {
+//							if(rating.getId() == debates.getInt(3))
+//								team = rating;
+//							if(rating.getId() == debates.getInt(4))
+//								against = rating;
+//							if(team != null && against != null)
+//								break;
+//						}
+//						if(team == null) {
+//							team = new Rating(debates.getInt(3), ratingSystem);
+//							teams.add(team);
+//						}
+//						if(against == null) {
+//							against = new Rating(debates.getInt(4), ratingSystem);
+//							teams.add(against);
+//						}
+//						
+//						// Add result
+//						if(debates.getString(5).equals("1-0"))
+//							results.addResult(team, against);
+//						else
+//							results.addResult(against, team);
+//					}
+//					index++;
+//					ratingSystem.updateRatings(results);
+//					if(!next)
+//						break;
+//				} 
+//				debates.close();
+//				
+//				// Sort by ratings
+//				Collections.sort(teams, new RatingsComparator());
+//				ArrayList<Team> teamList = DebateHelper.getTeams(sql);
+//				for(int i = 1;i<=teams.size();i++) {
+//					Team team = null;
+//					for(Team t : teamList)
+//						if(t.getID().intValue() == teams.get(i-1).getId()) {
+//							team = t;
+//							break;
+//						}
+//					Debater debater1 = team.getLeft();
+//					Debater debater2 = team.getRight();
+//					log.info(i + ". " + debater1.getFirst() + " " + debater1.getLast() + " and " + debater2.getFirst() + " " + debater2.getLast() + " (" + debater2.getSchool() + ") " + " - " + teams.get(i-1).getRating() + " / " + teams.get(i-1).getNumberOfResults());
+//				}
+//				
+//			} catch (SQLException e) {
+//				log.error(e);
+//				log.fatal("Could not update debater ratings.");
+//			}
+			
+			// CX
 			
 			// Establish rating periods by tournaments
 			try {
@@ -377,7 +457,7 @@ public class Main {
 					}
 				}
 				
-				ResultSet debates = sql.executeQuery("SELECT t.date, round, team, against, decision from pf_rounds pf JOIN tournaments AS t ON pf.tournament=t.id  WHERE tournament IN (SELECT id FROM tournaments WHERE date>'2016-07-01 00:00:00.000') AND NOT team=against GROUP BY CONCAT(date, \"-\", round, \"-\", LEAST(team, against), \"-\", GREATEST(team, against)) HAVING count(*) > 0 ORDER BY t.date, round");
+				ResultSet debates = sql.executeQuery("SELECT t.date, round, team, against, decision from cx_rounds cx JOIN tournaments AS t ON cx.tournament=t.id  WHERE tournament IN (SELECT id FROM tournaments WHERE date>'2016-07-01 00:00:00.000') AND NOT team=against GROUP BY CONCAT(date, \"-\", round, \"-\", LEAST(team, against), \"-\", GREATEST(team, against)) HAVING count(*) > 0 ORDER BY t.date, round");
 				ArrayList<Rating> teams = new ArrayList<Rating>();
 				int index = 0;
 				RatingCalculator ratingSystem = new RatingCalculator(0.06, 0.5);
