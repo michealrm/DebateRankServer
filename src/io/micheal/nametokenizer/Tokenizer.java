@@ -3,6 +3,7 @@ package io.micheal.nametokenizer;
 import static io.micheal.nametokenizer.Name.*;
 import java.util.HashMap;
 
+@Deprecated
 public class Tokenizer {
 
 	public static final int SUB_CHAR_THRESHOLD = 3;
@@ -44,8 +45,8 @@ public class Tokenizer {
         }
         else if(split.length > 4) {
         	tokenized.put(FIRST, split[0]);
-        	Name lastToken = FIRST;
-        	boolean[] subCurrent = new boolean[split.length];
+        	//Name lastToken = FIRST;
+        	//boolean[] subCurrent = new boolean[split.length];
         	for(int i = 1;i<split.length;i++) {
         		if(split[i-1].length() < SUB_CHAR_THRESHOLD);
         	}
