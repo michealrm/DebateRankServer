@@ -70,13 +70,14 @@ public class Debater {
 				if(entry.getKey().equals(this))
 					replace = entry.getValue();
 			if(replace != null) {
-				// Replace all info here
+				// Replace all info here TODO: This needs to be updated as info is added
 				first = replace.getFirst();
 				middle = replace.getMiddle();
 				last = replace.getLast();
 				surname = replace.getSurname();
 				school = replace.getSchool();
 				state = replace.getState();
+				id = replace.getID();
 			}
 		}
 	}
