@@ -2,6 +2,7 @@ package io.micheal.debaterank;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Map;
 
 import io.micheal.debaterank.util.SQLHelper;
 
@@ -64,7 +65,10 @@ public class Debater {
 	
 	public void changeInfoIfMatchesPointer() {
 		if(Main.pointers != null) {
-			Debater replace = Main.pointers.get(this);
+			Debater replace = null;
+			for(Map.Entry<Debater, Debater> entry : Main.pointers.entrySet())
+				if(entry.getKey().equals(this))
+					replace = entry.getValue();
 			if(replace != null) {
 				// Replace all info here
 				first = replace.getFirst();
