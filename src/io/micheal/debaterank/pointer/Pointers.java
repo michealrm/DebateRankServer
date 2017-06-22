@@ -6,8 +6,9 @@ import io.micheal.debaterank.Debater;
 import io.micheal.debaterank.util.DebateHelper;
 import io.micheal.debaterank.util.SQLHelper;
 
-// Need to update this file as I add more meta-data
-// For numbers, I should add them together
+/* TODO: Need to update this file as I add more meta-data
+ * For numbers, I should add them together
+ */
 public class Pointers {
 	
 	public static void changeDebaterID(SQLHelper sql, String table, String column, int from, int to) throws SQLException {
