@@ -67,7 +67,7 @@ public class LD extends Module {
 					try {
 						log.log(JOT, "Updating " + t.getName());
 						Document tPage = Jsoup.connect(t.getLink()).timeout(10*1000).get();
-						Elements eventRows = tPage.select("tr:has(td:matches(LD|Lincoln|L-D)");
+						Elements eventRows = tPage.select("tr:has(td:matches(LDOld|Lincoln|L-D)");
 						
 						for(Element eventRow : eventRows) {
 							
@@ -77,18 +77,19 @@ public class LD extends Module {
 								Document p = Jsoup.connect(prelim.absUrl("href")).timeout(10*1000).get();
 								Element table = p.select("table[border=1]").first();
 								Elements rows = table.select("tr:has(table)");
-								
+
 								// Register all debaters
 								HashMap<String, Debater> competitors = new HashMap<String, Debater>();
 								for(Element row : rows) {
 									Elements infos = row.select("td").first().select("td");
 									competitors.put(infos.get(2).text(), new Debater(infos.get(3).text(), infos.get(1).text()));
 								}
-								
+
 								// If we have the same amount of entries, then do not check
 								if(tournamentExists(p.baseUri(), table.select("[colspan=2].rec:not(:containsOwn(F))").size(), sql, "ld_rounds"))
 									log.log(JOT, t.getName() + " prelims is up to date.");
 								else {
+
 									// Update DB with debaters
 									for(Map.Entry<String, Debater> entry : competitors.entrySet())
 										entry.getValue().setID(DebateHelper.getDebaterID(sql, entry.getValue()));

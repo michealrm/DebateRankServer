@@ -9,6 +9,8 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 
+import io.micheal.debaterank.modules.WorkerPool;
+import io.micheal.debaterank.modules.nsda.Schools;
 import org.apache.commons.configuration2.Configuration;
 import org.apache.commons.configuration2.builder.fluent.Configurations;
 import org.apache.logging.log4j.LogManager;
@@ -28,6 +30,9 @@ import io.micheal.debaterank.modules.WorkerPoolManager;
 import io.micheal.debaterank.util.DebateHelper;
 import io.micheal.debaterank.util.RatingsComparator;
 import io.micheal.debaterank.util.SQLHelper;
+import org.xml.sax.SAXException;
+
+import javax.xml.parsers.ParserConfigurationException;
 
 public class Main {
 
@@ -105,8 +110,6 @@ public class Main {
 //
 //			} catch(SQLException e) {}
 
-
-
 			///////////////
 			// Variables //
 			///////////////
@@ -131,7 +134,7 @@ public class Main {
 				// Get all the jotTournaments
 				jotTournaments = new ArrayList<Tournament>();
 				for(String year : years) {
-					Document tournamentDoc = Jsoup.connect("http://www.joyoftournaments.com/results.asp")
+					Document tournamentDoc = Jsoup.connect("http://www.joyoftournaments.com/results.asp").timeout(10 * 1000)
 						.data("state","")
 						.data("month", "0")
 						.data("season", year)
@@ -176,12 +179,12 @@ public class Main {
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
-			
+
 			// Modules //
 			
 //			WorkerPool jotLD = new WorkerPool();
 //			workerManager.add(jotLD);
-//			moduleManager.newModule(new io.micheal.debaterank.modules.jot.LD(jotTournaments, sql, jotLD));
+//			moduleManager.newModule(new io.micheal.debaterank.modules.jot.LDOld(jotTournaments, sql, jotLD));
 			
 //			WorkerPool jotPF = new WorkerPool();
 //			workerManager.add(jotPF);
@@ -214,7 +217,7 @@ public class Main {
 //						circuits.add(select.attr("value"));
 					circuits.add("6"); // Testing for National Circuit
 					for(String circuit : circuits) {
-						Document doc = Jsoup.connect("https://www.tabroom.com/index/results/")
+						Document doc = Jsoup.connect("https://www.tabroom.com/index/results/").timeout(10*1000)
 								.data("year", year)
 								.data("circuit_id", circuit)
 								.post();
@@ -266,8 +269,12 @@ public class Main {
 			
 //			WorkerPool tabroomLD = new WorkerPool();
 //			workerManager.add(tabroomLD);
-//			moduleManager.newModule(new io.micheal.debaterank.modules.tabroom.LD(tabroomTournaments, sql, tabroomLD));
-			
+//			moduleManager.newModule(new io.micheal.debaterank.modules.tabroom.LDOld(tabroomTournaments, sql, tabroomLD));
+
+			WorkerPool tabroomLD = new WorkerPool();
+			workerManager.add(tabroomLD);
+			moduleManager.newModule(new io.micheal.debaterank.modules.tabroom.LD(sql, log, tabroomTournaments, tabroomLD));
+
 			/////////////
 			// Execute //
 			/////////////
@@ -289,21 +296,29 @@ public class Main {
 			// NSDA //
 			//////////
 
+			moduleManager = new ModuleManager();
+			workerManager = new WorkerPoolManager();
+
 			// Schools //
 
-			try {
-				ArrayList<Debater> debaters = DebateHelper.getDebaters(sql);
-				HashSet<String> schoolNames = new HashSet<String>();
-				for(Debater debater : debaters)
-					if(!schoolNames.contains(SQLHelper.cleanString(debater.getSchool())))
-						schoolNames.add(SQLHelper.cleanString(debater.getSchool()));
-				for(String str : schoolNames) {
-					Document schoolPage = Jsoup.connect("https://points.speechanddebate.org/points_application/showreport.php?name=" + str.replaceAll(" ", "%20") + "&state=&rpt=findschool").timeout(10*1000).get();
-				}
-			} catch(SQLException | IOException e) {
+//			WorkerPool schoolsPool = new WorkerPool();
+//			workerManager.add(schoolsPool);
+//			moduleManager.newModule(new Schools(sql, log, schoolsPool));
 
-			}
-			//Document tPage = Jsoup.connect(t.getLink()).timeout(10*1000).get();
+			// Execute //
+
+			try {
+				workerManager.start();
+			} catch (PoolSizeException e) {}
+
+			do {
+				try {
+					Thread.sleep(5000);
+				} catch (InterruptedException e) {
+					log.error(e);
+					System.exit(1);
+				}
+			} while(moduleManager.getActiveCount() != 0 || workerManager.getActiveCount() != 0);
 
 			// Update debaters' states
 
@@ -337,7 +352,7 @@ public class Main {
 				
 			// Glicko-2 //
 			
-			// LD
+			// LDOld
 			
 			// Establish rating periods by tournaments
 			try {
@@ -489,82 +504,82 @@ public class Main {
 			
 			// CX
 			
-			// Establish rating periods by tournaments
-			try {
-				ArrayList<DateTime> newWeeks = new ArrayList<DateTime>();
-				ResultSet orderedTournaments = sql.executeQuery("SELECT date FROM tournaments WHERE date>'2016-07-01 00:00:00.000' ORDER BY date");
-				DateTime last = null;
-				while(orderedTournaments.next()) {
-					DateTime date = new DateTime(orderedTournaments.getDate(1)).withTimeAtStartOfDay();
-					if(last == null || date.equals(last) || date.minusDays(1).equals(last))
-						last = date;
-					else {
-						newWeeks.add(date);
-						last = date;
-					}
-				}
-				
-				ResultSet debates = sql.executeQuery("SELECT t.date, round, team, against, decision from cx_rounds cx JOIN tournaments AS t ON cx.tournament=t.id  WHERE tournament IN (SELECT id FROM tournaments WHERE date>'2016-07-01 00:00:00.000') AND NOT team=against GROUP BY CONCAT(date, \"-\", round, \"-\", LEAST(team, against), \"-\", GREATEST(team, against)) HAVING count(*) > 0 ORDER BY t.date, round");
-				ArrayList<Rating> teams = new ArrayList<Rating>();
-				int index = 0;
-				RatingCalculator ratingSystem = new RatingCalculator(0.06, 0.5);
-				RatingPeriodResults results = new RatingPeriodResults();
-				while(true) {
-					boolean next = false;
-					while((next = debates.next()) && !(new DateTime(debates.getDate(1)).withTimeAtStartOfDay().getMillis() > newWeeks.get(index).getMillis())) {
-						// Check to see if we have this debater stored
-						Rating team = null, against = null;
-						for(Rating rating : teams) {
-							if(rating.getId() == debates.getInt(3))
-								team = rating;
-							if(rating.getId() == debates.getInt(4))
-								against = rating;
-							if(team != null && against != null)
-								break;
-						}
-						if(team == null) {
-							team = new Rating(debates.getInt(3), ratingSystem);
-							teams.add(team);
-						}
-						if(against == null) {
-							against = new Rating(debates.getInt(4), ratingSystem);
-							teams.add(against);
-						}
-						
-						// Add result
-						if(debates.getString(5).equals("1-0"))
-							results.addResult(team, against);
-						else
-							results.addResult(against, team);
-					}
-					index++;
-					ratingSystem.updateRatings(results);
-					if(!next)
-						break;
-				} 
-				debates.close();
-				
-				// Sort by ratings
-				Collections.sort(teams, new RatingsComparator());
-				ArrayList<Team> teamList = DebateHelper.getTeams(sql);
-				for(int i = 1;i<=teams.size();i++) {
-					Team team = null;
-					for(Team t : teamList)
-						if(t.getID().intValue() == teams.get(i-1).getId()) {
-							team = t;
-							break;
-						}
-					Debater debater1 = team.getLeft();
-					Debater debater2 = team.getRight();
-					log.info(i + ". " + debater1.getFirst() + " " + debater1.getLast() + " and " + debater2.getFirst() + " " + debater2.getLast() + " (" + debater2.getSchool() + ") " + " - " + teams.get(i-1).getRating() + " / " + teams.get(i-1).getNumberOfResults());
-				}
-				
-			} catch (SQLException e) {
-				log.error(e);
-				log.fatal("Could not update debater ratings.");
-			}
+//			// Establish rating periods by tournaments
+//			try {
+//				ArrayList<DateTime> newWeeks = new ArrayList<DateTime>();
+//				ResultSet orderedTournaments = sql.executeQuery("SELECT date FROM tournaments WHERE date>'2016-07-01 00:00:00.000' ORDER BY date");
+//				DateTime last = null;
+//				while(orderedTournaments.next()) {
+//					DateTime date = new DateTime(orderedTournaments.getDate(1)).withTimeAtStartOfDay();
+//					if(last == null || date.equals(last) || date.minusDays(1).equals(last))
+//						last = date;
+//					else {
+//						newWeeks.add(date);
+//						last = date;
+//					}
+//				}
+//
+//				ResultSet debates = sql.executeQuery("SELECT t.date, round, team, against, decision from cx_rounds cx JOIN tournaments AS t ON cx.tournament=t.id  WHERE tournament IN (SELECT id FROM tournaments WHERE date>'2016-07-01 00:00:00.000') AND NOT team=against GROUP BY CONCAT(date, \"-\", round, \"-\", LEAST(team, against), \"-\", GREATEST(team, against)) HAVING count(*) > 0 ORDER BY t.date, round");
+//				ArrayList<Rating> teams = new ArrayList<Rating>();
+//				int index = 0;
+//				RatingCalculator ratingSystem = new RatingCalculator(0.06, 0.5);
+//				RatingPeriodResults results = new RatingPeriodResults();
+//				while(true) {
+//					boolean next = false;
+//					while((next = debates.next()) && !(new DateTime(debates.getDate(1)).withTimeAtStartOfDay().getMillis() > newWeeks.get(index).getMillis())) {
+//						// Check to see if we have this debater stored
+//						Rating team = null, against = null;
+//						for(Rating rating : teams) {
+//							if(rating.getId() == debates.getInt(3))
+//								team = rating;
+//							if(rating.getId() == debates.getInt(4))
+//								against = rating;
+//							if(team != null && against != null)
+//								break;
+//						}
+//						if(team == null) {
+//							team = new Rating(debates.getInt(3), ratingSystem);
+//							teams.add(team);
+//						}
+//						if(against == null) {
+//							against = new Rating(debates.getInt(4), ratingSystem);
+//							teams.add(against);
+//						}
+//
+//						// Add result
+//						if(debates.getString(5).equals("1-0"))
+//							results.addResult(team, against);
+//						else
+//							results.addResult(against, team);
+//					}
+//					index++;
+//					ratingSystem.updateRatings(results);
+//					if(!next)
+//						break;
+//				}
+//				debates.close();
+//
+//				// Sort by ratings
+//				Collections.sort(teams, new RatingsComparator());
+//				ArrayList<Team> teamList = DebateHelper.getTeams(sql);
+//				for(int i = 1;i<=teams.size();i++) {
+//					Team team = null;
+//					for(Team t : teamList)
+//						if(t.getID().intValue() == teams.get(i-1).getId()) {
+//							team = t;
+//							break;
+//						}
+//					Debater debater1 = team.getLeft();
+//					Debater debater2 = team.getRight();
+//					log.info(i + ". " + debater1.getFirst() + " " + debater1.getLast() + " and " + debater2.getFirst() + " " + debater2.getLast() + " (" + debater2.getSchool() + ") " + " - " + teams.get(i-1).getRating() + " / " + teams.get(i-1).getNumberOfResults());
+//				}
+//
+//			} catch (SQLException e) {
+//				log.error(e);
+//				log.fatal("Could not update debater ratings.");
+//			}
 			
-			//System.exit(0); // Temp - 1 loop
+			System.exit(0); // Temp - 1 loop
 		}
 	}
 }

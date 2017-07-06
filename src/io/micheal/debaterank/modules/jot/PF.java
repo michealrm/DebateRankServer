@@ -79,7 +79,7 @@ public class PF extends Module {
 								Document p = Jsoup.connect(prelim.absUrl("href")).timeout(10*1000).get();
 								Element table = p.select("table[border=1]").first();
 								Elements rows = table.select("tr:has(table)");
-								
+
 								// Register all debaters
 								HashMap<String, Team> competitors = new HashMap<String, Team>();
 								for(Element row : rows) {
@@ -91,7 +91,7 @@ public class PF extends Module {
 									String right = info.select("tr:eq(2)").text();
 									competitors.put(key, new Team(new Debater(left, school), new Debater(right, school)));
 								}
-								
+
 								// If we have the same amount of entries, then do not check
 								if(tournamentExists(p.baseUri(), table.select("[colspan=3].rec:not(:containsOwn(F))").size(), sql, "pf_rounds"))
 									log.log(JOT, t.getName() + " prelims is up to date.");

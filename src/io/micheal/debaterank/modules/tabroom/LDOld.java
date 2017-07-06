@@ -35,14 +35,14 @@ import io.micheal.debaterank.util.DebateHelper;
 import io.micheal.debaterank.util.Round;
 import io.micheal.debaterank.util.SQLHelper;
 
-public class LD extends Module {
+public class LDOld extends Module {
 	
 	private ArrayList<Tournament> tournaments;
 	private WorkerPool manager;
 	private final boolean overwrite;
 	
-	public LD(ArrayList<Tournament> tournaments, SQLHelper sql, WorkerPool manager) {
-		super(sql, LogManager.getLogger(LD.class));
+	public LDOld(ArrayList<Tournament> tournaments, SQLHelper sql, WorkerPool manager) {
+		super(sql, LogManager.getLogger(LDOld.class));
 		this.tournaments = tournaments;
 		this.manager = manager;
 		
