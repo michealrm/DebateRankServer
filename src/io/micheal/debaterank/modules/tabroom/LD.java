@@ -29,9 +29,11 @@ import javax.xml.stream.events.StartElement;
 import javax.xml.stream.events.XMLEvent;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.net.URLConnection;
 import java.sql.SQLException;
 import java.util.*;
 
@@ -166,9 +168,14 @@ public class LD extends Module {
 	private int size = 0; // for getTournamentRoundEntries
 
 	public int getTournamentRoundEntries(int tourn_id, int event_id) throws XMLStreamException, IOException, SAXException, ParserConfigurationException {
+		size = 0;
 		URL url = new URL("https://www.tabroom.com/api/tourn_published.mhtml?tourn_id=" + tourn_id + "&event_id=" + event_id);
+		URLConnection connection = url.openConnection();
+		InputStream stream = connection.getInputStream();
 
 		SAXParserFactory factory = SAXParserFactory.newInstance();
+		factory.setFeature("http://xml.org/sax/features/namespaces", false);
+		factory.setFeature("http://xml.org/sax/features/validation", false);
 		SAXParser saxParser = factory.newSAXParser();
 
 		DefaultHandler handler = new DefaultHandler() {
@@ -185,12 +192,12 @@ public class LD extends Module {
 			}
 		};
 
-		saxParser.parse(url.openStream(), handler);
-
+		long two = System.currentTimeMillis();
+		saxParser.parse(stream, handler);
+		System.out.println("Time to complete:" + (System.currentTimeMillis() - two));
 		int localSize = size;
-		size = 0;
 
-		System.out.println(size + " " + url);
+		System.out.println(localSize + " " + url);
 		return localSize;
 	}
 
@@ -244,49 +251,49 @@ public class LD extends Module {
 
 		// Getting competitors
 		HashMap<Integer, Debater> competitors = new HashMap<Integer, Debater>();
-		NodeList entryNodes = doc.getElementsByTagName("ENTRY");
-		for(int i = 0;i<entryNodes.getLength();i++)
-		{
-			try {
-				Node node = entryNodes.item(i);
-				if (node.getChildNodes().getLength() > 1) {
-					Element element = (Element) node;
-					Debater debater = new Debater(element.getElementsByTagName("FULLNAME").item(0).getTextContent(), schools.get(Integer.parseInt(element.getElementsByTagName("SCHOOL").item(0).getTextContent())));
-					debater.setID(DebateHelper.getDebaterID(sql, debater));
-					competitors.put(Integer.parseInt(element.getElementsByTagName("ID").item(0).getTextContent()), debater);
-				}
-			} catch(SQLException e) {}
-		}
+//		NodeList entryNodes = doc.getElementsByTagName("ENTRY");
+//		for(int i = 0;i<entryNodes.getLength();i++)
+//		{
+//			try {
+//				Node node = entryNodes.item(i);
+//				if (node.getChildNodes().getLength() > 1) {
+//					Element element = (Element) node;
+//					Debater debater = new Debater(element.getElementsByTagName("FULLNAME").item(0).getTextContent(), schools.get(Integer.parseInt(element.getElementsByTagName("SCHOOL").item(0).getTextContent())));
+//					debater.setID(DebateHelper.getDebaterID(sql, debater));
+//					competitors.put(Integer.parseInt(element.getElementsByTagName("ID").item(0).getTextContent()), debater);
+//				}
+//			} catch(SQLException e) {}
+//		}
 
 		// Getting judges
 		HashMap<Integer, Debater> judges = new HashMap<Integer, Debater>();
-		NodeList judgesNodes = doc.getElementsByTagName("JUDGE");
-		for(int i = 0;i<judgesNodes.getLength();i++)
-		{
-			Node node = judgesNodes.item(i);
-			if(node.getChildNodes().getLength() > 1) {
-				Element element = (Element) node;
-				Debater debater = new Debater(element.getElementsByTagName("FIRST").item(0).getTextContent() + " " + element.getElementsByTagName("LAST").item(0).getTextContent(), schools.get(Integer.parseInt(element.getElementsByTagName("SCHOOL").item(0).getTextContent())));
-				judges.put(Integer.parseInt(element.getElementsByTagName("ID").item(0).getTextContent()), debater);
-			}
-		}
+//		NodeList judgesNodes = doc.getElementsByTagName("JUDGE");
+//		for(int i = 0;i<judgesNodes.getLength();i++)
+//		{
+//			Node node = judgesNodes.item(i);
+//			if(node.getChildNodes().getLength() > 1) {
+//				Element element = (Element) node;
+//				Debater debater = new Debater(element.getElementsByTagName("FIRST").item(0).getTextContent() + " " + element.getElementsByTagName("LAST").item(0).getTextContent(), schools.get(Integer.parseInt(element.getElementsByTagName("SCHOOL").item(0).getTextContent())));
+//				judges.put(Integer.parseInt(element.getElementsByTagName("ID").item(0).getTextContent()), debater);
+//			}
+//		}
 
 		// Getting round keys / names
 		HashMap<Integer, Character> round = new HashMap<Integer, Character>();
-		NodeList roundNodes = doc.getElementsByTagName("ROUND");
+//		NodeList roundNodes = doc.getElementsByTagName("ROUND");
 
 		ArrayList<RoundInfo> roundNumbers = new ArrayList<RoundInfo>();
-		for(int i = 0;i<roundNodes.getLength();i++)
-		{
-			Node node = roundNodes.item(i);
-			if(node.getChildNodes().getLength() > 1) {
-				Element element = (Element) node;
-				RoundInfo roundInfo = new RoundInfo();
-				roundInfo.number = Integer.parseInt(element.getElementsByTagName("RD_NAME").item(0).getTextContent());
-				roundInfo.elim = element.getElementsByTagName("PAIRINGSCHEME").item(0).getTextContent().equals("Elim");
-				roundNumbers.add(roundInfo);
-			}
-		}
+//		for(int i = 0;i<roundNodes.getLength();i++)
+//		{
+//			Node node = roundNodes.item(i);
+//			if(node.getChildNodes().getLength() > 1) {
+//				Element element = (Element) node;
+//				RoundInfo roundInfo = new RoundInfo();
+//				roundInfo.number = Integer.parseInt(element.getElementsByTagName("RD_NAME").item(0).getTextContent());
+//				roundInfo.elim = element.getElementsByTagName("PAIRINGSCHEME").item(0).getTextContent().equals("Elim");
+//				roundNumbers.add(roundInfo);
+//			}
+//		}
 		Collections.sort(roundNumbers, new Comparator<RoundInfo>(){
 			public int compare(RoundInfo o1, RoundInfo o2){
 				return o1.number - o2.number;
