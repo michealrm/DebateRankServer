@@ -131,8 +131,7 @@ public class LD extends Module {
 									bevent = false;
 									if (eventname.matches("^.*(LD|Lincoln|L-D).*$") && tourn_id == tid) {
 										try {
-											int entries;
-											if ((entries = getTournamentRoundEntries(tourn_id, event_id)) == 0)
+											if (getTournamentRoundEntries(tourn_id, event_id) == 0)
 												return;
 
 											// If we have the same amount of entries, then do not check
@@ -143,7 +142,7 @@ public class LD extends Module {
 											//if (overwrite)
 											//	sql.executePreparedStatementArgs("DELETE FROM ld_rounds WHERE absUrl=?", t.getLink() + "|" + event_id);
 
-											System.out.println(entries + " " + (System.currentTimeMillis() - one));
+											System.out.println(System.currentTimeMillis() - one);
 										} catch (XMLStreamException xmlse) {
 										} catch (IOException ioe) {}
 										catch(ParserConfigurationException pce) {}
@@ -191,7 +190,7 @@ public class LD extends Module {
 		int localSize = size;
 		size = 0;
 
-		System.out.println(url);
+		System.out.println(size + " " + url);
 		return localSize;
 	}
 
@@ -204,21 +203,44 @@ public class LD extends Module {
 	}
 
 	public void enterTournament(int tourn_id, int event_id) throws ParserConfigurationException,IOException, SAXException {
-		DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
-		DocumentBuilder db = dbf.newDocumentBuilder();
-		Document doc = db.parse(new URL("https://www.tabroom.com/api/tourn_published.mhtml?tourn_id=" + tourn_id + "&event_id=" + event_id).openStream());
+		SAXParserFactory factory = SAXParserFactory.newInstance();
+		SAXParser saxParser = factory.newSAXParser();
+		URL url = new URL("https://www.tabroom.com/api/tourn_published.mhtml?tourn_id=" + tourn_id + "&event_id=" + event_id);
 
 		// Getting schools
 		HashMap<Integer, String> schools = new HashMap<Integer, String>();
-		NodeList schoolNodes = doc.getElementsByTagName("SCHOOL");
-		for(int i = 0;i<schoolNodes.getLength();i++)
-		{
-			Node node = schoolNodes.item(i);
-			if (node.getChildNodes().getLength() > 1) {
-				Element element = (Element) node;
-				schools.put(Integer.parseInt(element.getElementsByTagName("ID").item(0).getTextContent()), element.getElementsByTagName("SCHOOLNAME").item(0).getTextContent());
+		DefaultHandler schoolHandler = new DefaultHandler() {
+
+			private boolean bschool, bid, bschoolname;
+			private String schoolname;
+			private int id;
+
+			public void startElement(String uri, String localName, String qName, Attributes attributes) throws SAXException {
+				if(qName.equalsIgnoreCase("SCHOOL")) {
+					bschool = true;
+					schoolname = null;
+					id = 0;
+				}
+				if(qName.equalsIgnoreCase("ID") && bschool)
+					bid = true;
+				if(qName.equalsIgnoreCase("SCHOOLNAME") && bschool)
+					bschoolname = true;
 			}
-		}
+			public void characters(char ch[], int start, int length) throws SAXException {
+				if(bid) {
+					bid = false;
+					id = Integer.parseInt(new String(ch, start, length));
+				}
+				if (bschoolname) {
+					bschoolname = false;
+					schoolname = new String(ch, start, length);
+				}
+				if(id != 0 && schoolname != null && bschool)
+					schools.put(id, schoolname);
+			}
+		};
+
+		saxParser.parse(url.openStream(), schoolHandler);
 
 		// Getting competitors
 		HashMap<Integer, Debater> competitors = new HashMap<Integer, Debater>();
