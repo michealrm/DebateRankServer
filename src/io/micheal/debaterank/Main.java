@@ -352,78 +352,78 @@ public class Main {
 				
 			// Glicko-2 //
 			
-			// LDOld
+			// LD
 			
 			// Establish rating periods by tournaments
-			try {
-				ArrayList<DateTime> newWeeks = new ArrayList<DateTime>();
-				ResultSet orderedTournaments = sql.executeQuery("SELECT date FROM tournaments WHERE date>'2016-07-01 00:00:00.000' ORDER BY date");
-				DateTime last = null;
-				while(orderedTournaments.next()) {
-					DateTime date = new DateTime(orderedTournaments.getDate(1)).withTimeAtStartOfDay();
-					if(last == null || date.equals(last) || date.minusDays(1).equals(last))
-						last = date;
-					else {
-						newWeeks.add(date);
-						last = date;
-					}
-				}
-
-				ResultSet debates = sql.executeQuery("SELECT t.date, round, debater, against, decision from ld_rounds ld JOIN tournaments AS t ON ld.tournament=t.id  WHERE tournament IN (SELECT id FROM tournaments WHERE date>'2016-07-01 00:00:00.000') AND NOT debater=against GROUP BY CONCAT(date, \"-\", round, \"-\", LEAST(debater, against), \"-\", GREATEST(debater, against)) HAVING count(*) > 0 ORDER BY t.date, round");
-				ArrayList<Rating> debaters = new ArrayList<Rating>();
-				int index = 0;
-				RatingCalculator ratingSystem = new RatingCalculator(0.06, 0.5);
-				RatingPeriodResults results = new RatingPeriodResults();
-				while(true) {
-					boolean next = false;
-					while((next = debates.next()) && !(new DateTime(debates.getDate(1)).withTimeAtStartOfDay().getMillis() > newWeeks.get(index).getMillis())) {
-						// Check to see if we have this debater stored
-						Rating debater = null, against = null;
-						for(Rating rating : debaters) {
-							if(rating.getId() == debates.getInt(3))
-								debater = rating;
-							if(rating.getId() == debates.getInt(4))
-								against = rating;
-							if(debater != null && against != null)
-								break;
-						}
-						if(debater == null) {
-							debater = new Rating(debates.getInt(3), ratingSystem);
-							debaters.add(debater);
-						}
-						if(against == null) {
-							against = new Rating(debates.getInt(4), ratingSystem);
-							debaters.add(against);
-						}
-
-						// Add result
-						if(debates.getString(5).equals("1-0"))
-							results.addResult(debater, against);
-						else
-							results.addResult(against, debater);
-					}
-					index++;
-					ratingSystem.updateRatings(results);
-					if(!next)
-						break;
-				}
-				debates.close();
-
-				// Sort by ratings
-				Collections.sort(debaters, new RatingsComparator());
-				ArrayList<Debater> debatersList = DebateHelper.getDebaters(sql);
-				for(int i = 1;i<=debaters.size();i++) {
-					Debater debater = null;
-					for(Debater d : debatersList)
-						if(d.getID().intValue() == debaters.get(i-1).getId())
-							debater = d;
-					log.info(i + ". " + debater + " - " + debaters.get(i-1).getRating() + " / " + debaters.get(i-1).getNumberOfResults());
-				}
-
-			} catch (SQLException e) {
-				log.error(e);
-				log.fatal("Could not update debater ratings.");
-			}
+//			try {
+//				ArrayList<DateTime> newWeeks = new ArrayList<DateTime>();
+//				ResultSet orderedTournaments = sql.executeQuery("SELECT date FROM tournaments WHERE date>'2016-07-01 00:00:00.000' ORDER BY date");
+//				DateTime last = null;
+//				while(orderedTournaments.next()) {
+//					DateTime date = new DateTime(orderedTournaments.getDate(1)).withTimeAtStartOfDay();
+//					if(last == null || date.equals(last) || date.minusDays(1).equals(last))
+//						last = date;
+//					else {
+//						newWeeks.add(date);
+//						last = date;
+//					}
+//				}
+//
+//				ResultSet debates = sql.executeQuery("SELECT t.date, round, debater, against, decision from ld_rounds ld JOIN tournaments AS t ON ld.tournament=t.id  WHERE tournament IN (SELECT id FROM tournaments WHERE date>'2016-07-01 00:00:00.000') AND NOT debater=against GROUP BY CONCAT(date, \"-\", round, \"-\", LEAST(debater, against), \"-\", GREATEST(debater, against)) HAVING count(*) > 0 ORDER BY t.date, round");
+//				ArrayList<Rating> debaters = new ArrayList<Rating>();
+//				int index = 0;
+//				RatingCalculator ratingSystem = new RatingCalculator(0.06, 0.5);
+//				RatingPeriodResults results = new RatingPeriodResults();
+//				while(true) {
+//					boolean next = false;
+//					while((next = debates.next()) && !(new DateTime(debates.getDate(1)).withTimeAtStartOfDay().getMillis() > newWeeks.get(index).getMillis())) {
+//						// Check to see if we have this debater stored
+//						Rating debater = null, against = null;
+//						for(Rating rating : debaters) {
+//							if(rating.getId() == debates.getInt(3))
+//								debater = rating;
+//							if(rating.getId() == debates.getInt(4))
+//								against = rating;
+//							if(debater != null && against != null)
+//								break;
+//						}
+//						if(debater == null) {
+//							debater = new Rating(debates.getInt(3), ratingSystem);
+//							debaters.add(debater);
+//						}
+//						if(against == null) {
+//							against = new Rating(debates.getInt(4), ratingSystem);
+//							debaters.add(against);
+//						}
+//
+//						// Add result
+//						if(debates.getString(5).equals("1-0"))
+//							results.addResult(debater, against);
+//						else
+//							results.addResult(against, debater);
+//					}
+//					index++;
+//					ratingSystem.updateRatings(results);
+//					if(!next)
+//						break;
+//				}
+//				debates.close();
+//
+//				// Sort by ratings
+//				Collections.sort(debaters, new RatingsComparator());
+//				ArrayList<Debater> debatersList = DebateHelper.getDebaters(sql);
+//				for(int i = 1;i<=debaters.size();i++) {
+//					Debater debater = null;
+//					for(Debater d : debatersList)
+//						if(d.getID().intValue() == debaters.get(i-1).getId())
+//							debater = d;
+//					log.info(i + ". " + debater + " - " + debaters.get(i-1).getRating() + " / " + debaters.get(i-1).getNumberOfResults());
+//				}
+//
+//			} catch (SQLException e) {
+//				log.error(e);
+//				log.fatal("Could not update debater ratings.");
+//			}
 			
 //			// PF
 //			

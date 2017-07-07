@@ -67,7 +67,7 @@ public class LD extends Module {
 					try {
 						log.log(JOT, "Updating " + t.getName());
 						Document tPage = Jsoup.connect(t.getLink()).timeout(10*1000).get();
-						Elements eventRows = tPage.select("tr:has(td:matches(LDOld|Lincoln|L-D)");
+						Elements eventRows = tPage.select("tr:has(td:matches(LD|Lincoln|L-D)");
 						
 						for(Element eventRow : eventRows) {
 							
