@@ -16,11 +16,11 @@ import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
+import org.xml.sax.helpers.DefaultHandler;
+import org.xml.sax.Attributes;
 
 import javax.xml.namespace.QName;
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.parsers.*;
 import javax.xml.stream.XMLEventReader;
 import javax.xml.stream.XMLInputFactory;
 import javax.xml.stream.XMLStreamException;
@@ -89,96 +89,110 @@ public class LD extends Module {
 
 						String[] split = t.getDate().split("\\/");
 						URL url = new URL("https://www.tabroom.com/api/current_tournaments.mhtml?timestring=" + split[2] + "-" + split[0] + "-" + split[1] + "T12:00:00");
-						System.out.println(url);
-						XMLInputFactory xmlInputFactory = XMLInputFactory.newInstance();
-						XMLEventReader xmlEventReader = xmlInputFactory.createXMLEventReader(url.openStream());
-						while(xmlEventReader.hasNext()) {
-							XMLEvent xmlEvent = xmlEventReader.nextEvent();
-							if (xmlEvent.isStartElement()) {
-								StartElement startElement = xmlEvent.asStartElement();
-								if(startElement.getName().getLocalPart().equals("EVENT")) {
-									xmlEvent = getNextStartElement(xmlEventReader);
-									if(xmlEvent.isStartElement() && xmlEvent.asStartElement().getName().getLocalPart().equals("EVENTNAME")) {
-										xmlEvent = xmlEventReader.nextEvent();
-										if(!xmlEvent.isEndElement()) {
-											String name = xmlEvent.asCharacters().getData();
-											xmlEvent = getNextStartElement(xmlEventReader);
-											if(xmlEvent.isStartElement() && xmlEvent.asStartElement().getName().getLocalPart().equals("ID")) {
-												xmlEvent = xmlEventReader.nextEvent();
-												if(!xmlEvent.isEndElement()) {
-													int event_id = Integer.parseInt(xmlEvent.asCharacters().getData());
-													xmlEvent = getNextStartElement(xmlEventReader);
-													if (xmlEvent.isStartElement() && xmlEvent.asStartElement().getName().getLocalPart().equals("TOURN")) {
-														xmlEvent = xmlEventReader.nextEvent();
-														if(!xmlEvent.isEndElement()) {
-															int tourn_id_element = Integer.parseInt(xmlEvent.asCharacters().getData());
 
-															if (name.matches("^.*(LD|Lincoln|L-D).*$") && tourn_id == tourn_id_element) {
+						SAXParserFactory factory = SAXParserFactory.newInstance();
+						SAXParser saxParser = factory.newSAXParser();
 
-																System.out.println("here");
-																int entries;
-																if ((entries = getTournamentRoundEntries(tourn_id, event_id)) == 0)
-																	return;
+						DefaultHandler handler = new DefaultHandler() {
 
-																// If we have the same amount of entries, then do not check
-																//if (tournamentExists(t.getLink() + "|" + event_id, getTournamentRoundEntries(tourn_id, event_id), sql, "ld_rounds"))
-																//	log.log(JOT, t.getName() + " prelims is up to date.");
+							private boolean bevent, beventname, bid, btourn;
+							private String eventname;
+							private int event_id, tid;
 
-																// Overwrite
-																//if (overwrite)
-																//	sql.executePreparedStatementArgs("DELETE FROM ld_rounds WHERE absUrl=?", t.getLink() + "|" + event_id);
+							public void startElement(String uri, String localName, String qName, Attributes attributes) throws SAXException {
+								if(qName.equalsIgnoreCase("EVENT")) {
+									bevent = true;
+									eventname = null;
+									event_id = 0;
+									tid = 0;
+								}
+								if(qName.equalsIgnoreCase("EVENTNAME") && bevent)
+									beventname = true;
+								if(qName.equalsIgnoreCase("ID") && bevent)
+									bid = true;
+								if(qName.equalsIgnoreCase("TOURN") && bevent)
+									btourn = true;
+							}
 
-																System.out.println(entries + " " + (System.currentTimeMillis() - one));
-															}
-														}
+							public void characters(char ch[], int start, int length) throws SAXException {
+								if(beventname) {
+									beventname = false;
+									eventname = new String(ch, start, length);
+								}
+								if(bid) {
+									bid = false;
+									event_id = Integer.parseInt(new String(ch, start, length));
+								}
+								if(btourn) {
+									btourn = false;
+									tid = Integer.parseInt(new String(ch, start, length));
+								}
+								if(eventname != null && event_id != 0 && tid != 0) {
+									bevent = false;
+									if (eventname.matches("^.*(LD|Lincoln|L-D).*$") && tourn_id == tid) {
+										try {
+											int entries;
+											if ((entries = getTournamentRoundEntries(tourn_id, event_id)) == 0)
+												return;
 
-													}
-												}
-											}
-										}
+											// If we have the same amount of entries, then do not check
+											//if (tournamentExists(t.getLink() + "|" + event_id, getTournamentRoundEntries(tourn_id, event_id), sql, "ld_rounds"))
+											//	log.log(JOT, t.getName() + " prelims is up to date.");
+
+											// Overwrite
+											//if (overwrite)
+											//	sql.executePreparedStatementArgs("DELETE FROM ld_rounds WHERE absUrl=?", t.getLink() + "|" + event_id);
+
+											System.out.println(entries + " " + (System.currentTimeMillis() - one));
+										} catch (XMLStreamException xmlse) {
+										} catch (IOException ioe) {}
+										catch(ParserConfigurationException pce) {}
 									}
-
 								}
 							}
-						}
+						};
+
+						saxParser.parse(url.openStream(), handler);
 
 					} catch(IOException ioe) {}
-					catch(XMLStreamException xmlse) {}
+					catch (SAXException e) {
+					} catch (ParserConfigurationException e) {
+					}
 					//catch(SQLException sqle) {}
 				}
 			});
 		}
 	}
 
-	public int getTournamentRoundEntries(int tourn_id, int event_id) throws XMLStreamException, IOException {
-		URL url = new URL("https://www.tabroom.com/api/tourn_published.mhtml?tourn_id=" + tourn_id + "&event_id=" + event_id);
-		XMLInputFactory xmlInputFactory = XMLInputFactory.newInstance();
-		XMLEventReader xmlEventReader = xmlInputFactory.createXMLEventReader(url.openStream());
-		int size = 0;
+	private int size = 0; // for getTournamentRoundEntries
 
-		boolean ballotsStarted = false, ballotStartTagOpen = false;
-		try {
-			while (xmlEventReader.hasNext()) {
-				XMLEvent xmlEvent = getNextStartElement(xmlEventReader);
-				StartElement startElement = xmlEvent.asStartElement();
-				if (startElement.getName().getLocalPart().equals("BALLOT")) {
-					xmlEvent = getNextStartElement(xmlEventReader);
-					if (xmlEvent.isStartElement() && xmlEvent.asStartElement().getName().getLocalPart().equals("ID")) {
-						ballotsStarted = true;
-						ballotStartTagOpen = true;
-						size++;
-					}
+	public int getTournamentRoundEntries(int tourn_id, int event_id) throws XMLStreamException, IOException, SAXException, ParserConfigurationException {
+		URL url = new URL("https://www.tabroom.com/api/tourn_published.mhtml?tourn_id=" + tourn_id + "&event_id=" + event_id);
+
+		SAXParserFactory factory = SAXParserFactory.newInstance();
+		SAXParser saxParser = factory.newSAXParser();
+
+		DefaultHandler handler = new DefaultHandler() {
+
+			private boolean bballot;
+
+			public void startElement(String uri, String localName, String qName, Attributes attributes) throws SAXException {
+				if(qName.equalsIgnoreCase("BALLOT"))
+					bballot = true;
+				if(qName.equalsIgnoreCase("ID") && bballot) {
+					bballot = false;
+					size++;
 				}
-				else if(!ballotStartTagOpen && ballotsStarted) {
-					System.out.println(startElement.getName().getLocalPart());
-					break;
-				}
-				ballotStartTagOpen = false;
 			}
-		} catch(XMLStreamException e) {}
+		};
+
+		saxParser.parse(url.openStream(), handler);
+
+		int localSize = size;
+		size = 0;
 
 		System.out.println(url);
-		return size;
+		return localSize;
 	}
 
 	private XMLEvent getNextStartElement(XMLEventReader xmlEventReader) throws XMLStreamException {
