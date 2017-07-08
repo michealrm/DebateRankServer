@@ -10,6 +10,7 @@ import io.micheal.debaterank.util.SQLHelper;
 import org.apache.commons.configuration2.Configuration;
 import org.apache.commons.configuration2.builder.fluent.Configurations;
 import org.apache.commons.configuration2.ex.ConfigurationException;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.logging.log4j.Logger;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -41,6 +42,7 @@ import static io.micheal.debaterank.util.DebateHelper.JOT;
 import static io.micheal.debaterank.util.DebateHelper.getDebaterID;
 import static io.micheal.debaterank.util.DebateHelper.tournamentExists;
 
+// XML Parsing sucks.
 public class LD extends Module {
 
 	private ArrayList<Tournament> tournaments;
@@ -512,45 +514,97 @@ System.out.println("Size:" + size.get());
 		saxParser.parse(url.openStream(), panelHandler);
 
 		// Finally, ballot parsing
-		HashMap<Integer, Round> rounds = new HashMap<Integer, Round>();
+		HashMap<Integer, Round> rounds = new HashMap<Integer, Round>(); // Key is panel
 		DefaultHandler ballotHandler = new DefaultHandler() {
 
-			private boolean bpanel, bround, bid;
-			private int round, id;
+			private boolean bballot, bid, bdebater, bpanel, bjudge, bside, bbye;
+			private int id, debater, panel, judge, side;
+			private Boolean bye; // Nullable
 
 			public void startElement(String uri, String localName, String qName, Attributes attributes) throws SAXException {
-				if(qName.equalsIgnoreCase("PANEL")) {
-					bpanel = true;
-					round = 0;
+				if(qName.equalsIgnoreCase("BALLOT")) {
+					bballot = true;
 					id = 0;
+					debater = 0;
+					panel = 0;
+					judge = 0;
+					side = 0;
+					bye = null;
 				}
-				if(qName.equalsIgnoreCase("ROUND") && bpanel)
-					bround = true;
-				if(qName.equalsIgnoreCase("ID") && bpanel)
+				if(qName.equalsIgnoreCase("ID") && bballot)
 					bid = true;
+				if(qName.equalsIgnoreCase("ENTRY") && bballot)
+					bdebater = true;
+				if(qName.equalsIgnoreCase("PANEL") && bballot)
+					bpanel = true;
+				if(qName.equalsIgnoreCase("JUDGE") && bballot)
+					bjudge = true;
+				if(qName.equalsIgnoreCase("SIDE") && bballot)
+					bside = true;
+				if(qName.equalsIgnoreCase("BYE") && bballot)
+					bbye = true;
 			}
 			public void endElement(String uri, String localName, String qName) throws SAXException {
-				if(qName.equalsIgnoreCase("PANEL")) {
-					bpanel = false;
-					round = 0;
+				if(qName.equalsIgnoreCase("BALLOT")) {
+					bballot = false;
 					id = 0;
+					debater = 0;
+					panel = 0;
+					judge = 0;
 				}
-				if(qName.equalsIgnoreCase("ROUND") && bpanel)
-					bround = false;
-				if(qName.equalsIgnoreCase("ID") && bpanel)
+				if(qName.equalsIgnoreCase("ID") && bballot)
 					bid = false;
+				if(qName.equalsIgnoreCase("ENTRY") && bballot)
+					bdebater = false;
+				if(qName.equalsIgnoreCase("PANEL") && bballot)
+					bpanel = false;
+				if(qName.equalsIgnoreCase("JUDGE") && bballot)
+					bjudge = false;
+				if(qName.equalsIgnoreCase("SIDE") && bballot)
+					bside = false;
+				if(qName.equalsIgnoreCase("BYE") && bballot)
+					bbye = false;
 			}
 			public void characters(char ch[], int start, int length) throws SAXException {
-				if(bround) {
-					bround = false;
-					round = Integer.parseInt(new String(ch, start, length));
+				if(bdebater) {
+					bdebater = false;
+					debater = Integer.parseInt(new String(ch, start, length));
+				}
+				if(bpanel) {
+					bpanel = false;
+					panel = Integer.parseInt(new String(ch, start, length));
+				}
+				if(bjudge) {
+					bjudge = false;
+					judge = Integer.parseInt(new String(ch, start, length));
 				}
 				if(bid) {
 					bid = false;
 					id = Integer.parseInt(new String(ch, start, length));
 				}
-				if(round != 0 && id != 0 && bpanel)
-					panels.put(id, roundInfo.get(round));
+				if(bside) {
+					bside = false;
+					side = Integer.parseInt(new String(ch, start, length));
+				}
+				if(bbye) {
+					bbye = false;
+					bye = Integer.parseInt(new String(ch, start, length)) == 1;
+				}
+				if(debater != 0 && id != 0 && judge != 0 && id != 0 && bye != null && bballot) {
+					if(rounds.get(panel) == null) {
+						Round round = new Round();
+						rounds.put(panel, round);
+					}
+					Round round = rounds.get(panel);
+					if (side == 1 && round.aff == null)
+						round.aff = competitors.get(debater);
+					else if (side == 2 && round.neg == null)
+						round.neg = competitors.get(debater);
+					if(round.bye != null)
+						round.bye = bye;
+					round.judges.add(Pair.of(id, Pair.of(judges.get(judge), null)));
+					rounds.put(panel, round); // May be redundant
+				}
 			}
 		};
 
