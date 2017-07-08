@@ -38,6 +38,7 @@ import java.sql.SQLException;
 import java.util.*;
 
 import static io.micheal.debaterank.util.DebateHelper.JOT;
+import static io.micheal.debaterank.util.DebateHelper.getDebaterID;
 import static io.micheal.debaterank.util.DebateHelper.tournamentExists;
 
 public class LD extends Module {
@@ -45,7 +46,6 @@ public class LD extends Module {
 	private ArrayList<Tournament> tournaments;
 	private WorkerPool manager;
 	private final boolean overwrite;
-	private int count = 0;
 
 	public LD(SQLHelper sql, Logger log, ArrayList<Tournament> tournaments, WorkerPool manager) {
 		super(sql, log);
@@ -116,6 +116,21 @@ public class LD extends Module {
 									btourn = true;
 							}
 
+							public void endElement(String uri, String localName, String qName) throws SAXException {
+								if(qName.equalsIgnoreCase("EVENT")) {
+									bevent = false;
+									eventname = null;
+									event_id = 0;
+									tid = 0;
+								}
+								if(qName.equalsIgnoreCase("EVENTNAME") && bevent)
+									beventname = false;
+								if(qName.equalsIgnoreCase("ID") && bevent)
+									bid = false;
+								if(qName.equalsIgnoreCase("TOURN") && bevent)
+									btourn = false;
+							}
+
 							public void characters(char ch[], int start, int length) throws SAXException {
 								if(beventname) {
 									beventname = false;
@@ -165,19 +180,18 @@ public class LD extends Module {
 		}
 	}
 
-	private int size = 0; // for getTournamentRoundEntries
+	private ThreadLocal<Integer> size = new ThreadLocal<Integer>(); // for getTournamentRoundEntries
 
 	public int getTournamentRoundEntries(int tourn_id, int event_id) throws XMLStreamException, IOException, SAXException, ParserConfigurationException {
-		size = 0;
+		size.set(0);
 		URL url = new URL("https://www.tabroom.com/api/tourn_published.mhtml?tourn_id=" + tourn_id + "&event_id=" + event_id);
 		URLConnection connection = url.openConnection();
 		InputStream stream = connection.getInputStream();
-
+System.out.println("Size:" + size.get());
 		SAXParserFactory factory = SAXParserFactory.newInstance();
 		factory.setFeature("http://xml.org/sax/features/namespaces", false);
 		factory.setFeature("http://xml.org/sax/features/validation", false);
 		SAXParser saxParser = factory.newSAXParser();
-
 		DefaultHandler handler = new DefaultHandler() {
 
 			private boolean bballot;
@@ -187,15 +201,20 @@ public class LD extends Module {
 					bballot = true;
 				if(qName.equalsIgnoreCase("ID") && bballot) {
 					bballot = false;
-					size++;
+					size.set(size.get().intValue()+1);
 				}
+			}
+
+			public void endElement(String uri, String localName, String qName) throws SAXException {
+				if(qName.equalsIgnoreCase("BALLOT"))
+					bballot = false;
 			}
 		};
 
 		long two = System.currentTimeMillis();
 		saxParser.parse(stream, handler);
 		System.out.println("Time to complete:" + (System.currentTimeMillis() - two));
-		int localSize = size;
+		int localSize = size.get().intValue();
 
 		System.out.println(localSize + " " + url);
 		return localSize;
@@ -233,6 +252,17 @@ public class LD extends Module {
 				if(qName.equalsIgnoreCase("SCHOOLNAME") && bschool)
 					bschoolname = true;
 			}
+			public void endElement(String uri, String localName, String qName) throws SAXException {
+				if(qName.equalsIgnoreCase("SCHOOL")) {
+					bschool = false;
+					schoolname = null;
+					id = 0;
+				}
+				if(qName.equalsIgnoreCase("ID") && bschool)
+					bid = false;
+				if(qName.equalsIgnoreCase("SCHOOLNAME") && bschool)
+					bschoolname = false;
+			}
 			public void characters(char ch[], int start, int length) throws SAXException {
 				if(bid) {
 					bid = false;
@@ -251,56 +281,280 @@ public class LD extends Module {
 
 		// Getting competitors
 		HashMap<Integer, Debater> competitors = new HashMap<Integer, Debater>();
-//		NodeList entryNodes = doc.getElementsByTagName("ENTRY");
-//		for(int i = 0;i<entryNodes.getLength();i++)
-//		{
-//			try {
-//				Node node = entryNodes.item(i);
-//				if (node.getChildNodes().getLength() > 1) {
-//					Element element = (Element) node;
-//					Debater debater = new Debater(element.getElementsByTagName("FULLNAME").item(0).getTextContent(), schools.get(Integer.parseInt(element.getElementsByTagName("SCHOOL").item(0).getTextContent())));
-//					debater.setID(DebateHelper.getDebaterID(sql, debater));
-//					competitors.put(Integer.parseInt(element.getElementsByTagName("ID").item(0).getTextContent()), debater);
-//				}
-//			} catch(SQLException e) {}
-//		}
+		DefaultHandler entryHandler = new DefaultHandler() {
+
+			private boolean bentry, bid, bschool, bfullname;
+			private String fullname;
+			private int id, school;
+
+			public void startElement(String uri, String localName, String qName, Attributes attributes) throws SAXException {
+				if(qName.equalsIgnoreCase("ENTRY")) {
+					bentry = true;
+					fullname = null;
+					id = 0;
+					school = 0;
+				}
+				if(qName.equalsIgnoreCase("FULLNAME") && bentry)
+					bfullname = true;
+				if(qName.equalsIgnoreCase("SCHOOL") && bentry)
+					bschool = true;
+				if(qName.equalsIgnoreCase("ID") && bentry)
+					bid = true;
+			}
+			public void endElement(String uri, String localName, String qName) throws SAXException {
+				if(qName.equalsIgnoreCase("ENTRY")) {
+					bentry = false;
+					fullname = null;
+					id = 0;
+					school = 0;
+				}
+				if(qName.equalsIgnoreCase("FULLNAME") && bentry)
+					bfullname = false;
+				if(qName.equalsIgnoreCase("SCHOOL") && bentry)
+					bschool = false;
+				if(qName.equalsIgnoreCase("ID") && bentry)
+					bid = false;
+			}
+			public void characters(char ch[], int start, int length) throws SAXException {
+				if(bfullname) {
+					bfullname = false;
+					fullname = new String(ch, start, length);
+				}
+				if(bschool) {
+					bschool = false;
+					school = Integer.parseInt(new String(ch, start, length));
+				}
+				if(bid) {
+					bid = false;
+					id = Integer.parseInt(new String(ch, start, length));
+				}
+				if(id != 0 && fullname != null && school != 0 && bentry)
+					competitors.put(id, new Debater(fullname, schools.get(school)));
+			}
+		};
+
+		saxParser.parse(url.openStream(), entryHandler);
+
+		// Get all ids
+		for(Debater debater : competitors.values()) {
+			try {
+				debater.setID(getDebaterID(sql, debater));
+			} catch(SQLException e) {}
+		}
 
 		// Getting judges
 		HashMap<Integer, Debater> judges = new HashMap<Integer, Debater>();
-//		NodeList judgesNodes = doc.getElementsByTagName("JUDGE");
-//		for(int i = 0;i<judgesNodes.getLength();i++)
-//		{
-//			Node node = judgesNodes.item(i);
-//			if(node.getChildNodes().getLength() > 1) {
-//				Element element = (Element) node;
-//				Debater debater = new Debater(element.getElementsByTagName("FIRST").item(0).getTextContent() + " " + element.getElementsByTagName("LAST").item(0).getTextContent(), schools.get(Integer.parseInt(element.getElementsByTagName("SCHOOL").item(0).getTextContent())));
-//				judges.put(Integer.parseInt(element.getElementsByTagName("ID").item(0).getTextContent()), debater);
-//			}
-//		}
+		DefaultHandler judgeHandler = new DefaultHandler() {
+
+			private boolean bjudge, bid, bschool, bfirst, blast;
+			private String first, last;
+			private int id, school;
+
+			public void startElement(String uri, String localName, String qName, Attributes attributes) throws SAXException {
+				if(qName.equalsIgnoreCase("JUDGE")) {
+					bjudge = true;
+					first = null;
+					last = null;
+					id = 0;
+					school = 0;
+				}
+				if(qName.equalsIgnoreCase("FIRST") && bjudge)
+					bfirst = true;
+				if(qName.equalsIgnoreCase("LAST") && bjudge)
+					blast = true;
+				if(qName.equalsIgnoreCase("SCHOOL") && bjudge)
+					bschool = true;
+				if(qName.equalsIgnoreCase("ID") && bjudge)
+					bid = true;
+			}
+			public void endElement(String uri, String localName, String qName) throws SAXException {
+				if(qName.equalsIgnoreCase("JUDGE")) {
+					bjudge = false;
+					first = null;
+					last = null;
+					id = 0;
+					school = 0;
+				}
+				if(qName.equalsIgnoreCase("FIRST") && bjudge)
+					bfirst = false;
+				if(qName.equalsIgnoreCase("LAST") && bjudge)
+					blast = false;
+				if(qName.equalsIgnoreCase("SCHOOL") && bjudge)
+					bschool = false;
+				if(qName.equalsIgnoreCase("ID") && bjudge)
+					bid = false;
+			}
+			public void characters(char ch[], int start, int length) throws SAXException {
+				if(bfirst) {
+					bfirst = false;
+					first = new String(ch, start, length);
+				}
+				if(blast) {
+					blast = false;
+					last = new String(ch, start, length);
+				}
+				if(bschool) {
+					bschool = false;
+					school = Integer.parseInt(new String(ch, start, length));
+				}
+				if(bid) {
+					bid = false;
+					id = Integer.parseInt(new String(ch, start, length));
+				}
+				if(id != 0 && first != null && last != null && school != 0 && bjudge)
+					competitors.put(id, new Debater(first + " " + last, schools.get(school)));
+			}
+		};
+
+		saxParser.parse(url.openStream(), judgeHandler);
 
 		// Getting round keys / names
-		HashMap<Integer, Character> round = new HashMap<Integer, Character>();
-//		NodeList roundNodes = doc.getElementsByTagName("ROUND");
+		HashMap<Integer, RoundInfo> roundInfo = new HashMap<Integer, RoundInfo>();
+		DefaultHandler roundHandler = new DefaultHandler() {
 
-		ArrayList<RoundInfo> roundNumbers = new ArrayList<RoundInfo>();
-//		for(int i = 0;i<roundNodes.getLength();i++)
-//		{
-//			Node node = roundNodes.item(i);
-//			if(node.getChildNodes().getLength() > 1) {
-//				Element element = (Element) node;
-//				RoundInfo roundInfo = new RoundInfo();
-//				roundInfo.number = Integer.parseInt(element.getElementsByTagName("RD_NAME").item(0).getTextContent());
-//				roundInfo.elim = element.getElementsByTagName("PAIRINGSCHEME").item(0).getTextContent().equals("Elim");
-//				roundNumbers.add(roundInfo);
-//			}
-//		}
-		Collections.sort(roundNumbers, new Comparator<RoundInfo>(){
-			public int compare(RoundInfo o1, RoundInfo o2){
-				return o1.number - o2.number;
+			private boolean bround, brd_name, bpairingscheme, bid;
+			private int rd_name, id;
+			private String pairingScheme;
+
+			public void startElement(String uri, String localName, String qName, Attributes attributes) throws SAXException {
+				if(qName.equalsIgnoreCase("ROUND")) {
+					bround = true;
+					pairingScheme = null;
+					rd_name = 0;
+				}
+				if(qName.equalsIgnoreCase("RD_NAME") && bround)
+					brd_name = true;
+				if(qName.equalsIgnoreCase("PAIRINGSCHEME") && bround)
+					bpairingscheme = true;
+				if(qName.equalsIgnoreCase("ID") && bround)
+					bid = true;
 			}
-		});
+			public void endElement(String uri, String localName, String qName) throws SAXException {
+				if(qName.equalsIgnoreCase("ROUND")) {
+					bround = false;
+					pairingScheme = null;
+					rd_name = 0;
+				}
+				if(qName.equalsIgnoreCase("RD_NAME") && bround)
+					brd_name = false;
+				if(qName.equalsIgnoreCase("PAIRINGSCHEME") && bround)
+					bpairingscheme = false;
+				if(qName.equalsIgnoreCase("ID") && bround)
+					bid = false;
+			}
+			public void characters(char ch[], int start, int length) throws SAXException {
+				if(brd_name) {
+					brd_name = false;
+					rd_name = Integer.parseInt(new String(ch, start, length));
+				}
+				if(bid) {
+					bid = false;
+					id = Integer.parseInt(new String(ch, start, length));
+				}
+				if(bpairingscheme) {
+					bpairingscheme = false;
+					pairingScheme = new String(ch, start, length);
+				}
+				if(rd_name != 0 && id != 0 && pairingScheme != null && bround) {
+					RoundInfo info = new RoundInfo();
+					info.number = rd_name;
+					info.elim = pairingScheme.equals("Elim");
+					roundInfo.put(id, info);
+				}
+			}
+		};
 
+		saxParser.parse(url.openStream(), roundHandler);
 
+		// Getting panels
+		HashMap<Integer, RoundInfo> panels = new HashMap<Integer, RoundInfo>();
+		DefaultHandler panelHandler = new DefaultHandler() {
+
+			private boolean bpanel, bround, bid;
+			private int round, id;
+
+			public void startElement(String uri, String localName, String qName, Attributes attributes) throws SAXException {
+				if(qName.equalsIgnoreCase("PANEL")) {
+					bpanel = true;
+					round = 0;
+					id = 0;
+				}
+				if(qName.equalsIgnoreCase("ROUND") && bpanel)
+					bround = true;
+				if(qName.equalsIgnoreCase("ID") && bpanel)
+					bid = true;
+			}
+			public void endElement(String uri, String localName, String qName) throws SAXException {
+				if(qName.equalsIgnoreCase("PANEL")) {
+					bpanel = false;
+					round = 0;
+					id = 0;
+				}
+				if(qName.equalsIgnoreCase("ROUND") && bpanel)
+					bround = false;
+				if(qName.equalsIgnoreCase("ID") && bpanel)
+					bid = false;
+			}
+			public void characters(char ch[], int start, int length) throws SAXException {
+				if(bround) {
+					bround = false;
+					round = Integer.parseInt(new String(ch, start, length));
+				}
+				if(bid) {
+					bid = false;
+					id = Integer.parseInt(new String(ch, start, length));
+				}
+				if(round != 0 && id != 0 && bpanel)
+					panels.put(id, roundInfo.get(round));
+			}
+		};
+
+		saxParser.parse(url.openStream(), panelHandler);
+
+		// Finally, ballot parsing
+		HashMap<Integer, Round> rounds = new HashMap<Integer, Round>();
+		DefaultHandler ballotHandler = new DefaultHandler() {
+
+			private boolean bpanel, bround, bid;
+			private int round, id;
+
+			public void startElement(String uri, String localName, String qName, Attributes attributes) throws SAXException {
+				if(qName.equalsIgnoreCase("PANEL")) {
+					bpanel = true;
+					round = 0;
+					id = 0;
+				}
+				if(qName.equalsIgnoreCase("ROUND") && bpanel)
+					bround = true;
+				if(qName.equalsIgnoreCase("ID") && bpanel)
+					bid = true;
+			}
+			public void endElement(String uri, String localName, String qName) throws SAXException {
+				if(qName.equalsIgnoreCase("PANEL")) {
+					bpanel = false;
+					round = 0;
+					id = 0;
+				}
+				if(qName.equalsIgnoreCase("ROUND") && bpanel)
+					bround = false;
+				if(qName.equalsIgnoreCase("ID") && bpanel)
+					bid = false;
+			}
+			public void characters(char ch[], int start, int length) throws SAXException {
+				if(bround) {
+					bround = false;
+					round = Integer.parseInt(new String(ch, start, length));
+				}
+				if(bid) {
+					bid = false;
+					id = Integer.parseInt(new String(ch, start, length));
+				}
+				if(round != 0 && id != 0 && bpanel)
+					panels.put(id, roundInfo.get(round));
+			}
+		};
+
+		saxParser.parse(url.openStream(), ballotHandler);
 
 	}
 }
