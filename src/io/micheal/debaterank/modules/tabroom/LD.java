@@ -146,7 +146,7 @@ public class LD extends Module {
 									btourn = false;
 									tid = Integer.parseInt(new String(ch, start, length));
 								}
-								if(eventname != null && event_id != 0 && tid != 0) {
+								if(eventname != null && event_id != 0 && tid != 0 && bevent) {
 									bevent = false;
 									if (eventname.matches("^.*(LD|Lincoln|L-D).*$") && tourn_id == tid) {
 										try {
@@ -274,8 +274,10 @@ System.out.println("Size:" + size.get());
 					bschoolname = false;
 					schoolname = new String(ch, start, length);
 				}
-				if(id != 0 && schoolname != null && bschool)
+				if(id != 0 && schoolname != null && bschool) {
+					bschool = false;
 					schools.put(id, schoolname);
+				}
 			}
 		};
 
@@ -330,8 +332,10 @@ System.out.println("Size:" + size.get());
 					bid = false;
 					id = Integer.parseInt(new String(ch, start, length));
 				}
-				if(id != 0 && fullname != null && school != 0 && bentry)
+				if(id != 0 && fullname != null && school != 0 && bentry) {
+					bentry = false;
 					competitors.put(id, new Debater(fullname, schools.get(school)));
+				}
 			}
 		};
 
@@ -403,8 +407,10 @@ System.out.println("Size:" + size.get());
 					bid = false;
 					id = Integer.parseInt(new String(ch, start, length));
 				}
-				if(id != 0 && first != null && last != null && school != 0 && bjudge)
+				if(id != 0 && first != null && last != null && school != 0 && bjudge) {
+					bjudge = false;
 					competitors.put(id, new Debater(first + " " + last, schools.get(school)));
+				}
 			}
 		};
 
@@ -458,6 +464,7 @@ System.out.println("Size:" + size.get());
 					pairingScheme = new String(ch, start, length);
 				}
 				if(rd_name != 0 && id != 0 && pairingScheme != null && bround) {
+					bround = false;
 					RoundInfo info = new RoundInfo();
 					info.number = rd_name;
 					info.elim = pairingScheme.equals("Elim");
@@ -506,8 +513,10 @@ System.out.println("Size:" + size.get());
 					bid = false;
 					id = Integer.parseInt(new String(ch, start, length));
 				}
-				if(round != 0 && id != 0 && bpanel)
+				if(round != 0 && id != 0 && bpanel) {
+					bpanel = false;
 					panels.put(id, roundInfo.get(round));
+				}
 			}
 		};
 
@@ -591,6 +600,7 @@ System.out.println("Size:" + size.get());
 					bye = Integer.parseInt(new String(ch, start, length)) == 1;
 				}
 				if(debater != 0 && id != 0 && judge != 0 && id != 0 && bye != null && bballot) {
+					bballot = false;
 					if(rounds.get(panel) == null) {
 						Round round = new Round();
 						rounds.put(panel, round);
@@ -609,6 +619,63 @@ System.out.println("Size:" + size.get());
 		};
 
 		saxParser.parse(url.openStream(), ballotHandler);
+
+		// Round results
+		DefaultHandler resultHandler = new DefaultHandler() {
+
+			private boolean bballot_score, bballot, bscore_id, bscore;
+			private int ballot;
+			private String score_id;
+			private Integer score;
+
+			public void startElement(String uri, String localName, String qName, Attributes attributes) throws SAXException {
+				if(qName.equalsIgnoreCase("BALLOT_SCORE")) {
+					bballot_score = true;
+					ballot = 0;
+					score_id = null;
+					score = null;
+				}
+				if(qName.equalsIgnoreCase("BALLOT") && bballot)
+					bballot = true;
+				if(qName.equalsIgnoreCase("SCORE_ID") && bballot)
+					bscore_id = true;
+				if(qName.equalsIgnoreCase("SCORE") && bballot)
+					bscore = true;
+			}
+			public void endElement(String uri, String localName, String qName) throws SAXException {
+				if(qName.equalsIgnoreCase("BALLOT_SCORE")) {
+					bballot_score = false;
+					ballot = 0;
+					score_id = null;
+					score = null;
+				}
+				if(qName.equalsIgnoreCase("BALLOT") && bballot)
+					bballot = false;
+				if(qName.equalsIgnoreCase("SCORE_ID") && bballot)
+					bscore_id = false;
+				if(qName.equalsIgnoreCase("SCORE") && bballot)
+					bscore = false;
+			}
+			public void characters(char ch[], int start, int length) throws SAXException {
+				if(bballot) {
+					bballot = false;
+					ballot = Integer.parseInt(new String(ch, start, length));
+				}
+				if(bscore_id) {
+					bscore_id = false;
+					score_id = new String(ch, start, length);
+				}
+				if(bscore) {
+					bscore = false;
+					score = Integer.parseInt(new String(ch, start, length));
+				}
+				if(ballot != 0 && score_id != null && score != null && bballot_score) {
+
+				}
+			}
+		};
+
+		saxParser.parse(url.openStream(), resultHandler);
 
 	}
 }
