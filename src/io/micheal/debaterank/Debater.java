@@ -90,6 +90,8 @@ public class Debater {
 	}
 	
 	public boolean equalsIgnoreID(Debater debater) {
+		if(debater == null)
+			return false;
 		boolean replaceThis = false;
 		String first = debater.getFirst();
 		String last = debater.getLast();

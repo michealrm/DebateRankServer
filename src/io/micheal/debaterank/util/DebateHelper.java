@@ -6,6 +6,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 
+import io.micheal.debaterank.Judge;
 import org.apache.logging.log4j.Level;
 import org.jsoup.nodes.Document;
 
@@ -17,7 +18,7 @@ public class DebateHelper {
 	public static final Level JOT = Level.forName("JOT", 400);
 	public static final Level TABROOM = Level.forName("TABROOM", 400);
 	public static final Level NSDA = Level.forName("NSDA", 400);
-	
+
 	/**
 	 * Searches the SQL tables for the specified name. If no match is found, a debater will be created and returned
 	 * @return
@@ -40,12 +41,34 @@ public class DebateHelper {
 		index.close();
 		return insertDebater(sql, debater);
 	}
+
+	/**
+	 * Searches the SQL tables for the specified name. If no match is found, a judge will be created and returned
+	 * @return
+	 * @throws SQLException
+	 */
+	public static int getJudgeID(SQLHelper sql, Judge judge) throws SQLException {
+		if(judge.getID() != null)
+			return judge.getID();
+		ResultSet index = sql.executeQueryPreparedStatement("SELECT id, school FROM judges WHERE first_clean<=>? AND middle_clean<=>? AND last_clean<=>? AND surname_clean<=>?", cleanString(judge.getFirst()), cleanString(judge.getMiddle()), cleanString(judge.getLast()), cleanString(judge.getSurname()));
+		if(index.next()) {
+			do {
+				Judge clone = new Judge(judge.getFirst(), judge.getMiddle(), judge.getLast(), judge.getSurname(), index.getString(2));
+				if(judge.equals(clone)) {
+					int ret = index.getInt(1);
+					index.close();
+					return ret;
+				}
+			} while(index.next());
+		}
+		index.close();
+		return insertJudge(sql, judge);
+	}
 	
 	/**
 	 * Searches the SQL tables for the specified team. If no match is found, a debater will be created and returned
 	 * @return
-	 * @throws SQLException 
-	 * @throws UnsupportedNameException 
+	 * @throws SQLException
 	 */
 	public static int getTeamID(SQLHelper sql, Team team, String event) throws SQLException {
 		if(team.getID() != null)
@@ -122,14 +145,23 @@ public class DebateHelper {
 		index.close();
 		return null;
 	}
-	
+
 	/**
 	 * Inserts a debater into the database
 	 * @return
-	 * @throws SQLException 
+	 * @throws SQLException
 	 */
 	public static int insertDebater(SQLHelper sql, Debater debater) throws SQLException {
 		return sql.executePreparedStatementArgs("INSERT INTO debaters (first, middle, last, surname, school, first_clean, middle_clean, last_clean, surname_clean, school_clean, state, year) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", debater.getFirst(), debater.getMiddle(), debater.getLast(), debater.getSurname(), debater.getSchool(), cleanString(debater.getFirst()), cleanString(debater.getMiddle()), cleanString(debater.getLast()), cleanString(debater.getSurname()), cleanString(debater.getSchool()), debater.getState(), debater.getYear());
+	}
+
+	/**
+	 * Inserts a judge into the database
+	 * @return
+	 * @throws SQLException
+	 */
+	public static int insertJudge(SQLHelper sql, Judge judge) throws SQLException {
+		return sql.executePreparedStatementArgs("INSERT INTO judges (first, middle, last, surname, school, first_clean, middle_clean, last_clean, surname_clean, school_clean, state, year) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", judge.getFirst(), judge.getMiddle(), judge.getLast(), judge.getSurname(), judge.getSchool(), cleanString(judge.getFirst()), cleanString(judge.getMiddle()), cleanString(judge.getLast()), cleanString(judge.getSurname()), cleanString(judge.getSchool()), judge.getState(), judge.getYear());
 	}
 	
 	public static int deleteDebater(SQLHelper sql, Debater debater) throws SQLException {

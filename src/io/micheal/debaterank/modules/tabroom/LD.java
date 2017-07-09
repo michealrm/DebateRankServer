@@ -152,7 +152,7 @@ public class LD extends Module {
 											if (getTournamentRoundEntries(tourn_id, event_id) == 0)
 												return;
 
-											enterTournament(t, 6819, 59362);
+											enterTournament(t, tourn_id, event_id);
 
 										} catch (XMLStreamException xmlse) {}
 										catch (IOException ioe) {}
@@ -819,7 +819,7 @@ public class LD extends Module {
 				try {
 					System.out.println("Judge: " + jBallot.judge);
 					System.out.println("Ballots: " + jBallot.ballots);
-					System.out.println("Win: " + (getDebaterID(sql, jBallot.winner) == getDebaterID(sql, round.aff) ? "Aff" : "Neg"));
+					System.out.println("Win: " + (getDebaterID(sql, jBallot.winner) == getDebaterID(sql, round.aff) ? "Aff" : (getDebaterID(sql, jBallot.winner) == getDebaterID(sql, round.neg) ? "Neg" : null)));
 					System.out.println("Bye: " + round.bye);
 					System.out.println("Aff speaks: " + jBallot.affSpeaks);
 					System.out.println("Neg speaks: " + jBallot.negSpeaks);
@@ -829,10 +829,6 @@ public class LD extends Module {
 			System.out.println();
 			System.out.println();
 		}
-
-		System.out.println(getTournamentRoundEntries(tourn_id, event_id) + " " + rounds.size());
-
-		System.exit(0);
 	}
 
 	private HashMap<Integer, String> roundToSQLFriendlyRound(List<Round> r) {
