@@ -6,8 +6,8 @@ import org.apache.commons.lang3.tuple.Pair;
 import java.util.ArrayList;
 
 public class Round {
-	public int id, panel, affSpeaks = -1, negSpeaks = -1; // If there are multiple judges, speaks should be -1
+	public RoundInfo roundInfo;
 	public Debater aff, neg;
-	public ArrayList<Pair<Integer, Pair<Debater, Boolean>>> judges; // Left is ballot id, right is pair where left is judge, right is true if win
+	public ArrayList<JudgeBallot> judges; // Left is ballot id, right is pair where left is judge, right is Pair where left is speaks and right is true if aff win
 	public Boolean bye;
 }

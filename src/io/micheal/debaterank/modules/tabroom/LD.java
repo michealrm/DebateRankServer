@@ -599,7 +599,7 @@ System.out.println("Size:" + size.get());
 					bbye = false;
 					bye = Integer.parseInt(new String(ch, start, length)) == 1;
 				}
-				if(debater != 0 && id != 0 && judge != 0 && id != 0 && bye != null && bballot) {
+				if(debater != 0 && id != 0 && judge != 0 && id != 0 && panel != 0 && bye != null && bballot) {
 					bballot = false;
 					if(rounds.get(panel) == null) {
 						Round round = new Round();
@@ -612,7 +612,12 @@ System.out.println("Size:" + size.get());
 						round.neg = competitors.get(debater);
 					if(round.bye != null)
 						round.bye = bye;
-					round.judges.add(Pair.of(id, Pair.of(judges.get(judge), null)));
+					if(round.roundInfo != null)
+						round.roundInfo = panels.get(panel);
+					JudgeBallot jBallot = new JudgeBallot();
+					jBallot.ballot = id;
+					jBallot.judge = judges.get(judge);
+					round.judges.add(jBallot);
 					rounds.put(panel, round); // May be redundant
 				}
 			}
@@ -621,12 +626,13 @@ System.out.println("Size:" + size.get());
 		saxParser.parse(url.openStream(), ballotHandler);
 
 		// Round results
+		Set<Map.Entry<Integer, Round>> roundsSet = rounds.entrySet();
 		DefaultHandler resultHandler = new DefaultHandler() {
 
-			private boolean bballot_score, bballot, bscore_id, bscore;
-			private int ballot;
+			private boolean bballot_score, bballot, bscore_id, bscore, brecipient;
+			private int ballot, recipient;
 			private String score_id;
-			private Integer score;
+			private Double score;
 
 			public void startElement(String uri, String localName, String qName, Attributes attributes) throws SAXException {
 				if(qName.equalsIgnoreCase("BALLOT_SCORE")) {
@@ -641,6 +647,8 @@ System.out.println("Size:" + size.get());
 					bscore_id = true;
 				if(qName.equalsIgnoreCase("SCORE") && bballot)
 					bscore = true;
+				if(qName.equalsIgnoreCase("RECIPIENT") && bballot)
+					brecipient = true;
 			}
 			public void endElement(String uri, String localName, String qName) throws SAXException {
 				if(qName.equalsIgnoreCase("BALLOT_SCORE")) {
@@ -655,6 +663,8 @@ System.out.println("Size:" + size.get());
 					bscore_id = false;
 				if(qName.equalsIgnoreCase("SCORE") && bballot)
 					bscore = false;
+				if(qName.equalsIgnoreCase("RECIPIENT") && bballot)
+					brecipient = true;
 			}
 			public void characters(char ch[], int start, int length) throws SAXException {
 				if(bballot) {
@@ -667,15 +677,74 @@ System.out.println("Size:" + size.get());
 				}
 				if(bscore) {
 					bscore = false;
-					score = Integer.parseInt(new String(ch, start, length));
+					score = Double.parseDouble(new String(ch, start, length));
 				}
-				if(ballot != 0 && score_id != null && score != null && bballot_score) {
-
+				if(brecipient) {
+					brecipient = false;
+					recipient = Integer.parseInt(new String(ch, start, length));
+				}
+				if(ballot != 0 && recipient != 0 && score_id != null && score != null && bballot_score) {
+					if(score_id.equals("WIN")) { // Test to see if this even updates
+						for (Map.Entry<Integer, Round> entry : roundsSet)
+							for (JudgeBallot jBallot : entry.getValue().judges)
+								if (jBallot.ballot == ballot)
+									if (score == 1)
+										jBallot.winner = competitors.get(recipient);
+					}
+					else if(score_id.equals("POINTS")) {
+						for (Map.Entry<Integer, Round> entry : roundsSet)
+							for (JudgeBallot jBallot : entry.getValue().judges)
+								if (jBallot.ballot == ballot) {
+									if (competitors.get(recipient).equals(entry.getValue().aff))
+										jBallot.affSpeaks = score;
+									else if (competitors.get(recipient).equals(entry.getValue().neg))
+										jBallot.negSpeaks = score;
+								}
+					}
 				}
 			}
 		};
 
 		saxParser.parse(url.openStream(), resultHandler);
 
+		for(Round round : rounds.values()) {
+			System.out.println();
+			System.out.println("Aff: " + round.aff);
+			System.out.println("Neg: " + round.neg);
+			for(JudgeBallot jBallot : round.judges) {
+				System.out.println("Judge: " + jBallot.judge);
+				System.out.println("Round: " + roundToSQLFriendlyRound(new ArrayList<Round>(rounds.values())));
+				System.out.println("Win: " + (jBallot.winner.getID() == round.aff.getID() ? "Aff" : "Neg"));
+				System.out.println("Aff speaks: " + jBallot.affSpeaks);
+				System.out.println("Neg speaks: " + jBallot.negSpeaks);
+				System.out.println("-------");
+			}
+			System.out.println();
+		}
+
+	}
+
+	private HashMap<Integer, String> roundToSQLFriendlyRound(List<Round> r) {
+		ArrayList<Round> rounds = new ArrayList<Round>(r);
+		String[] elimsStrings = {"TO", "DO", "O", "Q", "S", "F"};
+		Collections.sort(rounds, new Comparator<Round>() {
+			public int compare(Round o1, Round o2) {
+				return o1.roundInfo.number - o2.roundInfo.number;
+			}
+		});
+		ArrayList<Pair<Round, String>> elims = new ArrayList<Pair<Round, String>>();
+		for(int i = 0;i<rounds.size();i++)
+			if(rounds.get(i).roundInfo.elim) {
+				elims.add(Pair.of(rounds.get(i), null));
+				rounds.remove(i--);
+			}
+		for(int i = 0;i<=elims.size();i++)
+			elims.set(i, Pair.of(elims.get(i).getLeft(), elimsStrings[elimsStrings.length - elims.size() - i]));
+		HashMap<Integer, String> ret = new HashMap<Integer, String>();
+		for(Round round : rounds)
+			ret.put(round.roundInfo.number, String.valueOf(round.roundInfo.number));
+		for(Pair<Round, String> pair : elims)
+			ret.put(pair.getLeft().roundInfo.number, pair.getRight());
+		return ret;
 	}
 }
