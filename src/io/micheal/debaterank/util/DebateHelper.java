@@ -21,8 +21,7 @@ public class DebateHelper {
 	/**
 	 * Searches the SQL tables for the specified name. If no match is found, a debater will be created and returned
 	 * @return
-	 * @throws SQLException 
-	 * @throws UnsupportedNameException 
+	 * @throws SQLException
 	 */
 	public static int getDebaterID(SQLHelper sql, Debater debater) throws SQLException {
 		if(debater.getID() != null)
