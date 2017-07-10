@@ -1,6 +1,7 @@
 package io.micheal.debaterank.modules.tabroom;
 
 import io.micheal.debaterank.Debater;
+import io.micheal.debaterank.Judge;
 import io.micheal.debaterank.School;
 import io.micheal.debaterank.Tournament;
 import io.micheal.debaterank.modules.Module;
@@ -10,6 +11,7 @@ import io.micheal.debaterank.util.SQLHelper;
 import org.apache.commons.configuration2.Configuration;
 import org.apache.commons.configuration2.builder.fluent.Configurations;
 import org.apache.commons.configuration2.ex.ConfigurationException;
+import org.apache.commons.lang.ObjectUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.logging.log4j.Logger;
 import org.w3c.dom.Document;
@@ -33,12 +35,11 @@ import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.*;
 
-import static io.micheal.debaterank.util.DebateHelper.JOT;
-import static io.micheal.debaterank.util.DebateHelper.getDebaterID;
-import static io.micheal.debaterank.util.DebateHelper.tournamentExists;
+import static io.micheal.debaterank.util.DebateHelper.*;
 
 // XML Parsing sucks.
 public class LD extends Module {
@@ -152,7 +153,7 @@ public class LD extends Module {
 											if (getTournamentRoundEntries(tourn_id, event_id) == 0)
 												return;
 
-											enterTournament(t, tourn_id, event_id);
+											enterTournament(t, 6819, 59362);
 
 										} catch (XMLStreamException xmlse) {}
 										catch (IOException ioe) {}
@@ -235,9 +236,20 @@ public class LD extends Module {
 //			return;
 //		}
 //
-//		//Overwrite
-//		if (overwrite)
-//			sql.executePreparedStatementArgs("DELETE FROM ld_rounds WHERE absUrl=?", t.getLink() + "|" + event_id);
+		//Overwrite
+		try {
+			if (overwrite) {
+				sql.executePreparedStatementArgs("DELETE FROM ld_judges WHERE round IN (SELECT id FROM ld_rounds WHERE absUrl=?)", t.getLink() + "|" + event_id);
+				sql.executeStatement("SET FOREIGN_KEY_CHECKS=0");
+				sql.executePreparedStatementArgs("DELETE FROM ld_rounds WHERE absUrl=?", t.getLink() + "|" + event_id);
+				sql.executeStatement("SET FOREIGN_KEY_CHECKS=1");
+			}
+		} catch(SQLException sqle) {
+			sqle.printStackTrace();
+			log.error(sqle);
+			log.fatal("Could not update " + t.getName() + " - " + sqle.getErrorCode());
+			return;
+		}
 
 		SAXParserFactory factory = SAXParserFactory.newInstance();
 		SAXParser saxParser = factory.newSAXParser();
@@ -417,7 +429,7 @@ public class LD extends Module {
 		saxParser.parse(stream, entryHandler);
 
 		// Getting judges
-		HashMap<Integer, Debater> judges = new HashMap<Integer, Debater>();
+		HashMap<Integer, Judge> judges = new HashMap<Integer, Judge>();
 		DefaultHandler judgeHandler = new DefaultHandler() {
 
 			private boolean bjudge, bid, bschool, bfirst, blast;
@@ -477,13 +489,20 @@ public class LD extends Module {
 				}
 				if(id != 0 && first != null && last != null && school != 0 && bjudge) {
 					bjudge = false;
-					judges.put(id, new Debater(first + " " + last, schools.get(school)));
+					judges.put(id, new Judge(first + " " + last, schools.get(school)));
 				}
 			}
 		};
 
 		stream = new ByteArrayInputStream(baos.toByteArray());
 		saxParser.parse(stream, judgeHandler);
+
+		// Get all ids
+		for(Judge judge : judges.values()) {
+			try {
+				judge.setID(getJudgeID(sql, judge));
+			} catch(SQLException e) {e.printStackTrace();}
+		}
 
 		// Getting round keys / names
 		HashMap<Integer, RoundInfo> roundInfo = new HashMap<Integer, RoundInfo>();
@@ -782,7 +801,7 @@ public class LD extends Module {
 					if(score_id.equals("WIN")) { // Test to see if this even updates
 						for (Map.Entry<Integer, Round> entry : roundsSet) {
 							for (JudgeBallot jBallot : entry.getValue().judges)
-									if (score == 1)
+									if (score == 1 && jBallot.ballots.contains(ballot))
 										jBallot.winner = competitors.get(recipient);
 						}
 					}
@@ -807,28 +826,162 @@ public class LD extends Module {
 		stream = new ByteArrayInputStream(baos.toByteArray());
 		saxParser.parse(stream, resultHandler);
 
-		System.out.println(url);
+
 		HashMap<Integer, String> sqlRoundStrings = roundToSQLFriendlyRound(new ArrayList<Round>(rounds.values()));
-		for(Map.Entry<Integer, Round> entry : rounds.entrySet()) {
-			System.out.println("ID: " + entry.getKey());
-			Round round = entry.getValue();
-			System.out.println("Round: " + sqlRoundStrings.get(round.roundInfo.number));
-			System.out.println("Aff: " + round.aff);
-			System.out.println("Neg: " + round.neg);
-			for(JudgeBallot jBallot : round.judges) {
+		String query = "INSERT INTO ld_rounds (tournament, absUrl, debater, against, round, side, decision) VALUES ";
+		ArrayList<Object> args = new ArrayList<Object>();
+		rounds:
+		for(Round round : rounds.values()) {
+			int affVotes = 0, negVotes = 0;
+			for (JudgeBallot jBallot : round.judges) {
 				try {
-					System.out.println("Judge: " + jBallot.judge);
-					System.out.println("Ballots: " + jBallot.ballots);
-					System.out.println("Win: " + (getDebaterID(sql, jBallot.winner) == getDebaterID(sql, round.aff) ? "Aff" : (getDebaterID(sql, jBallot.winner) == getDebaterID(sql, round.neg) ? "Neg" : null)));
-					System.out.println("Bye: " + round.bye);
-					System.out.println("Aff speaks: " + jBallot.affSpeaks);
-					System.out.println("Neg speaks: " + jBallot.negSpeaks);
-					System.out.println("-------");
-				} catch(SQLException e) {} catch(NullPointerException npe) {}
+					if (getDebaterID(sql, jBallot.winner) == getDebaterID(sql, round.aff))
+						affVotes++;
+					if (getDebaterID(sql, jBallot.winner) == getDebaterID(sql, round.neg))
+						negVotes++;
+				} catch (SQLException | NullPointerException sqle) {
+					continue rounds;
+				}
 			}
-			System.out.println();
-			System.out.println();
+			if(round.aff == null || round.aff.getID() == null || round.neg == null || round.neg.getID() == null)
+				continue;
+			ArrayList<Object> a = new ArrayList<Object>();
+			if(round.bye) {
+				a.add(t.getLink());
+				a.add(t.getLink() + "|" + event_id);
+				Debater debater = round.aff != null ? round.aff : round.neg;
+				try {
+					a.add(getDebaterID(sql, debater));
+					a.add(getDebaterID(sql, debater));
+				} catch(SQLException sqle) {
+					continue;
+				}
+				a.add(null);
+				a.add("B");
+			}
+			else {
+				a.add(t.getLink());
+				a.add(t.getLink() + "|" + event_id);
+				a.add(round.aff.getID());
+				a.add(round.neg.getID());
+				a.add(sqlRoundStrings.get(round.roundInfo.number));
+				a.add('A');
+				a.add(affVotes + "-" + negVotes);
+			}
+			if(!overwrite) {
+				try {
+					ResultSet exists = sql.executeQueryPreparedStatement("SELECT * FROM ld_rounds WHERE tournament=(SELECT id FROM tournaments WHERE link=?) AND absUrl<=>? AND debater=? AND against=? AND round<=>? AND side<=>? AND decision<=>?", a.get(0), a.get(1), a.get(2), a.get(3), a.get(4), a.get(5), a.get(6));
+					if (!exists.next()) {
+						query += "((SELECT id FROM tournaments WHERE link=?), ?, ?, ?, ?, ?, ?), ";
+						args.addAll(a);
+					}
+					exists.close();
+				} catch(SQLException sqle) {
+					continue rounds;
+				}
+			}
+			else {
+				query += "((SELECT id FROM tournaments WHERE link=?), ?, ?, ?, ?, ?, ?), ";
+				args.addAll(a);
+			}
+
+			a.clear();
+
+			a.add(t.getLink());
+			a.add(t.getLink() + "|" + event_id);
+			a.add(round.neg.getID());
+			a.add(round.aff.getID());
+			a.add(sqlRoundStrings.get(round.roundInfo.number));
+			a.add('N');
+			a.add(negVotes + "-" + affVotes);
+
+			if(!overwrite) {
+				try {
+					ResultSet exists = sql.executeQueryPreparedStatement("SELECT * FROM ld_rounds WHERE tournament=(SELECT id FROM tournaments WHERE link=?) AND absUrl<=>? AND debater=? AND against=? AND round<=>? AND side<=>? AND decision<=>?", a.get(0), a.get(1), a.get(2), a.get(3), a.get(4), a.get(5), a.get(6));
+					if (!exists.next()) {
+						query += "((SELECT id FROM tournaments WHERE link=?), ?, ?, ?, ?, ?, ?), ";
+						args.addAll(a);
+					}
+					exists.close();
+				} catch(SQLException sqle) {
+					continue rounds;
+				}
+			}
+			else {
+				query += "((SELECT id FROM tournaments WHERE link=?), ?, ?, ?, ?, ?, ?), ";
+				args.addAll(a);
+			}
 		}
+
+		try {
+			if (!query.equals("INSERT INTO ld_rounds (tournament, absUrl, debater, against, round, side, decision) VALUES ")) {
+				query = query.substring(0, query.lastIndexOf(", "));
+				sql.executePreparedStatement(query, args.toArray());
+
+				String judgeQuery = "INSERT INTO ld_judges (round, judge_id, decision, aff_speaks, neg_speaks) VALUES ";
+				ArrayList<Object> judgeArgs = new ArrayList<Object>();
+				for (Round round : rounds.values()) {
+					for (JudgeBallot jBallot : round.judges) {
+						ArrayList<Object> a = new ArrayList<Object>();
+						try {
+							ResultSet idStatement = sql.executeQueryPreparedStatement("SELECT id FROM ld_rounds WHERE tournament=(SELECT id FROM tournaments WHERE link=?) AND absUrl<=>? AND debater=? AND against=? AND round<=>? AND side<=>?", t.getLink(), t.getLink() + "|" + event_id, getDebaterID(sql, jBallot.winner), getDebaterID(sql, jBallot.winner) != round.aff.getID() ? round.aff.getID() : round.neg.getID(), sqlRoundStrings.get(round.roundInfo.number), (getDebaterID(sql, jBallot.winner) == getDebaterID(sql, round.aff) ? 'A' : (getDebaterID(sql, jBallot.winner) == getDebaterID(sql, round.neg) ? 'N' : null)));
+							if(!idStatement.next())
+								continue;
+							a.add(idStatement.getInt(1));
+							idStatement.close();
+						} catch(NullPointerException npe) {
+							continue;
+						}
+						try {
+							a.add(getJudgeID(sql, jBallot.judge));
+							a.add((getDebaterID(sql, jBallot.winner) == getDebaterID(sql, round.aff) ? 'A' : (getDebaterID(sql, jBallot.winner) == getDebaterID(sql, round.neg) ? 'N' : null)));
+						} catch (SQLException | NullPointerException sqle) {
+							continue;
+						}
+						if(jBallot.affSpeaks != 0)
+							a.add(jBallot.affSpeaks);
+						else
+							a.add(null);
+						if(jBallot.negSpeaks != 0)
+							a.add(jBallot.negSpeaks);
+						else
+							a.add(null);
+
+						if (!overwrite) {
+							try {
+								ResultSet exists = sql.executeQueryPreparedStatement("SELECT * FROM ld_judges WHERE round=? AND judge_id=?", a.get(0), a.get(1));
+								if (!exists.next()) {
+									judgeQuery += "(?, ?, ?, ?, ?), ";
+									judgeArgs.addAll(a);
+								}
+								exists.close();
+							} catch (SQLException sqle) {
+								continue;
+							}
+						} else {
+							judgeQuery += "(?, ?, ?, ?, ?), ";
+							judgeArgs.addAll(a);
+						}
+
+					}
+				}
+
+				if(!judgeQuery.equals("INSERT INTO ld_judges (round, judge_id, decision, aff_speaks, neg_speaks) VALUES ")) {
+					judgeQuery = judgeQuery.substring(0, judgeQuery.lastIndexOf(", "));
+					sql.executePreparedStatement(judgeQuery, judgeArgs.toArray());
+				}
+
+				log.log(JOT, t.getName() + " updated.");
+				System.exit(0);
+			} else {
+				log.log(JOT, t.getName() + " is up to date.");
+			}
+		} catch(Exception ex) {
+			log.error(ex);
+			ex.printStackTrace();
+			log.fatal("Could not update " + t.getName() + " - " + ex);
+		}
+
 	}
 
 	private HashMap<Integer, String> roundToSQLFriendlyRound(List<Round> r) {
