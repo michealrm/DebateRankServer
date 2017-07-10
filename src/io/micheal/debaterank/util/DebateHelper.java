@@ -18,52 +18,6 @@ public class DebateHelper {
 	public static final Level JOT = Level.forName("JOT", 400);
 	public static final Level TABROOM = Level.forName("TABROOM", 400);
 	public static final Level NSDA = Level.forName("NSDA", 400);
-
-	/**
-	 * Searches the SQL tables for the specified name. If no match is found, a debater will be created and returned
-	 * @return
-	 * @throws SQLException
-	 */
-	public static int getDebaterID(SQLHelper sql, Debater debater) throws SQLException {
-		if(debater.getID() != null)
-			return debater.getID();
-		ResultSet index = sql.executeQueryPreparedStatement("SELECT id, school FROM debaters WHERE first_clean<=>? AND middle_clean<=>? AND last_clean<=>? AND surname_clean<=>?", cleanString(debater.getFirst()), cleanString(debater.getMiddle()), cleanString(debater.getLast()), cleanString(debater.getSurname()));
-		if(index.next()) {
-			do {
-				Debater clone = new Debater(debater.getFirst(), debater.getMiddle(), debater.getLast(), debater.getSurname(), index.getString(2));
-				if(debater.equals(clone)) {
-					int ret = index.getInt(1);
-					index.close();
-					return ret;
-				}
-			} while(index.next());
-		}
-		index.close();
-		return insertDebater(sql, debater);
-	}
-
-	/**
-	 * Searches the SQL tables for the specified name. If no match is found, a judge will be created and returned
-	 * @return
-	 * @throws SQLException
-	 */
-	public static int getJudgeID(SQLHelper sql, Judge judge) throws SQLException {
-		if(judge.getID() != null)
-			return judge.getID();
-		ResultSet index = sql.executeQueryPreparedStatement("SELECT id, school FROM judges WHERE first_clean<=>? AND middle_clean<=>? AND last_clean<=>? AND surname_clean<=>?", cleanString(judge.getFirst()), cleanString(judge.getMiddle()), cleanString(judge.getLast()), cleanString(judge.getSurname()));
-		if(index.next()) {
-			do {
-				Judge clone = new Judge(judge.getFirst(), judge.getMiddle(), judge.getLast(), judge.getSurname(), index.getString(2));
-				if(judge.equals(clone)) {
-					int ret = index.getInt(1);
-					index.close();
-					return ret;
-				}
-			} while(index.next());
-		}
-		index.close();
-		return insertJudge(sql, judge);
-	}
 	
 	/**
 	 * Searches the SQL tables for the specified team. If no match is found, a debater will be created and returned
@@ -83,8 +37,8 @@ public class DebateHelper {
 				return ret;
 			}
 		}
-		int left = getDebaterID(sql, team.getLeft());
-		int right = getDebaterID(sql, team.getRight());
+		int left = team.getLeft().getID(sql);
+		int right = team.getRight().getID(sql);
 		return sql.executePreparedStatementArgs("INSERT INTO teams (debater1, debater2, event) VALUES (?, ?, ?)", left, right, event);
 	}
 	
@@ -165,9 +119,8 @@ public class DebateHelper {
 	}
 	
 	public static int deleteDebater(SQLHelper sql, Debater debater) throws SQLException {
-		debater.setID(getDebaterID(sql, debater));
 		sql.executeStatement("SET FOREIGN_KEY_CHECKS=0");
-		int id = sql.executePreparedStatementArgs("DELETE FROM debaters WHERE id=?", debater.getID());
+		int id = sql.executePreparedStatementArgs("DELETE FROM debaters WHERE id=?", debater.getID(sql));
 		sql.executeStatement("SET FOREIGN_KEY_CHECKS=1");
 		return id;
 	}

@@ -213,9 +213,9 @@ public class Main {
 						.data("year", year)
 						.post();
 					ArrayList<String> circuits = new ArrayList<String>();
-					for(Element select : tournamentDoc.select("select[name=circuit_id] > option"))
-						circuits.add(select.attr("value"));
-					//circuits.add("6"); // Testing for National Circuit
+					//for(Element select : tournamentDoc.select("select[name=circuit_id] > option"))
+					//	circuits.add(select.attr("value"));
+					circuits.add("6"); // Testing for National Circuit
 					for(String circuit : circuits) {
 						Document doc = Jsoup.connect("https://www.tabroom.com/index/results/").timeout(10*1000)
 								.data("year", year)
@@ -231,7 +231,7 @@ public class Main {
 					}
 				}
 				
-				// Remove duplicates TODO: Add a better method. This doesn't work I think
+				// Remove duplicates
 				for(int i = 0;i<tabroomTournaments.size();i++)
 					for(int k = 0;k<tabroomTournaments.size();k++)
 						if(tabroomTournaments.get(i).getLink().equals(tabroomTournaments.get(k).getLink()) && i != k) {

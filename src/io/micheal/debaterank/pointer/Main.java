@@ -46,10 +46,14 @@ public class Main {
 		Debater toDebater = null;
 		Debater fromDebater = null;
 		for(Debater debater : debaters) {
-			if(debater.getID().intValue() == to)
-				toDebater = debater;
-			if(debater.getID().intValue() == from)
-				fromDebater = debater;
+			try {
+				if (debater.getID(sql).intValue() == to)
+					toDebater = debater;
+				if (debater.getID(sql).intValue() == from)
+					fromDebater = debater;
+			} catch(SQLException sqle) {
+				continue;
+			}
 		}
 		System.out.println("To: " + toDebater);
 		System.out.println("From: " + fromDebater);

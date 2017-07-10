@@ -21,12 +21,10 @@ public class Pointers {
 	 * @throws SQLException
 	 */
 	public static void changeDebaterIDForAllTables(SQLHelper sql, Debater to, Debater from) throws SQLException {
-		to.setID(DebateHelper.getDebaterID(sql, to));
-		from.setID(DebateHelper.getDebaterID(sql, from));
-		changeDebaterID(sql, "ld_rounds", "debater", from.getID(), to.getID());
-		changeDebaterID(sql, "ld_rounds", "against", from.getID(), to.getID());
-		changeDebaterID(sql, "teams", "debater1", from.getID(), to.getID());
-		changeDebaterID(sql, "teams", "debater2", from.getID(), to.getID());
+		changeDebaterID(sql, "ld_rounds", "debater", from.getID(sql), to.getID(sql));
+		changeDebaterID(sql, "ld_rounds", "against", from.getID(sql), to.getID(sql));
+		changeDebaterID(sql, "teams", "debater1", from.getID(sql), to.getID(sql));
+		changeDebaterID(sql, "teams", "debater2", from.getID(sql), to.getID(sql));
 	}
 	
 	/**
@@ -55,7 +53,6 @@ public class Pointers {
 	 * @throws SQLException 
 	 */
 	private static void newPointer(SQLHelper sql, Debater to, Debater from) throws SQLException {
-		to.setID(DebateHelper.getDebaterID(sql, to));
-		sql.executePreparedStatementArgs("INSERT INTO pointers (`to`, old_first, old_middle, old_last, old_surname, old_school) VALUES (?, ?, ?, ?, ?, ?)", to.getID(), from.getFirst(), from.getMiddle(), from.getLast(), from.getSurname(), from.getSchool());
+		sql.executePreparedStatementArgs("INSERT INTO pointers (`to`, old_first, old_middle, old_last, old_surname, old_school) VALUES (?, ?, ?, ?, ?, ?)", to.getID(sql), from.getFirst(), from.getMiddle(), from.getLast(), from.getSurname(), from.getSchool());
 	}
 }

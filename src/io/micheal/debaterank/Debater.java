@@ -1,10 +1,15 @@
 package io.micheal.debaterank;
 
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Map;
 
 import io.micheal.debaterank.util.SQLHelper;
+
+import static io.micheal.debaterank.util.DebateHelper.insertDebater;
+import static io.micheal.debaterank.util.SQLHelper.cleanString;
 
 public class Debater {
 
@@ -77,14 +82,14 @@ public class Debater {
 				surname = replace.getSurname();
 				school = replace.getSchool();
 				state = replace.getState();
-				id = replace.getID();
+				id = replace.getRawID();
 			}
 		}
 	}
 	
 	public boolean equals(Debater debater) {
-		if(id != null && debater.getID() != null)
-			return id.intValue() == debater.getID().intValue();
+		if(id != null && debater.getRawID() != null)
+			return id.intValue() == debater.getRawID().intValue();
 		else
 			return equalsIgnoreID(debater);
 	}
@@ -126,7 +131,7 @@ public class Debater {
 			if(replaceThis)
 				this.school = debater.getSchool();
 			if(this.id == null)
-				this.id = debater.getID();
+				this.id = debater.getRawID();
 			return true;
 		}
 		return false;
@@ -136,8 +141,8 @@ public class Debater {
 		String first = getFirst() == null ? debater.getFirst() : getFirst();
 		Debater tempLocal = new Debater(first, getMiddle(), getLast(), getSurname(), getSchool());
 		Debater tempAgainst = new Debater(first, debater.getMiddle(), debater.getLast(), debater.getSurname(), debater.getSchool());
-		if(debater.getID() != null)
-			tempAgainst.setID(debater.getID());
+		if(debater.getRawID() != null)
+			tempAgainst.setID(debater.getRawID());
 		if(tempLocal.equals(tempAgainst)) {
 			if(this.first == null)
 				this.first = debater.getFirst();
@@ -150,7 +155,7 @@ public class Debater {
 			if(this.school == null)
 				this.school = debater.getSchool();
 			if(this.id == null)
-				this.id = debater.getID();
+				this.id = debater.getRawID();
 			return true;
 		}
 		else
@@ -184,8 +189,27 @@ public class Debater {
 	public void setID(int id) {
 		this.id = id;
 	}
-	
-	public Integer getID() {
+
+	public Integer getRawID() {
+		return id;
+	}
+
+	public Integer getID(SQLHelper sql) throws SQLException {
+		if(id != null)
+			return id;
+		ResultSet index = sql.executeQueryPreparedStatement("SELECT id, school FROM debaters WHERE first_clean<=>? AND middle_clean<=>? AND last_clean<=>? AND surname_clean<=>?", cleanString(first), cleanString(middle), cleanString(last), cleanString(surname));
+		if(index.next()) {
+			do {
+				Debater clone = new Debater(first, middle, last, surname, index.getString(2));
+				if(this.equals(clone)) {
+					int ret = index.getInt(1);
+					index.close();
+					return ret;
+				}
+			} while(index.next());
+		}
+		index.close();
+		id = insertDebater(sql, this);
 		return id;
 	}
 	

@@ -375,13 +375,6 @@ public class LD extends Module {
 		stream = new ByteArrayInputStream(baos.toByteArray());
 		saxParser.parse(stream, competitorHandler);
 
-		// Get all ids
-		for(Debater debater : competitors.values()) {
-			try {
-				debater.setID(getDebaterID(sql, debater));
-			} catch(SQLException e) {e.printStackTrace();}
-		}
-
 		HashMap<Integer, Integer> entryStudents = new HashMap<Integer, Integer>();
 		DefaultHandler entryHandler = new DefaultHandler() {
 
@@ -501,7 +494,7 @@ public class LD extends Module {
 		// Get all ids
 		for(Judge judge : judges.values()) {
 			try {
-				judge.setID(getJudgeID(sql, judge));
+				judge.setID(judge.getID(sql));
 			} catch(SQLException e) {e.printStackTrace();}
 		}
 
@@ -836,15 +829,15 @@ public class LD extends Module {
 			int affVotes = 0, negVotes = 0;
 			for (JudgeBallot jBallot : round.judges) {
 				try {
-					if (getDebaterID(sql, jBallot.winner) == getDebaterID(sql, round.aff))
+					if (jBallot.winner.getID(sql) == round.aff.getID(sql))
 						affVotes++;
-					if (getDebaterID(sql, jBallot.winner) == getDebaterID(sql, round.neg))
+					if (jBallot.winner.getID(sql) == round.neg.getID(sql))
 						negVotes++;
 				} catch (SQLException | NullPointerException sqle) {
 					continue rounds;
 				}
 			}
-			if(round.aff == null || round.aff.getID() == null || round.neg == null || round.neg.getID() == null)
+			if(round.aff == null || round.neg == null)
 				continue;
 			ArrayList<Object> a = new ArrayList<Object>();
 			if(round.bye) {
@@ -852,8 +845,8 @@ public class LD extends Module {
 				a.add(t.getLink() + "|" + event_id);
 				Debater debater = round.aff != null ? round.aff : round.neg;
 				try {
-					a.add(getDebaterID(sql, debater));
-					a.add(getDebaterID(sql, debater));
+					a.add(debater.getID(sql));
+					a.add(debater.getID(sql));
 				} catch(SQLException sqle) {
 					continue;
 				}
@@ -863,8 +856,12 @@ public class LD extends Module {
 			else {
 				a.add(t.getLink());
 				a.add(t.getLink() + "|" + event_id);
-				a.add(round.aff.getID());
-				a.add(round.neg.getID());
+				try {
+					a.add(round.aff.getID(sql));
+					a.add(round.neg.getID(sql));
+				} catch(SQLException sqle) {
+					continue;
+				}
 				a.add(sqlRoundStrings.get(round.roundInfo.number));
 				a.add('A');
 				a.add(affVotes + "-" + negVotes);
@@ -890,8 +887,12 @@ public class LD extends Module {
 
 			a.add(t.getLink());
 			a.add(t.getLink() + "|" + event_id);
-			a.add(round.neg.getID());
-			a.add(round.aff.getID());
+			try {
+				a.add(round.neg.getID(sql));
+				a.add(round.aff.getID(sql));
+			} catch(SQLException sqle) {
+				continue;
+			}
 			a.add(sqlRoundStrings.get(round.roundInfo.number));
 			a.add('N');
 			a.add(negVotes + "-" + affVotes);
@@ -925,7 +926,7 @@ public class LD extends Module {
 					for (JudgeBallot jBallot : round.judges) {
 						ArrayList<Object> a = new ArrayList<Object>();
 						try {
-							ResultSet idStatement = sql.executeQueryPreparedStatement("SELECT id FROM ld_rounds WHERE tournament=(SELECT id FROM tournaments WHERE link=?) AND absUrl<=>? AND debater=? AND against=? AND round<=>? AND side<=>?", t.getLink(), t.getLink() + "|" + event_id, getDebaterID(sql, jBallot.winner), getDebaterID(sql, jBallot.winner) != round.aff.getID() ? round.aff.getID() : round.neg.getID(), sqlRoundStrings.get(round.roundInfo.number), (getDebaterID(sql, jBallot.winner) == getDebaterID(sql, round.aff) ? 'A' : (getDebaterID(sql, jBallot.winner) == getDebaterID(sql, round.neg) ? 'N' : null)));
+							ResultSet idStatement = sql.executeQueryPreparedStatement("SELECT id FROM ld_rounds WHERE tournament=(SELECT id FROM tournaments WHERE link=?) AND absUrl<=>? AND debater=? AND against=? AND round<=>? AND side<=>?", t.getLink(), t.getLink() + "|" + event_id, jBallot.winner.getID(sql), jBallot.winner.getID(sql) != round.aff.getID(sql) ? round.aff.getID(sql) : round.neg.getID(sql), sqlRoundStrings.get(round.roundInfo.number), (jBallot.winner.getID(sql) == round.aff.getID(sql) ? 'A' : (jBallot.winner.getID(sql) == round.neg.getID(sql) ? 'N' : null)));
 							if(!idStatement.next())
 								continue;
 							a.add(idStatement.getInt(1));
@@ -934,8 +935,8 @@ public class LD extends Module {
 							continue;
 						}
 						try {
-							a.add(getJudgeID(sql, jBallot.judge));
-							a.add((getDebaterID(sql, jBallot.winner) == getDebaterID(sql, round.aff) ? 'A' : (getDebaterID(sql, jBallot.winner) == getDebaterID(sql, round.neg) ? 'N' : null)));
+							a.add(jBallot.judge.getID(sql));
+							a.add((jBallot.winner.getID(sql) == round.aff.getID(sql) ? 'A' : (jBallot.winner.getID(sql) == round.neg.getID(sql) ? 'N' : null)));
 						} catch (SQLException | NullPointerException sqle) {
 							continue;
 						}

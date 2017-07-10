@@ -2,7 +2,6 @@ package io.micheal.debaterank.modules.jot;
 
 import static io.micheal.debaterank.util.DebateHelper.JOT;
 import static io.micheal.debaterank.util.DebateHelper.getBracketRound;
-import static io.micheal.debaterank.util.DebateHelper.getDebaterID;
 import static io.micheal.debaterank.util.DebateHelper.tournamentExists;
 
 import java.io.File;
@@ -89,10 +88,6 @@ public class LD extends Module {
 								if(tournamentExists(p.baseUri(), table.select("[colspan=2].rec:not(:containsOwn(F))").size(), sql, "ld_rounds"))
 									log.log(JOT, t.getName() + " prelims is up to date.");
 								else {
-
-									// Update DB with debaters
-									for(Map.Entry<String, Debater> entry : competitors.entrySet())
-										entry.getValue().setID(DebateHelper.getDebaterID(sql, entry.getValue()));
 									
 									// Overwrite
 									if(overwrite)
@@ -119,9 +114,9 @@ public class LD extends Module {
 											ArrayList<Object> a = new ArrayList<Object>();
 											a.add(t.getLink());
 											a.add(p.baseUri());
-											a.add(competitors.get(key).getID());
+											a.add(competitors.get(key).getID(sql));
 											if(win.text().equals("F") || win.text().equals("B")) {
-												a.add(competitors.get(key).getID());
+												a.add(competitors.get(key).getID(sql));
 												a.add(Character.forDigit(k+1, 10));
 												a.add(null);
 												a.add(null);
@@ -131,9 +126,9 @@ public class LD extends Module {
 											}
 											else {
 												if(against.text() != null && competitors.get(against.text()) != null)
-													a.add(competitors.get(against.text()).getID());
+													a.add(competitors.get(against.text()).getID(sql));
 												else
-													a.add(competitors.get(key).getID());
+													a.add(competitors.get(key).getID(sql));
 												a.add(Character.forDigit(k+1, 10));
 												if(side != null)
 													a.add(side.text().equals("Aff") ? new Character('A') : new Character('N'));
@@ -208,8 +203,8 @@ public class LD extends Module {
 										ArrayList<Object> a = new ArrayList<Object>();
 										a.add(t.getLink());
 										a.add(doc.baseUri());
-										a.add(getDebaterID(sql, new Debater(matcher.group(1), matcher.group(3))));
-										a.add(getDebaterID(sql, new Debater(matcher.group(5), matcher.group(7))));
+										a.add((new Debater(matcher.group(1), matcher.group(3))).getID(sql));
+										a.add((new Debater(matcher.group(5), matcher.group(7))).getID(sql));
 										a.add(Round.DOUBLE_OCTOS);
 										a.add(matcher.group(4).equals("Aff") ? new Character('A') : new Character('N'));
 										a.add("1-0");
@@ -230,8 +225,8 @@ public class LD extends Module {
 										a.clear();
 										a.add(t.getLink());
 										a.add(doc.baseUri());
-										a.add(getDebaterID(sql, new Debater(matcher.group(5), matcher.group(7))));
-										a.add(getDebaterID(sql, new Debater(matcher.group(1), matcher.group(3))));
+										a.add((new Debater(matcher.group(5), matcher.group(7))).getID(sql));
+										a.add((new Debater(matcher.group(1), matcher.group(3))).getID(sql));
 										a.add(Round.DOUBLE_OCTOS);
 										a.add(matcher.group(8).equals("Aff") ? new Character('A') : new Character('N'));
 										a.add("0-1");
@@ -352,8 +347,8 @@ public class LD extends Module {
 												ArrayList<Object> a = new ArrayList<Object>();
 												a.add(t.getLink());
 												a.add(doc.baseUri());
-												a.add(pair.getLeft().getID());
-												a.add(pair.getRight().getID());
+												a.add(pair.getLeft().getID(sql));
+												a.add(pair.getRight().getID(sql));
 												a.add(last.toString());
 												a.add("1-0");
 												
@@ -374,8 +369,8 @@ public class LD extends Module {
 												a.clear();
 												a.add(t.getLink());
 												a.add(doc.baseUri());
-												a.add(pair.getRight().getID());
-												a.add(pair.getLeft().getID());
+												a.add(pair.getRight().getID(sql));
+												a.add(pair.getLeft().getID(sql));
 												a.add(last.toString());
 												a.add("0-1");
 												
@@ -390,13 +385,6 @@ public class LD extends Module {
 													query += "((SELECT id FROM tournaments WHERE link=?), ?, ?, ?, ?, ?), ";
 													args.addAll(a);
 												}
-											}
-										}
-										else {
-											// Update IDs
-											for(Pair<Debater, Debater> pair : currentMatchup) {
-												pair.getLeft().setID(getDebaterID(sql, pair.getLeft()));
-												pair.getRight().setID(getDebaterID(sql, pair.getRight()));
 											}
 										}
 										
