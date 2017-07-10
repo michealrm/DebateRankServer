@@ -68,7 +68,7 @@ public class LD extends Module {
 
 	public void run() {
 		for(Tournament t : tournaments) {
-			long one = System.currentTimeMillis();
+			if(t.getName().contains("High School TOC"))
 			manager.newModule(new Runnable() {
 				public void run() {
 					try {
@@ -153,7 +153,7 @@ public class LD extends Module {
 											if (getTournamentRoundEntries(tourn_id, event_id) == 0)
 												return;
 
-											enterTournament(t, 6819, 59362);
+											enterTournament(t, tourn_id, event_id);
 
 										} catch (XMLStreamException xmlse) {}
 										catch (IOException ioe) {}
@@ -241,6 +241,7 @@ public class LD extends Module {
 			if (overwrite) {
 				sql.executePreparedStatementArgs("DELETE FROM ld_judges WHERE round IN (SELECT id FROM ld_rounds WHERE absUrl=?)", t.getLink() + "|" + event_id);
 				sql.executeStatement("SET FOREIGN_KEY_CHECKS=0");
+				System.out.println(t.getLink()+"|"+event_id);
 				sql.executePreparedStatementArgs("DELETE FROM ld_rounds WHERE absUrl=?", t.getLink() + "|" + event_id);
 				sql.executeStatement("SET FOREIGN_KEY_CHECKS=1");
 			}

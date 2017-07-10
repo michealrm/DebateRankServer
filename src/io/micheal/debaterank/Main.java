@@ -131,7 +131,7 @@ public class Main {
 						for(Element option : select.select("option"))
 							years.add(option.attr("value"));
 
-				// Get all the jotTournaments
+				// Get all the tournaments
 				jotTournaments = new ArrayList<Tournament>();
 				for(String year : years) {
 					Document tournamentDoc = Jsoup.connect("http://www.joyoftournaments.com/results.asp").timeout(10 * 1000)
@@ -209,13 +209,13 @@ public class Main {
 				// Get all the tournaments
 				tabroomTournaments = new ArrayList<Tournament>();
 				for(String year : years) {
-//					Document tournamentDoc = Jsoup.connect("https://www.tabroom.com/index/results/")
-//						.data("year", year)
-//						.post();
+					Document tournamentDoc = Jsoup.connect("https://www.tabroom.com/index/results/")
+						.data("year", year)
+						.post();
 					ArrayList<String> circuits = new ArrayList<String>();
-//					for(Element select : tournamentDoc.select("select[name=circuit_id] > option"))
-//						circuits.add(select.attr("value"));
-					circuits.add("6"); // Testing for National Circuit
+					for(Element select : tournamentDoc.select("select[name=circuit_id] > option"))
+						circuits.add(select.attr("value"));
+					//circuits.add("6"); // Testing for National Circuit
 					for(String circuit : circuits) {
 						Document doc = Jsoup.connect("https://www.tabroom.com/index/results/").timeout(10*1000)
 								.data("year", year)
