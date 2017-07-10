@@ -1,17 +1,16 @@
 package io.micheal.debaterank.util;
 
-import static io.micheal.debaterank.util.SQLHelper.cleanString;
+import io.micheal.debaterank.Debater;
+import io.micheal.debaterank.Judge;
+import io.micheal.debaterank.Team;
+import org.apache.logging.log4j.Level;
+import org.jsoup.nodes.Document;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 
-import io.micheal.debaterank.Judge;
-import org.apache.logging.log4j.Level;
-import org.jsoup.nodes.Document;
-
-import io.micheal.debaterank.Debater;
-import io.micheal.debaterank.Team;
+import static io.micheal.debaterank.util.SQLHelper.cleanString;
 
 public class DebateHelper {
 

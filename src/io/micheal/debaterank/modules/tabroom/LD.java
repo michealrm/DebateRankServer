@@ -2,44 +2,30 @@ package io.micheal.debaterank.modules.tabroom;
 
 import io.micheal.debaterank.Debater;
 import io.micheal.debaterank.Judge;
-import io.micheal.debaterank.School;
 import io.micheal.debaterank.Tournament;
 import io.micheal.debaterank.modules.Module;
 import io.micheal.debaterank.modules.WorkerPool;
-import io.micheal.debaterank.util.DebateHelper;
 import io.micheal.debaterank.util.SQLHelper;
 import org.apache.commons.configuration2.Configuration;
 import org.apache.commons.configuration2.builder.fluent.Configurations;
 import org.apache.commons.configuration2.ex.ConfigurationException;
-import org.apache.commons.lang.ObjectUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.logging.log4j.Logger;
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
-import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
+import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;
 import org.xml.sax.helpers.DefaultHandler;
-import org.xml.sax.Attributes;
 
-import javax.xml.namespace.QName;
-import javax.xml.parsers.*;
-import javax.xml.stream.XMLEventReader;
-import javax.xml.stream.XMLInputFactory;
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.parsers.SAXParser;
+import javax.xml.parsers.SAXParserFactory;
 import javax.xml.stream.XMLStreamException;
-import javax.xml.stream.events.Attribute;
-import javax.xml.stream.events.StartElement;
-import javax.xml.stream.events.XMLEvent;
 import java.io.*;
-import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
 import java.net.URL;
-import java.net.URLConnection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.*;
 
-import static io.micheal.debaterank.util.DebateHelper.*;
+import static io.micheal.debaterank.util.DebateHelper.JOT;
 
 // XML Parsing sucks.
 public class LD extends Module {

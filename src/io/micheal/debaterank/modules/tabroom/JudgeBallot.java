@@ -2,7 +2,6 @@ package io.micheal.debaterank.modules.tabroom;
 
 import io.micheal.debaterank.Debater;
 import io.micheal.debaterank.Judge;
-import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.ArrayList;
 

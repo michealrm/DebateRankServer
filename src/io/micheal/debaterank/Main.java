@@ -1,5 +1,19 @@
 package io.micheal.debaterank;
 
+import io.micheal.debaterank.modules.ModuleManager;
+import io.micheal.debaterank.modules.PoolSizeException;
+import io.micheal.debaterank.modules.WorkerPool;
+import io.micheal.debaterank.modules.WorkerPoolManager;
+import io.micheal.debaterank.util.SQLHelper;
+import org.apache.commons.configuration2.Configuration;
+import org.apache.commons.configuration2.builder.fluent.Configurations;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
+import org.jsoup.select.Elements;
+
 import java.io.File;
 import java.io.IOException;
 import java.sql.ResultSet;
@@ -7,32 +21,6 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
-
-import io.micheal.debaterank.modules.WorkerPool;
-import io.micheal.debaterank.modules.nsda.Schools;
-import org.apache.commons.configuration2.Configuration;
-import org.apache.commons.configuration2.builder.fluent.Configurations;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-import org.goochjs.glicko2.Rating;
-import org.goochjs.glicko2.RatingCalculator;
-import org.goochjs.glicko2.RatingPeriodResults;
-import org.joda.time.DateTime;
-import org.jsoup.Jsoup;
-import org.jsoup.nodes.Document;
-import org.jsoup.nodes.Element;
-import org.jsoup.select.Elements;
-
-import io.micheal.debaterank.modules.ModuleManager;
-import io.micheal.debaterank.modules.PoolSizeException;
-import io.micheal.debaterank.modules.WorkerPoolManager;
-import io.micheal.debaterank.util.DebateHelper;
-import io.micheal.debaterank.util.RatingsComparator;
-import io.micheal.debaterank.util.SQLHelper;
-import org.xml.sax.SAXException;
-
-import javax.xml.parsers.ParserConfigurationException;
 
 public class Main {
 

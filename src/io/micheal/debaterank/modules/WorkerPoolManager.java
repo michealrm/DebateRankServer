@@ -1,11 +1,11 @@
 package io.micheal.debaterank.modules;
 
-import java.io.File;
-import java.util.ArrayList;
-
 import org.apache.commons.configuration2.Configuration;
 import org.apache.commons.configuration2.builder.fluent.Configurations;
 import org.apache.commons.configuration2.ex.ConfigurationException;
+
+import java.io.File;
+import java.util.ArrayList;
 
 public class WorkerPoolManager {
 

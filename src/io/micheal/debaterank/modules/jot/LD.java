@@ -1,19 +1,11 @@
 package io.micheal.debaterank.modules.jot;
 
-import static io.micheal.debaterank.util.DebateHelper.JOT;
-import static io.micheal.debaterank.util.DebateHelper.getBracketRound;
-import static io.micheal.debaterank.util.DebateHelper.tournamentExists;
-
-import java.io.File;
-import java.io.IOException;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
+import io.micheal.debaterank.Debater;
+import io.micheal.debaterank.Tournament;
+import io.micheal.debaterank.modules.Module;
+import io.micheal.debaterank.modules.WorkerPool;
+import io.micheal.debaterank.util.Round;
+import io.micheal.debaterank.util.SQLHelper;
 import org.apache.commons.configuration2.Configuration;
 import org.apache.commons.configuration2.builder.fluent.Configurations;
 import org.apache.commons.configuration2.ex.ConfigurationException;
@@ -25,13 +17,16 @@ import org.jsoup.nodes.Element;
 import org.jsoup.nodes.TextNode;
 import org.jsoup.select.Elements;
 
-import io.micheal.debaterank.Debater;
-import io.micheal.debaterank.Tournament;
-import io.micheal.debaterank.modules.Module;
-import io.micheal.debaterank.modules.WorkerPool;
-import io.micheal.debaterank.util.DebateHelper;
-import io.micheal.debaterank.util.Round;
-import io.micheal.debaterank.util.SQLHelper;
+import java.io.File;
+import java.io.IOException;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+import static io.micheal.debaterank.util.DebateHelper.*;
 
 public class LD extends Module {
 	

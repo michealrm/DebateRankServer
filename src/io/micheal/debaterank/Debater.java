@@ -1,12 +1,12 @@
 package io.micheal.debaterank;
 
+import io.micheal.debaterank.util.SQLHelper;
+
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Map;
-
-import io.micheal.debaterank.util.SQLHelper;
 
 import static io.micheal.debaterank.util.DebateHelper.insertDebater;
 import static io.micheal.debaterank.util.SQLHelper.cleanString;

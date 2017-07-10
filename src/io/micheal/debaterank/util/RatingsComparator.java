@@ -1,8 +1,8 @@
 package io.micheal.debaterank.util;
 
-import java.util.Comparator;
-
 import org.goochjs.glicko2.Rating;
+
+import java.util.Comparator;
 
 public class RatingsComparator implements Comparator<Rating> {
 
