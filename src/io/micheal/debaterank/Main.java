@@ -4,6 +4,8 @@ import io.micheal.debaterank.modules.ModuleManager;
 import io.micheal.debaterank.modules.PoolSizeException;
 import io.micheal.debaterank.modules.WorkerPool;
 import io.micheal.debaterank.modules.WorkerPoolManager;
+import io.micheal.debaterank.modules.nsda.Schools;
+import io.micheal.debaterank.util.DebateHelper;
 import io.micheal.debaterank.util.SQLHelper;
 import org.apache.commons.configuration2.Configuration;
 import org.apache.commons.configuration2.builder.fluent.Configurations;
@@ -259,9 +261,9 @@ public class Main {
 //			workerManager.add(tabroomLD);
 //			moduleManager.newModule(new io.micheal.debaterank.modules.tabroom.LDOld(tabroomTournaments, sql, tabroomLD));
 
-			WorkerPool tabroomLD = new WorkerPool();
-			workerManager.add(tabroomLD);
-			moduleManager.newModule(new io.micheal.debaterank.modules.tabroom.LD(sql, log, tabroomTournaments, tabroomLD));
+//			WorkerPool tabroomLD = new WorkerPool();
+//			workerManager.add(tabroomLD);
+//			moduleManager.newModule(new io.micheal.debaterank.modules.tabroom.LD(sql, log, tabroomTournaments, tabroomLD));
 
 			/////////////
 			// Execute //
@@ -280,6 +282,27 @@ public class Main {
 				}
 			} while(moduleManager.getActiveCount() != 0 || workerManager.getActiveCount() != 0);
 
+			/////////////
+			// Schools //
+			/////////////
+
+			try {
+				ArrayList<Debater> debaters = DebateHelper.getDebaters(sql);
+				String query = "INSERT IGNORE INTO schools (name, clean) VALUES ";
+				ArrayList<Object> args = new ArrayList<Object>();
+				for(Debater debater : debaters) {
+					query += "(?, ?), ";
+					args.add(debater.getSchool());
+					args.add(SQLHelper.cleanString(debater.getSchool()));
+				}
+				if (!query.equals("INSERT IGNORE INTO schools (name, clean) VALUES ")) {
+					query = query.substring(0, query.lastIndexOf(", "));
+					sql.executePreparedStatement(query, args.toArray());
+				}
+			} catch(SQLException sqle) {
+
+			}
+
 			//////////
 			// NSDA //
 			//////////
@@ -289,9 +312,9 @@ public class Main {
 
 			// Schools //
 
-//			WorkerPool schoolsPool = new WorkerPool();
-//			workerManager.add(schoolsPool);
-//			moduleManager.newModule(new Schools(sql, log, schoolsPool));
+			WorkerPool schoolsPool = new WorkerPool();
+			workerManager.add(schoolsPool);
+			moduleManager.newModule(new Schools(sql, log, schoolsPool));
 
 			// Execute //
 

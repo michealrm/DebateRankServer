@@ -204,6 +204,7 @@ public class Debater {
 				if(this.equals(clone)) {
 					int ret = index.getInt(1);
 					index.close();
+					id = ret;
 					return ret;
 				}
 			} while(index.next());
