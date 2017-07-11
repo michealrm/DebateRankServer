@@ -70,7 +70,7 @@ public class Schools extends Module {
 			}
 
 			try {
-				String query = "INSERT INTO schools (name, clean, nsda_link, address, state) VALUES ";
+				String query = "INSERT INTO schools (name, clean, nsda_link, address, state) VALUES "; // Don't need to add judges school since every jduge is from a school where there is a debater
 				ArrayList<Object> args = new ArrayList<Object>();
 				for(School school : schools) {
 					try {

@@ -18,6 +18,7 @@ import org.jsoup.select.Elements;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.URL;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -187,7 +188,8 @@ public class Main {
 			/////////////
 			// Tabroom //
 			/////////////
-			
+
+			long one = System.currentTimeMillis();
 			ArrayList<Tournament> tabroomTournaments = null;
 			try {
 				// Get seasons so we can iterate through all the tournaments
@@ -203,20 +205,24 @@ public class Main {
 						.data("year", year)
 						.post();
 					ArrayList<String> circuits = new ArrayList<String>();
-					//for(Element select : tournamentDoc.select("select[name=circuit_id] > option"))
-					//	circuits.add(select.attr("value"));
-					circuits.add("6"); // Testing for National Circuit
+					for(Element select : tournamentDoc.select("select[name=circuit_id] > option"))
+						circuits.add(select.attr("value"));
+					circuits.remove("43"); // NDT / CEDA
+					circuits.remove("15"); // College invitationals
+					circuits.remove("49"); // Afghan
+					circuits.remove("141"); // Canada
+
 					for(String circuit : circuits) {
-						Document doc = Jsoup.connect("https://www.tabroom.com/index/results/").timeout(10*1000)
-								.data("year", year)
+						Document doc = Jsoup.connect("https://www.tabroom.com/index/results/circuit_tourney_portal.mhtml").timeout(10*1000)
 								.data("circuit_id", circuit)
+								.data("year", year)
 								.post();
-						Element table = doc.select("table[id=results]").first();
+						Element table = doc.select("table[id=Stats]").first();
 						Elements rows = table.select("tr");
 						for(int i = 0;i<rows.size();i++) {
 							Elements cols = rows.get(i).select("td");
-							if(cols.size() > 0 && cols.get(1).text().endsWith("/US"))
-								tabroomTournaments.add(new Tournament(cols.get(3).text(), cols.get(4).select("a").first().absUrl("href"), cols.get(1).text().substring(0,cols.get(1).text().indexOf("/US")), cols.get(0).text()));
+							if(cols.size() > 0)
+								tabroomTournaments.add(new Tournament(cols.get(0).text(), cols.get(0).select("a").first().absUrl("href"), null, cols.get(1).text()));
 						}
 					}
 				}
@@ -228,7 +234,7 @@ public class Main {
 							tabroomTournaments.remove(k);
 							k--;
 						}
-				
+
 				// Update DB / Remove cached tournaments from the queue
 				log.debug(tabroomTournaments.size() + " tournaments scraped from tabroom");
 				try {
@@ -254,16 +260,12 @@ public class Main {
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
-			
+			System.out.println(System.currentTimeMillis() - one);
 			// Modules //
-			
-//			WorkerPool tabroomLD = new WorkerPool();
-//			workerManager.add(tabroomLD);
-//			moduleManager.newModule(new io.micheal.debaterank.modules.tabroom.LDOld(tabroomTournaments, sql, tabroomLD));
 
-//			WorkerPool tabroomLD = new WorkerPool();
-//			workerManager.add(tabroomLD);
-//			moduleManager.newModule(new io.micheal.debaterank.modules.tabroom.LD(sql, log, tabroomTournaments, tabroomLD));
+			WorkerPool tabroomLD = new WorkerPool();
+			workerManager.add(tabroomLD);
+			moduleManager.newModule(new io.micheal.debaterank.modules.tabroom.LD(sql, log, tabroomTournaments, tabroomLD));
 
 			/////////////
 			// Execute //

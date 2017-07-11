@@ -960,7 +960,6 @@ public class LD extends Module {
 				}
 
 				log.log(JOT, t.getName() + " updated.");
-				System.exit(0);
 			} else {
 				log.log(JOT, t.getName() + " is up to date.");
 			}
