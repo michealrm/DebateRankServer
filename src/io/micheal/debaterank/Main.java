@@ -286,22 +286,23 @@ public class Main {
 			// Schools //
 			/////////////
 
-			try {
-				ArrayList<Debater> debaters = DebateHelper.getDebaters(sql);
-				String query = "INSERT IGNORE INTO schools (name, clean) VALUES ";
-				ArrayList<Object> args = new ArrayList<Object>();
-				for(Debater debater : debaters) {
-					query += "(?, ?), ";
-					args.add(debater.getSchool());
-					args.add(SQLHelper.cleanString(debater.getSchool()));
-				}
-				if (!query.equals("INSERT IGNORE INTO schools (name, clean) VALUES ")) {
-					query = query.substring(0, query.lastIndexOf(", "));
-					sql.executePreparedStatement(query, args.toArray());
-				}
-			} catch(SQLException sqle) {
-
-			}
+//			try {
+//				ArrayList<Debater> debaters = DebateHelper.getDebaters(sql);
+//				String query = "INSERT IGNORE INTO schools (name, clean) VALUES ";
+//				ArrayList<Object> args = new ArrayList<Object>();
+//				for(Debater debater : debaters) {
+//					query += "(?, ?), ";
+//					args.add(debater.getSchool());
+//					args.add(SQLHelper.cleanString(debater.getSchool()));
+//				}
+//				if (!query.equals("INSERT IGNORE INTO schools (name, clean) VALUES ")) {
+//					query = query.substring(0, query.lastIndexOf(", "));
+//					sql.executePreparedStatement(query, args.toArray());
+//					log.info("Schools inserted into database.");
+//				}
+//			} catch(SQLException sqle) {
+//				log.error("Couldn't update schools: " + sqle);
+//			}
 
 			//////////
 			// NSDA //

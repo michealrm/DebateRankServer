@@ -18,13 +18,13 @@ import java.util.*;
 public class Schools extends Module {
 
 	private WorkerPool manager;
-	private ArrayList<School> schools;
+	private List<School> schools;
 
 
 	public Schools(SQLHelper sql, Logger log, WorkerPool manager) {
 		super(sql, log);
 		this.manager = manager;
-		schools = new ArrayList<School>();
+		schools = Collections.synchronizedList(new ArrayList<School>());
 	}
 
 	public void run() {
@@ -45,7 +45,7 @@ public class Schools extends Module {
 							if (elements == null || elements.first() == null)
 								return;
 							String link = schoolPage.select("a").eq(1).get(0).absUrl("href");
-							String address = elements.first().textNodes().get(2).text();
+							String address = elements.first().textNodes().get(2).text().trim();
 							String state = address.split(", ")[1];
 							School school = new School();
 							school.name = string;
@@ -54,7 +54,6 @@ public class Schools extends Module {
 							school.address = address;
 							school.state = state;
 							schools.add(school);
-							System.out.println("tick");
 						} catch(IOException e) {}
 					}
 				});
@@ -70,11 +69,40 @@ public class Schools extends Module {
 				running = manager.getActiveCount() != 0;
 			}
 
-			for(School school : schools)
-				System.out.print(school.address + ";");
-			System.out.println();
-			for(School school : schools)
-				System.out.print(school.name + ";");
+			try {
+				String query = "INSERT INTO schools (name, clean, nsda_link, address, state) VALUES ";
+				ArrayList<Object> args = new ArrayList<Object>();
+				for(School school : schools) {
+					try {
+						ArrayList<Object> a = new ArrayList<Object>();
+						a.add(school.name);
+						a.add(SQLHelper.cleanString(school.name));
+						a.add(school.link);
+						if(school.state.length() > 2) {
+							a.add(null);
+							a.add(null);
+						}
+						else {
+							a.add(school.address);
+							a.add(school.state);
+						}
+						query += "(?, ?, ?, ?, ?), ";
+						args.addAll(a);
+					} catch(NullPointerException npe) {
+						continue;
+					}
+				}
+
+				if (!query.equals("INSERT INTO schools (name, clean, nsda_link, address, state) VALUES ")) {
+					query = query.substring(0, query.lastIndexOf(", "));
+					query += " ON DUPLICATE KEY UPDATE name=VALUES(name), clean=VALUES(clean), nsda_link=VALUES(nsda_link), address=VALUES(address), state=VALUES(state)";
+					sql.executePreparedStatement(query, args.toArray());
+					log.log(DebateHelper.NSDA, "NSDA schools inserted into database.");
+				}
+			} catch (SQLException sqle) {
+				log.error("Could not update NSDA schools - " + sqle.getErrorCode());
+				sqle.printStackTrace();
+			}
 		} catch(SQLException e) {
 			log.error("Couldn't update NSDA schools: " + e);
 		}
