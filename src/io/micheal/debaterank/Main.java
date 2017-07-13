@@ -18,6 +18,7 @@ import org.jsoup.select.Elements;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.SocketTimeoutException;
 import java.net.URL;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -189,7 +190,6 @@ public class Main {
 			// Tabroom //
 			/////////////
 
-			long one = System.currentTimeMillis();
 			ArrayList<Tournament> tabroomTournaments = null;
 			try {
 				// Get seasons so we can iterate through all the tournaments
@@ -200,32 +200,48 @@ public class Main {
 				Collections.reverse(years);
 				// Get all the tournaments
 				tabroomTournaments = new ArrayList<Tournament>();
-				for(String year : years) {
-					Document tournamentDoc = Jsoup.connect("https://www.tabroom.com/index/results/")
-						.data("year", year)
-						.post();
-					ArrayList<String> circuits = new ArrayList<String>();
-					for(Element select : tournamentDoc.select("select[name=circuit_id] > option"))
-						circuits.add(select.attr("value"));
-					circuits.remove("43"); // NDT / CEDA
-					circuits.remove("15"); // College invitationals
-					circuits.remove("49"); // Afghan
-					circuits.remove("141"); // Canada
-
-					for(String circuit : circuits) {
-						Document doc = Jsoup.connect("https://www.tabroom.com/index/results/circuit_tourney_portal.mhtml").timeout(10*1000)
-								.data("circuit_id", circuit)
-								.data("year", year)
-								.post();
-						Element table = doc.select("table[id=Stats]").first();
-						Elements rows = table.select("tr");
-						for(int i = 0;i<rows.size();i++) {
-							Elements cols = rows.get(i).select("td");
-							if(cols.size() > 0)
-								tabroomTournaments.add(new Tournament(cols.get(0).text(), cols.get(0).select("a").first().absUrl("href"), null, cols.get(1).text()));
-						}
-					}
-				}
+				ArrayList<Tournament> dbTournaments = new ArrayList<>();
+				ResultSet tournamentRS = sql.executeQuery("SELECT name, link, state, date FROM tournaments WHERE link LIKE 'https://www.tabroom.com/index/tourn/results/index.mhtml?tourn_id=%'");
+				while(tournamentRS.next())
+					dbTournaments.add(new Tournament(tournamentRS.getString(1), tournamentRS.getString(2), tournamentRS.getString(3), tournamentRS.getString(4)));
+				tabroomTournaments = new ArrayList<>(dbTournaments);
+//				for(String year : years) {
+//					Document tournamentDoc = Jsoup.connect("https://www.tabroom.com/index/results/")
+//						.data("year", year)
+//						.post();
+//					ArrayList<String> circuits = new ArrayList<String>();
+//					for(Element select : tournamentDoc.select("select[name=circuit_id] > option"))
+//						circuits.add(select.attr("value"));
+//					circuits.remove("43"); // NDT / CEDA
+//					circuits.remove("15"); // College invitationals
+//					circuits.remove("49"); // Afghan
+//					circuits.remove("141"); // Canada
+//
+//					for(String circuit : circuits) {
+//						Document doc = null;
+//						int k = 0;
+//						while(k < 3) {
+//							try {
+//								doc = Jsoup.connect("https://www.tabroom.com/index/results/circuit_tourney_portal.mhtml")
+//										.timeout(10 * 1000)
+//										.data("circuit_id", circuit)
+//										.data("year", year)
+//										.post();
+//								break;
+//							}
+//							catch(SocketTimeoutException ste) {
+//								k++;
+//							}
+//						}
+//						Element table = doc.select("table[id=Stats]").first();
+//						Elements rows = table.select("tr");
+//						for(int i = 0;i<rows.size();i++) {
+//							Elements cols = rows.get(i).select("td");
+//							if (cols.size() > 0)
+//								tabroomTournaments.add(new Tournament(cols.get(0).text(), cols.get(0).select("a").first().absUrl("href"), null, cols.get(1).text()));
+//						}
+//					}
+//				}
 				
 				// Remove duplicates
 				for(int i = 0;i<tabroomTournaments.size();i++)
@@ -256,11 +272,13 @@ public class Main {
 				}
 				
 				log.info(tabroomTournaments.size() + " tournaments queued from tabroom");
-			
-			} catch (IOException e) {
+
+			} catch (IOException | SQLException e) {
 				e.printStackTrace();
+				log.error(e);
+				log.fatal("Tabroom could not be updated");
 			}
-			System.out.println(System.currentTimeMillis() - one);
+
 			// Modules //
 
 			WorkerPool tabroomLD = new WorkerPool();
