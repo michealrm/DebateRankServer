@@ -14,7 +14,7 @@ public class SQLHelper {
 	public SQLHelper(String host, Integer port, String name, String user, String pass) throws ClassNotFoundException, SQLException {
 		this.log = LogManager.getLogger(SQLHelper.class);
 		Class.forName("com.mysql.cj.jdbc.Driver");
-		sql = DriverManager.getConnection("jdbc:mysql://" + host + ":" + port + "/" + name + "?user=" + user + "&password=" + pass);
+		sql = DriverManager.getConnection("jdbc:mysql://" + host + ":" + port + "/" + name + "?user=" + user + "&password=" + pass + "&bind-address=0.0.0.0");
 		st = sql.createStatement();
 		st.setFetchSize(5000);
 	}

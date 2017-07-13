@@ -5,6 +5,7 @@ import io.micheal.debaterank.Judge;
 import io.micheal.debaterank.Tournament;
 import io.micheal.debaterank.modules.Module;
 import io.micheal.debaterank.modules.WorkerPool;
+import io.micheal.debaterank.util.DebateHelper;
 import io.micheal.debaterank.util.SQLHelper;
 import org.apache.commons.configuration2.Configuration;
 import org.apache.commons.configuration2.builder.fluent.Configurations;
@@ -13,6 +14,7 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.apache.logging.log4j.Logger;
 import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;
+import org.xml.sax.SAXParseException;
 import org.xml.sax.helpers.DefaultHandler;
 
 import javax.xml.parsers.ParserConfigurationException;
@@ -54,7 +56,6 @@ public class LD extends Module {
 
 	public void run() {
 		for(Tournament t : tournaments) {
-			if(t.getName().contains("High School TOC"))
 			manager.newModule(new Runnable() {
 				public void run() {
 					try {
@@ -74,10 +75,8 @@ public class LD extends Module {
 
 						int tourn_id = Integer.parseInt(tournIDStr);
 
-
-
-						String[] split = t.getDate().split("\\/");
-						URL url = new URL("https://www.tabroom.com/api/current_tournaments.mhtml?timestring=" + split[2] + "-" + split[0] + "-" + split[1] + "T12:00:00");
+						String[] split = t.getDate().split("-| ");
+						URL url = new URL("https://www.tabroom.com/api/current_tournaments.mhtml?timestring=" + split[0] + "-" + split[1] + "-" + split[2] + "T12:00:00");
 
 						SAXParserFactory factory = SAXParserFactory.newInstance();
 						SAXParser saxParser = factory.newSAXParser();
@@ -136,10 +135,17 @@ public class LD extends Module {
 									if (eventname.matches("^.*(LD|Lincoln|L-D).*$") && tourn_id == tid) {
 										try {
 
-											if (getTournamentRoundEntries(tourn_id, event_id) == 0)
-												return;
+											try {
 
-											enterTournament(t, tourn_id, event_id);
+												if (getTournamentRoundEntries(tourn_id, event_id) == 0)
+													return;
+
+												enterTournament(t, tourn_id, event_id);
+
+											} catch(SAXParseException saxpe) {
+												log.log(DebateHelper.TABROOM, "Skipping " + t.getName());
+												saxpe.printStackTrace();
+											}
 
 										} catch (XMLStreamException xmlse) {}
 										catch (IOException ioe) {}
@@ -152,7 +158,7 @@ public class LD extends Module {
 
 						saxParser.parse(url.openStream(), handler);
 
-					} catch(IOException ioe) {}
+					} catch(IOException ioe) {ioe.printStackTrace();}
 					catch (SAXException e) { e.printStackTrace();
 					} catch (ParserConfigurationException e) { e.printStackTrace();
 					}
@@ -167,6 +173,7 @@ public class LD extends Module {
 	private int getTournamentRoundEntries(int tourn_id, int event_id) throws XMLStreamException, IOException, SAXException, ParserConfigurationException {
 		size.set(0);
 		URL url = new URL("https://www.tabroom.com/api/tourn_published.mhtml?tourn_id=" + tourn_id + "&event_id=" + event_id);
+		System.out.println(url);
 		InputStream stream = url.openStream();
 
 		SAXParserFactory factory = SAXParserFactory.newInstance();
@@ -227,7 +234,6 @@ public class LD extends Module {
 			if (overwrite) {
 				sql.executePreparedStatementArgs("DELETE FROM ld_judges WHERE round IN (SELECT id FROM ld_rounds WHERE absUrl=?)", t.getLink() + "|" + event_id);
 				sql.executeStatement("SET FOREIGN_KEY_CHECKS=0");
-				System.out.println(t.getLink()+"|"+event_id);
 				sql.executePreparedStatementArgs("DELETE FROM ld_rounds WHERE absUrl=?", t.getLink() + "|" + event_id);
 				sql.executeStatement("SET FOREIGN_KEY_CHECKS=1");
 			}
@@ -476,13 +482,6 @@ public class LD extends Module {
 
 		stream = new ByteArrayInputStream(baos.toByteArray());
 		saxParser.parse(stream, judgeHandler);
-
-		// Get all ids
-		for(Judge judge : judges.values()) {
-			try {
-				judge.setID(judge.getID(sql));
-			} catch(SQLException e) {e.printStackTrace();}
-		}
 
 		// Getting round keys / names
 		HashMap<Integer, RoundInfo> roundInfo = new HashMap<Integer, RoundInfo>();
@@ -910,6 +909,8 @@ public class LD extends Module {
 				ArrayList<Object> judgeArgs = new ArrayList<Object>();
 				for (Round round : rounds.values()) {
 					for (JudgeBallot jBallot : round.judges) {
+						System.out.println(jBallot.judge.getID(sql));
+						System.exit(0);
 						ArrayList<Object> a = new ArrayList<Object>();
 						try {
 							ResultSet idStatement = sql.executeQueryPreparedStatement("SELECT id FROM ld_rounds WHERE tournament=(SELECT id FROM tournaments WHERE link=?) AND absUrl<=>? AND debater=? AND against=? AND round<=>? AND side<=>?", t.getLink(), t.getLink() + "|" + event_id, jBallot.winner.getID(sql), jBallot.winner.getID(sql) != round.aff.getID(sql) ? round.aff.getID(sql) : round.neg.getID(sql), sqlRoundStrings.get(round.roundInfo.number), (jBallot.winner.getID(sql) == round.aff.getID(sql) ? 'A' : (jBallot.winner.getID(sql) == round.neg.getID(sql) ? 'N' : null)));

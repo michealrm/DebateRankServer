@@ -16,6 +16,7 @@ public class Judge extends Debater {
 		super(first, middle, last, surname, school);
 	}
 
+	@Override
 	public Integer getID(SQLHelper sql) throws SQLException {
 		if(getRawID() != null)
 			return getRawID();

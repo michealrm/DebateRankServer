@@ -88,7 +88,9 @@ public class Debater {
 	}
 	
 	public boolean equals(Debater debater) {
-		if(id != null && debater.getRawID() != null)
+		if(debater == null)
+			return false;
+		else if(id != null && debater.getRawID() != null)
 			return id.intValue() == debater.getRawID().intValue();
 		else
 			return equalsIgnoreID(debater);
