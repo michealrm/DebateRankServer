@@ -700,6 +700,10 @@ public class LD extends Module {
 						round.aff = competitors.get(debater);
 					else if (side == 2 && round.neg == null)
 						round.neg = competitors.get(debater);
+					else if(side == -1) {
+						round.aff = competitors.get(debater);
+						round.neg = competitors.get(debater);
+					}
 					if(round.roundInfo == null)
 						round.roundInfo = panels.get(panel).roundInfo;
 					if(bye != null && round.bye == null)
@@ -838,6 +842,7 @@ public class LD extends Module {
 				} catch(SQLException | NullPointerException sqle) {
 					continue;
 				}
+				a.add(sqlRoundStrings.get(round.roundInfo.number));
 				a.add(null);
 				a.add("B");
 				if (!overwrite) {
@@ -856,81 +861,81 @@ public class LD extends Module {
 					args.addAll(a);
 				}
 			}
-			int affVotes = 0, negVotes = 0;
-			for (JudgeBallot jBallot : round.judges) {
-				try {
-					if (jBallot.winner.getID(sql) == round.aff.getID(sql))
-						affVotes++;
-					if (jBallot.winner.getID(sql) == round.neg.getID(sql))
-						negVotes++;
-				} catch (SQLException | NullPointerException sqle) {
-					continue rounds;
-				}
-			}
-			if(round.aff == null || round.neg == null)
-				continue;
-			a.add(t.getLink());
-			a.add(t.getLink() + "|" + event_id);
-			try {
-				a.add(round.aff.getID(sql));
-				a.add(round.neg.getID(sql));
-			} catch (SQLException sqle) {
-				continue;
-			}
-			a.add(sqlRoundStrings.get(round.roundInfo.number));
-			a.add('A');
-			a.add(affVotes + "-" + negVotes);
-			if (!overwrite) {
-				try {
-					ResultSet exists = sql.executeQueryPreparedStatement("SELECT * FROM ld_rounds WHERE tournament=(SELECT id FROM tournaments WHERE link=?) AND absUrl<=>? AND debater=? AND against=? AND round<=>? AND side<=>? AND decision<=>?", a.get(0), a.get(1), a.get(2), a.get(3), a.get(4), a.get(5), a.get(6));
-					if (!exists.next()) {
-						query += "((SELECT id FROM tournaments WHERE link=?), ?, ?, ?, ?, ?, ?), ";
-						args.addAll(a);
-					}
-					exists.close();
-				} catch (SQLException sqle) {
-					continue rounds;
-				}
-			} else {
-				query += "((SELECT id FROM tournaments WHERE link=?), ?, ?, ?, ?, ?, ?), ";
-				args.addAll(a);
-			}
-
-			a.clear();
-
-			a.add(t.getLink());
-			a.add(t.getLink() + "|" + event_id);
-			try {
-				a.add(round.neg.getID(sql));
-				a.add(round.aff.getID(sql));
-			} catch (SQLException sqle) {
-				continue;
-			}
-			a.add(sqlRoundStrings.get(round.roundInfo.number));
-			a.add('N');
-			a.add(negVotes + "-" + affVotes);
-			if(!overwrite) {
-				try {
-					ResultSet exists = sql.executeQueryPreparedStatement("SELECT * FROM ld_rounds WHERE tournament=(SELECT id FROM tournaments WHERE link=?) AND absUrl<=>? AND debater=? AND against=? AND round<=>? AND side<=>? AND decision<=>?", a.get(0), a.get(1), a.get(2), a.get(3), a.get(4), a.get(5), a.get(6));
-					if (!exists.next()) {
-						query += "((SELECT id FROM tournaments WHERE link=?), ?, ?, ?, ?, ?, ?), ";
-						args.addAll(a);
-					}
-					exists.close();
-				} catch(SQLException sqle) {
-					continue rounds;
-				}
-			}
 			else {
-				query += "((SELECT id FROM tournaments WHERE link=?), ?, ?, ?, ?, ?, ?), ";
-				args.addAll(a);
+				int affVotes = 0, negVotes = 0;
+				for (JudgeBallot jBallot : round.judges) {
+					try {
+						if (jBallot.winner.getID(sql) == round.aff.getID(sql))
+							affVotes++;
+						if (jBallot.winner.getID(sql) == round.neg.getID(sql))
+							negVotes++;
+					} catch (SQLException | NullPointerException sqle) {
+						continue rounds;
+					}
+				}
+				if (round.aff == null || round.neg == null)
+					continue;
+				a.add(t.getLink());
+				a.add(t.getLink() + "|" + event_id);
+				try {
+					a.add(round.aff.getID(sql));
+					a.add(round.neg.getID(sql));
+				} catch (SQLException sqle) {
+					continue;
+				}
+				a.add(sqlRoundStrings.get(round.roundInfo.number));
+				a.add('A');
+				a.add(affVotes + "-" + negVotes);
+				if (!overwrite) {
+					try {
+						ResultSet exists = sql.executeQueryPreparedStatement("SELECT * FROM ld_rounds WHERE tournament=(SELECT id FROM tournaments WHERE link=?) AND absUrl<=>? AND debater=? AND against=? AND round<=>? AND side<=>? AND decision<=>?", a.get(0), a.get(1), a.get(2), a.get(3), a.get(4), a.get(5), a.get(6));
+						if (!exists.next()) {
+							query += "((SELECT id FROM tournaments WHERE link=?), ?, ?, ?, ?, ?, ?), ";
+							args.addAll(a);
+						}
+						exists.close();
+					} catch (SQLException sqle) {
+						continue rounds;
+					}
+				} else {
+					query += "((SELECT id FROM tournaments WHERE link=?), ?, ?, ?, ?, ?, ?), ";
+					args.addAll(a);
+				}
+
+				a.clear();
+
+				a.add(t.getLink());
+				a.add(t.getLink() + "|" + event_id);
+				try {
+					a.add(round.neg.getID(sql));
+					a.add(round.aff.getID(sql));
+				} catch (SQLException sqle) {
+					continue;
+				}
+				a.add(sqlRoundStrings.get(round.roundInfo.number));
+				a.add('N');
+				a.add(negVotes + "-" + affVotes);
+				if (!overwrite) {
+					try {
+						ResultSet exists = sql.executeQueryPreparedStatement("SELECT * FROM ld_rounds WHERE tournament=(SELECT id FROM tournaments WHERE link=?) AND absUrl<=>? AND debater=? AND against=? AND round<=>? AND side<=>? AND decision<=>?", a.get(0), a.get(1), a.get(2), a.get(3), a.get(4), a.get(5), a.get(6));
+						if (!exists.next()) {
+							query += "((SELECT id FROM tournaments WHERE link=?), ?, ?, ?, ?, ?, ?), ";
+							args.addAll(a);
+						}
+						exists.close();
+					} catch (SQLException sqle) {
+						continue rounds;
+					}
+				} else {
+					query += "((SELECT id FROM tournaments WHERE link=?), ?, ?, ?, ?, ?, ?), ";
+					args.addAll(a);
+				}
 			}
 		}
 
 		try {
 			if (!query.equals("INSERT INTO ld_rounds (tournament, absUrl, debater, against, round, side, decision) VALUES ")) {
 				query = query.substring(0, query.lastIndexOf(", "));
-				System.out.println(args);
 				sql.executePreparedStatement(query, args.toArray());
 
 				String judgeQuery = "INSERT INTO ld_judges (round, judge_id, decision, aff_speaks, neg_speaks) VALUES ";
