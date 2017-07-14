@@ -37,6 +37,7 @@ public class LD extends Module {
 	private ArrayList<Tournament> tournaments;
 	private WorkerPool manager;
 	private final boolean overwrite;
+	private SAXParserFactory factory;
 
 	public LD(SQLHelper sql, Logger log, ArrayList<Tournament> tournaments, WorkerPool manager) {
 		super(sql, log);
@@ -80,7 +81,9 @@ public class LD extends Module {
 						String[] split = t.getDate().split("-| ");
 						URL url = new URL("https://www.tabroom.com/api/current_tournaments.mhtml?timestring=" + split[0] + "-" + split[1] + "-" + split[2] + "T12:00:00");
 
-						SAXParserFactory factory = SAXParserFactory.newInstance();
+						factory = SAXParserFactory.newInstance();
+						factory.setFeature("http://xml.org/sax/features/namespaces", false);
+						factory.setFeature("http://xml.org/sax/features/validation", false);
 						SAXParser saxParser = factory.newSAXParser();
 
 						DefaultHandler handler = new DefaultHandler() {
@@ -151,8 +154,8 @@ public class LD extends Module {
 
 										} catch (XMLStreamException xmlse) {}
 										catch (IOException ioe) {}
-										catch(ParserConfigurationException pce) {}
-										catch(Exception e) {}
+										catch(ParserConfigurationException pce) {pce.printStackTrace();}
+										catch(Exception e) {e.printStackTrace();}
 									}
 								}
 							}
@@ -161,7 +164,7 @@ public class LD extends Module {
 						saxParser.parse(url.openStream(), handler);
 
 					} catch(IOException ioe) {ioe.printStackTrace();}
-					catch (SAXException e) {
+					catch (SAXException e) { e.printStackTrace();
 					} catch (ParserConfigurationException e) { e.printStackTrace();
 					}
 					//catch(SQLException sqle) {}
@@ -169,7 +172,7 @@ public class LD extends Module {
 			});
 		}
 
-		boolean running = true;
+		boolean running = true; // TODO: Remove this
 		while(running) {
 			try {
 				Thread.sleep(5000);
@@ -189,9 +192,6 @@ public class LD extends Module {
 		URL url = new URL("https://www.tabroom.com/api/tourn_published.mhtml?tourn_id=" + tourn_id + "&event_id=" + event_id);
 		InputStream stream = url.openStream();
 
-		SAXParserFactory factory = SAXParserFactory.newInstance();
-		factory.setFeature("http://xml.org/sax/features/namespaces", false);
-		factory.setFeature("http://xml.org/sax/features/validation", false);
 		SAXParser saxParser = factory.newSAXParser();
 		DefaultHandler resultHandler = new DefaultHandler() {
 
@@ -257,7 +257,6 @@ public class LD extends Module {
 			return;
 		}
 
-		SAXParserFactory factory = SAXParserFactory.newInstance();
 		SAXParser saxParser = factory.newSAXParser();
 		URL url = new URL("https://www.tabroom.com/api/tourn_published.mhtml?tourn_id=" + tourn_id + "&event_id=" + event_id);
 
