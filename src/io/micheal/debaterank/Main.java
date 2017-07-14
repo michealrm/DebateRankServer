@@ -202,7 +202,7 @@ public class Main {
 				tabroomTournaments = new ArrayList<Tournament>();
 				ArrayList<Tournament> dbTournaments = new ArrayList<>();
 				ResultSet tournamentRS = sql.executeQuery("SELECT name, link, state, date FROM tournaments WHERE link LIKE 'https://www.tabroom.com/index/tourn/results/index.mhtml?tourn_id=%'");
-				while(tournamentRS.next())
+				while(tournamentRS.next()) // TODO: Remove this when not testing
 					dbTournaments.add(new Tournament(tournamentRS.getString(1), tournamentRS.getString(2), tournamentRS.getString(3), tournamentRS.getString(4)));
 				tabroomTournaments = new ArrayList<>(dbTournaments);
 //				for(String year : years) {

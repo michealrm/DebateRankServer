@@ -10,4 +10,10 @@ public class JudgeBallot {
 	public Judge judge;
 	public Debater winner;
 	public double affSpeaks, negSpeaks;
+	public String toString() {
+		if(judge == null)
+			return null;
+		else
+			return judge.toString();
+	}
 }

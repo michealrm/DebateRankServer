@@ -10,6 +10,7 @@ import io.micheal.debaterank.util.SQLHelper;
 import org.apache.commons.configuration2.Configuration;
 import org.apache.commons.configuration2.builder.fluent.Configurations;
 import org.apache.commons.configuration2.ex.ConfigurationException;
+import org.apache.commons.lang.ObjectUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.logging.log4j.Logger;
 import org.xml.sax.Attributes;
@@ -56,6 +57,7 @@ public class LD extends Module {
 
 	public void run() {
 		for(Tournament t : tournaments) {
+			if(t.getName().toUpperCase().contains("BAY AREA CLOSEOUT"))
 			manager.newModule(new Runnable() {
 				public void run() {
 					try {
@@ -546,33 +548,40 @@ public class LD extends Module {
 		saxParser.parse(stream, roundHandler);
 
 		// Getting panels
-		HashMap<Integer, RoundInfo> panels = new HashMap<Integer, RoundInfo>();
+		HashMap<Integer, Round> panels = new HashMap<Integer, Round>(); // Only contains bye and roundInfo
 		DefaultHandler panelHandler = new DefaultHandler() {
 
-			private boolean bpanel, bround, bid;
+			private boolean bpanel, bround, bid, bbye;
 			private int round, id;
+			private Boolean bye = null; // Nullable
 
 			public void startElement(String uri, String localName, String qName, Attributes attributes) throws SAXException {
 				if(qName.equalsIgnoreCase("PANEL")) {
 					bpanel = true;
 					round = 0;
 					id = 0;
+					bye = null;
 				}
 				if(qName.equalsIgnoreCase("ROUND") && bpanel)
 					bround = true;
 				if(qName.equalsIgnoreCase("ID") && bpanel)
 					bid = true;
+				if(qName.equalsIgnoreCase("BYE") && bpanel)
+					bbye = true;
 			}
 			public void endElement(String uri, String localName, String qName) throws SAXException {
 				if(qName.equalsIgnoreCase("PANEL")) {
 					bpanel = false;
 					round = 0;
 					id = 0;
+					bye = null;
 				}
 				if(qName.equalsIgnoreCase("ROUND") && bpanel)
 					bround = false;
 				if(qName.equalsIgnoreCase("ID") && bpanel)
 					bid = false;
+				if(qName.equalsIgnoreCase("BYE") && bpanel)
+					bbye = false;
 			}
 			public void characters(char ch[], int start, int length) throws SAXException {
 				if(bround) {
@@ -583,9 +592,16 @@ public class LD extends Module {
 					bid = false;
 					id = Integer.parseInt(new String(ch, start, length));
 				}
-				if(round != 0 && id != 0 && bpanel) {
+				if(bbye) {
+					bbye = false;
+					bye = new String(ch, start, length).equals("1");
+				}
+				if(round != 0 && id != 0 && bye != null && bpanel) {
 					bpanel = false;
-					panels.put(id, roundInfo.get(round));
+					Round r = new Round();
+					r.roundInfo = roundInfo.get(round);
+					r.bye = bye;
+					panels.put(id, r);
 				}
 			}
 		};
@@ -599,7 +615,7 @@ public class LD extends Module {
 
 			private boolean bballot, bid, bdebater, bpanel, bjudge, bside, bbye;
 			private int id, debater, panel, judge, side;
-			private Boolean bye; // Nullable
+			private Boolean bye = null; // Nullable
 
 			public void startElement(String uri, String localName, String qName, Attributes attributes) throws SAXException {
 				if(qName.equalsIgnoreCase("BALLOT")) {
@@ -684,12 +700,12 @@ public class LD extends Module {
 						round.aff = competitors.get(debater);
 					else if (side == 2 && round.neg == null)
 						round.neg = competitors.get(debater);
-					if(round.bye == null)
-						round.bye = bye;
 					if(round.roundInfo == null)
-						round.roundInfo = panels.get(panel);
+						round.roundInfo = panels.get(panel).roundInfo;
 					if(bye != null && round.bye == null)
-						round.bye = bye;
+						round.bye = panels.get(panel).bye || bye;
+					else if(round.bye == null)
+						round.bye = panels.get(panel).bye;
 					boolean found = false;
 					for(JudgeBallot jBallot : round.judges) {
 						if (jBallot.judge == null) {
@@ -805,12 +821,41 @@ public class LD extends Module {
 		stream = new ByteArrayInputStream(baos.toByteArray());
 		saxParser.parse(stream, resultHandler);
 
-
 		HashMap<Integer, String> sqlRoundStrings = roundToSQLFriendlyRound(new ArrayList<Round>(rounds.values()));
 		String query = "INSERT INTO ld_rounds (tournament, absUrl, debater, against, round, side, decision) VALUES ";
 		ArrayList<Object> args = new ArrayList<Object>();
 		rounds:
 		for(Round round : rounds.values()) {
+			System.out.println(sqlRoundStrings.get(round.roundInfo.number) + ": " + round.aff + " vs " + round.neg + " with " + round.judges + " judging. Bye: " + round.bye);
+			ArrayList<Object> a = new ArrayList<Object>();
+			if(round.bye) {
+				a.add(t.getLink());
+				a.add(t.getLink() + "|" + event_id);
+				Debater debater = round.aff != null ? round.aff : round.neg != null ? round.neg : null;
+				try {
+					a.add(debater.getID(sql));
+					a.add(debater.getID(sql));
+				} catch(SQLException | NullPointerException sqle) {
+					continue;
+				}
+				a.add(null);
+				a.add("B");
+				if (!overwrite) {
+					try {
+						ResultSet exists = sql.executeQueryPreparedStatement("SELECT * FROM ld_rounds WHERE tournament=(SELECT id FROM tournaments WHERE link=?) AND absUrl<=>? AND debater=? AND against=? AND round<=>? AND side<=>? AND decision<=>?", a.get(0), a.get(1), a.get(2), a.get(3), a.get(4), a.get(5), a.get(6));
+						if (!exists.next()) {
+							query += "((SELECT id FROM tournaments WHERE link=?), ?, ?, ?, ?, ?, ?), ";
+							args.addAll(a);
+						}
+						exists.close();
+					} catch (SQLException sqle) {
+						continue rounds;
+					}
+				} else {
+					query += "((SELECT id FROM tournaments WHERE link=?), ?, ?, ?, ?, ?, ?), ";
+					args.addAll(a);
+				}
+			}
 			int affVotes = 0, negVotes = 0;
 			for (JudgeBallot jBallot : round.judges) {
 				try {
@@ -824,34 +869,18 @@ public class LD extends Module {
 			}
 			if(round.aff == null || round.neg == null)
 				continue;
-			ArrayList<Object> a = new ArrayList<Object>();
-			if(round.bye) {
-				a.add(t.getLink());
-				a.add(t.getLink() + "|" + event_id);
-				Debater debater = round.aff != null ? round.aff : round.neg;
-				try {
-					a.add(debater.getID(sql));
-					a.add(debater.getID(sql));
-				} catch(SQLException sqle) {
-					continue;
-				}
-				a.add(null);
-				a.add("B");
+			a.add(t.getLink());
+			a.add(t.getLink() + "|" + event_id);
+			try {
+				a.add(round.aff.getID(sql));
+				a.add(round.neg.getID(sql));
+			} catch (SQLException sqle) {
+				continue;
 			}
-			else {
-				a.add(t.getLink());
-				a.add(t.getLink() + "|" + event_id);
-				try {
-					a.add(round.aff.getID(sql));
-					a.add(round.neg.getID(sql));
-				} catch(SQLException sqle) {
-					continue;
-				}
-				a.add(sqlRoundStrings.get(round.roundInfo.number));
-				a.add('A');
-				a.add(affVotes + "-" + negVotes);
-			}
-			if(!overwrite) {
+			a.add(sqlRoundStrings.get(round.roundInfo.number));
+			a.add('A');
+			a.add(affVotes + "-" + negVotes);
+			if (!overwrite) {
 				try {
 					ResultSet exists = sql.executeQueryPreparedStatement("SELECT * FROM ld_rounds WHERE tournament=(SELECT id FROM tournaments WHERE link=?) AND absUrl<=>? AND debater=? AND against=? AND round<=>? AND side<=>? AND decision<=>?", a.get(0), a.get(1), a.get(2), a.get(3), a.get(4), a.get(5), a.get(6));
 					if (!exists.next()) {
@@ -859,11 +888,10 @@ public class LD extends Module {
 						args.addAll(a);
 					}
 					exists.close();
-				} catch(SQLException sqle) {
+				} catch (SQLException sqle) {
 					continue rounds;
 				}
-			}
-			else {
+			} else {
 				query += "((SELECT id FROM tournaments WHERE link=?), ?, ?, ?, ?, ?, ?), ";
 				args.addAll(a);
 			}
@@ -875,13 +903,12 @@ public class LD extends Module {
 			try {
 				a.add(round.neg.getID(sql));
 				a.add(round.aff.getID(sql));
-			} catch(SQLException sqle) {
+			} catch (SQLException sqle) {
 				continue;
 			}
 			a.add(sqlRoundStrings.get(round.roundInfo.number));
 			a.add('N');
 			a.add(negVotes + "-" + affVotes);
-
 			if(!overwrite) {
 				try {
 					ResultSet exists = sql.executeQueryPreparedStatement("SELECT * FROM ld_rounds WHERE tournament=(SELECT id FROM tournaments WHERE link=?) AND absUrl<=>? AND debater=? AND against=? AND round<=>? AND side<=>? AND decision<=>?", a.get(0), a.get(1), a.get(2), a.get(3), a.get(4), a.get(5), a.get(6));
@@ -903,14 +930,13 @@ public class LD extends Module {
 		try {
 			if (!query.equals("INSERT INTO ld_rounds (tournament, absUrl, debater, against, round, side, decision) VALUES ")) {
 				query = query.substring(0, query.lastIndexOf(", "));
+				System.out.println(args);
 				sql.executePreparedStatement(query, args.toArray());
 
 				String judgeQuery = "INSERT INTO ld_judges (round, judge_id, decision, aff_speaks, neg_speaks) VALUES ";
 				ArrayList<Object> judgeArgs = new ArrayList<Object>();
 				for (Round round : rounds.values()) {
 					for (JudgeBallot jBallot : round.judges) {
-						System.out.println(jBallot.judge.getID(sql));
-						System.exit(0);
 						ArrayList<Object> a = new ArrayList<Object>();
 						try {
 							ResultSet idStatement = sql.executeQueryPreparedStatement("SELECT id FROM ld_rounds WHERE tournament=(SELECT id FROM tournaments WHERE link=?) AND absUrl<=>? AND debater=? AND against=? AND round<=>? AND side<=>?", t.getLink(), t.getLink() + "|" + event_id, jBallot.winner.getID(sql), jBallot.winner.getID(sql) != round.aff.getID(sql) ? round.aff.getID(sql) : round.neg.getID(sql), sqlRoundStrings.get(round.roundInfo.number), (jBallot.winner.getID(sql) == round.aff.getID(sql) ? 'A' : (jBallot.winner.getID(sql) == round.neg.getID(sql) ? 'N' : null)));

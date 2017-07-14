@@ -6,6 +6,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 
 import static io.micheal.debaterank.util.DebateHelper.insertDebater;
+import static io.micheal.debaterank.util.DebateHelper.insertJudge;
 import static io.micheal.debaterank.util.SQLHelper.cleanString;
 
 public class Judge extends Debater {
@@ -23,7 +24,7 @@ public class Judge extends Debater {
 		ResultSet index = sql.executeQueryPreparedStatement("SELECT id, school FROM judges WHERE first_clean<=>? AND middle_clean<=>? AND last_clean<=>? AND surname_clean<=>?", cleanString(getFirst()), cleanString(getMiddle()), cleanString(getLast()), cleanString(getSurname()));
 		if(index.next()) {
 			do {
-				Debater clone = new Debater(getFirst(), getMiddle(), getLast(), getSurname(), index.getString(2));
+				Judge clone = new Judge(getFirst(), getMiddle(), getLast(), getSurname(), index.getString(2));
 				if(this.equals(clone)) {
 					int ret = index.getInt(1);
 					index.close();
@@ -33,7 +34,7 @@ public class Judge extends Debater {
 			} while(index.next());
 		}
 		index.close();
-		setID(insertDebater(sql, this));
+		setID(insertJudge(sql, this));
 		return getRawID();
 	}
 }
