@@ -29,6 +29,7 @@ import java.sql.SQLException;
 import java.util.*;
 
 import static io.micheal.debaterank.util.DebateHelper.JOT;
+import static io.micheal.debaterank.util.DebateHelper.TABROOM;
 
 // XML Parsing sucks.
 public class LD extends Module {
@@ -57,7 +58,6 @@ public class LD extends Module {
 
 	public void run() {
 		for(Tournament t : tournaments) {
-			if(t.getName().toUpperCase().contains("BAY AREA CLOSEOUT"))
 			manager.newModule(new Runnable() {
 				public void run() {
 					try {
@@ -142,17 +142,17 @@ public class LD extends Module {
 												if (getTournamentRoundEntries(tourn_id, event_id) == 0)
 													return;
 
+												log.log(TABROOM, "Updating " + t.getName() + ". Tournament ID: " + tourn_id + " Event ID: " + event_id);
 												enterTournament(t, tourn_id, event_id);
 
 											} catch(SAXParseException saxpe) {
 												log.log(DebateHelper.TABROOM, "Skipping " + t.getName());
-												saxpe.printStackTrace();
 											}
 
 										} catch (XMLStreamException xmlse) {}
 										catch (IOException ioe) {}
 										catch(ParserConfigurationException pce) {}
-										catch(Exception e) {e.printStackTrace();}
+										catch(Exception e) {}
 									}
 								}
 							}
@@ -161,13 +161,25 @@ public class LD extends Module {
 						saxParser.parse(url.openStream(), handler);
 
 					} catch(IOException ioe) {ioe.printStackTrace();}
-					catch (SAXException e) { e.printStackTrace();
+					catch (SAXException e) {
 					} catch (ParserConfigurationException e) { e.printStackTrace();
 					}
 					//catch(SQLException sqle) {}
 				}
 			});
 		}
+
+		boolean running = true;
+		while(running) {
+			try {
+				Thread.sleep(5000);
+			} catch(InterruptedException e) {
+				return;
+			}
+			running = manager.getActiveCount() != 0;
+		}
+
+		System.out.println("Done");
 	}
 
 	private ThreadLocal<Integer> size = new ThreadLocal<Integer>(); // for getTournamentRoundEntries
@@ -175,7 +187,6 @@ public class LD extends Module {
 	private int getTournamentRoundEntries(int tourn_id, int event_id) throws XMLStreamException, IOException, SAXException, ParserConfigurationException {
 		size.set(0);
 		URL url = new URL("https://www.tabroom.com/api/tourn_published.mhtml?tourn_id=" + tourn_id + "&event_id=" + event_id);
-		System.out.println(url);
 		InputStream stream = url.openStream();
 
 		SAXParserFactory factory = SAXParserFactory.newInstance();
@@ -227,7 +238,7 @@ public class LD extends Module {
 
 //		//If we have the same amount of entries, then do not check
 //		if (tournamentExists(t.getLink() + "|" + event_id, getTournamentRoundEntries(tourn_id, event_id), sql, "ld_rounds")) {
-//			log.log(JOT, t.getName() + " prelims is up to date.");
+//			log.log(TABROOM, t.getName() + " prelims is up to date.");
 //			return;
 //		}
 //
@@ -249,7 +260,6 @@ public class LD extends Module {
 		SAXParserFactory factory = SAXParserFactory.newInstance();
 		SAXParser saxParser = factory.newSAXParser();
 		URL url = new URL("https://www.tabroom.com/api/tourn_published.mhtml?tourn_id=" + tourn_id + "&event_id=" + event_id);
-		System.out.println(url);
 
 		InputStream iStream = url.openStream();
 		ByteArrayOutputStream baos = new ByteArrayOutputStream();
@@ -830,7 +840,6 @@ public class LD extends Module {
 		ArrayList<Object> args = new ArrayList<Object>();
 		rounds:
 		for(Round round : rounds.values()) {
-			System.out.println(sqlRoundStrings.get(round.roundInfo.number) + ": " + round.aff + " vs " + round.neg + " with " + round.judges + " judging. Bye: " + round.bye);
 			ArrayList<Object> a = new ArrayList<Object>();
 			if(round.bye) {
 				a.add(t.getLink());
@@ -936,8 +945,6 @@ public class LD extends Module {
 		try {
 			if (!query.equals("INSERT INTO ld_rounds (tournament, absUrl, debater, against, round, side, decision) VALUES ")) {
 				query = query.substring(0, query.lastIndexOf(", "));
-				System.out.println(query);
-				System.out.println(args);
 				sql.executePreparedStatement(query, args.toArray());
 
 				String judgeQuery = "INSERT INTO ld_judges (round, judge_id, decision, aff_speaks, neg_speaks) VALUES ";
@@ -993,9 +1000,9 @@ public class LD extends Module {
 					sql.executePreparedStatement(judgeQuery, judgeArgs.toArray());
 				}
 
-				log.log(JOT, t.getName() + " updated.");
+				log.log(TABROOM, t.getName() + " updated.");
 			} else {
-				log.log(JOT, t.getName() + " is up to date.");
+				log.log(TABROOM, t.getName() + " is up to date.");
 			}
 		} catch(Exception ex) {
 			log.error(ex);
