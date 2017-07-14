@@ -936,6 +936,8 @@ public class LD extends Module {
 		try {
 			if (!query.equals("INSERT INTO ld_rounds (tournament, absUrl, debater, against, round, side, decision) VALUES ")) {
 				query = query.substring(0, query.lastIndexOf(", "));
+				System.out.println(query);
+				System.out.println(args);
 				sql.executePreparedStatement(query, args.toArray());
 
 				String judgeQuery = "INSERT INTO ld_judges (round, judge_id, decision, aff_speaks, neg_speaks) VALUES ";
