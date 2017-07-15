@@ -1,35 +1,43 @@
 package io.micheal.debaterank.modules.tabroom;
 
-import io.micheal.debaterank.Debater;
-import io.micheal.debaterank.Judge;
-import io.micheal.debaterank.Tournament;
-import io.micheal.debaterank.modules.Module;
-import io.micheal.debaterank.modules.WorkerPool;
-import io.micheal.debaterank.util.DebateHelper;
-import io.micheal.debaterank.util.SQLHelper;
-import org.apache.commons.configuration2.Configuration;
-import org.apache.commons.configuration2.builder.fluent.Configurations;
-import org.apache.commons.configuration2.ex.ConfigurationException;
-import org.apache.commons.lang.ObjectUtils;
-import org.apache.commons.lang3.tuple.Pair;
-import org.apache.logging.log4j.Logger;
-import org.xml.sax.Attributes;
-import org.xml.sax.SAXException;
-import org.xml.sax.SAXParseException;
-import org.xml.sax.helpers.DefaultHandler;
+import static io.micheal.debaterank.util.DebateHelper.TABROOM;
+
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.URL;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
 import javax.xml.stream.XMLStreamException;
-import java.io.*;
-import java.net.URL;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.util.*;
 
-import static io.micheal.debaterank.util.DebateHelper.JOT;
-import static io.micheal.debaterank.util.DebateHelper.TABROOM;
+import org.apache.commons.configuration2.Configuration;
+import org.apache.commons.configuration2.builder.fluent.Configurations;
+import org.apache.commons.configuration2.ex.ConfigurationException;
+import org.apache.commons.lang3.tuple.Pair;
+import org.apache.logging.log4j.Logger;
+import org.xml.sax.Attributes;
+import org.xml.sax.SAXException;
+import org.xml.sax.helpers.DefaultHandler;
+
+import io.micheal.debaterank.Debater;
+import io.micheal.debaterank.Judge;
+import io.micheal.debaterank.Tournament;
+import io.micheal.debaterank.modules.Module;
+import io.micheal.debaterank.modules.WorkerPool;
+import io.micheal.debaterank.util.SQLHelper;
 
 // XML Parsing sucks.
 public class LD extends Module {
@@ -38,12 +46,16 @@ public class LD extends Module {
 	private WorkerPool manager;
 	private final boolean overwrite;
 	private SAXParserFactory factory;
+	private ArrayList<Runnable> getTournamentRoundEntries;
+	private ArrayList<Runnable> enterTournament;
 
 	public LD(SQLHelper sql, Logger log, ArrayList<Tournament> tournaments, WorkerPool manager) {
 		super(sql, log);
 		this.tournaments = tournaments;
 		this.manager = manager;
-
+		getTournamentRoundEntries = new ArrayList<>();
+		enterTournament = new ArrayList<>();
+		
 		Configuration config;
 		boolean temp;
 		try {
@@ -138,24 +150,36 @@ public class LD extends Module {
 								if(eventname != null && event_id != 0 && tid != 0 && bevent) {
 									bevent = false;
 									if (eventname.matches("^.*(LD|Lincoln|L-D).*$") && tourn_id == tid) {
+
 										try {
+												log.log(TABROOM, "Queuing " + t.getName() + ". Tournament ID: " + tourn_id + " Event ID: " + event_id);
+//												getTournamentRoundEntries.add(new Runnable() {
+//													
+//													@Override
+//													public void run() {
+//														//If we have the same amount of entries, then do not check
+//														if (tournamentExists(t.getLink() + "|" + event_id, getTournamentRoundEntries(tourn_id, event_id), sql, "ld_rounds")) {
+//															log.log(TABROOM, t.getName() + " prelims is up to date.");
+//															return;
+//														}
+//												
+//													}
+//												});
+												
+												enterTournament.add(new Runnable() {
+													
+													@Override
+													public void run() {
+														try {
+															enterTournament(t, tourn_id, event_id);
+														} catch(Exception e) {
+															log.log(TABROOM, "Could not update " + t.getName());
+															e.printStackTrace();
+														}
+													}
+												});
 
-											try {
-
-												if (getTournamentRoundEntries(tourn_id, event_id) == 0)
-													return;
-
-												log.log(TABROOM, "Updating " + t.getName() + ". Tournament ID: " + tourn_id + " Event ID: " + event_id);
-												enterTournament(t, tourn_id, event_id);
-
-											} catch(SAXParseException saxpe) {
-												log.log(DebateHelper.TABROOM, "Skipping " + t.getName());
-											}
-
-										} catch (XMLStreamException xmlse) {}
-										catch (IOException ioe) {}
-										catch(ParserConfigurationException pce) {pce.printStackTrace();}
-										catch(Exception e) {e.printStackTrace();}
+										} catch(Exception e) {e.printStackTrace();}
 									}
 								}
 							}
@@ -167,7 +191,6 @@ public class LD extends Module {
 					catch (SAXException e) { e.printStackTrace();
 					} catch (ParserConfigurationException e) { e.printStackTrace();
 					}
-					//catch(SQLException sqle) {}
 				}
 			});
 		}
@@ -181,8 +204,15 @@ public class LD extends Module {
 			}
 			running = manager.getActiveCount() != 0;
 		}
-
+		
 		System.out.println("Done");
+		
+		// getTournamentRoundEntries
+		
+		for(Runnable runnable : enterTournament) {
+			manager.newModule(runnable);;
+		}
+
 	}
 
 	private ThreadLocal<Integer> size = new ThreadLocal<Integer>(); // for getTournamentRoundEntries
@@ -234,14 +264,13 @@ public class LD extends Module {
 		return localSize;
 	}
 
-	public void enterTournament(Tournament t, int tourn_id, int event_id) throws ParserConfigurationException,IOException, SAXException, XMLStreamException {
-
-//		//If we have the same amount of entries, then do not check
-//		if (tournamentExists(t.getLink() + "|" + event_id, getTournamentRoundEntries(tourn_id, event_id), sql, "ld_rounds")) {
-//			log.log(TABROOM, t.getName() + " prelims is up to date.");
-//			return;
-//		}
-//
+	private void enterTournament(Tournament t, int tourn_id, int event_id) throws ParserConfigurationException,IOException, SAXException, XMLStreamException {
+		
+		if (getTournamentRoundEntries(tourn_id, event_id) == 0)
+			return;
+		
+		log.log(TABROOM, "Updating " + t.getName() + ". Tournament ID: " + tourn_id + " Event ID: " + event_id);
+		
 		//Overwrite
 		try {
 			if (overwrite) {
@@ -375,6 +404,7 @@ public class LD extends Module {
 			}
 		};
 
+		saxParser = factory.newSAXParser();
 		stream = new ByteArrayInputStream(baos.toByteArray());
 		saxParser.parse(stream, competitorHandler);
 
@@ -422,6 +452,7 @@ public class LD extends Module {
 			}
 		};
 
+		saxParser = factory.newSAXParser();
 		stream = new ByteArrayInputStream(baos.toByteArray());
 		saxParser.parse(stream, entryHandler);
 
@@ -491,6 +522,7 @@ public class LD extends Module {
 			}
 		};
 
+		saxParser = factory.newSAXParser();
 		stream = new ByteArrayInputStream(baos.toByteArray());
 		saxParser.parse(stream, judgeHandler);
 
@@ -553,6 +585,7 @@ public class LD extends Module {
 			}
 		};
 
+		saxParser = factory.newSAXParser();
 		stream = new ByteArrayInputStream(baos.toByteArray());
 		saxParser.parse(stream, roundHandler);
 
@@ -615,6 +648,7 @@ public class LD extends Module {
 			}
 		};
 
+		saxParser = factory.newSAXParser();
 		stream = new ByteArrayInputStream(baos.toByteArray());
 		saxParser.parse(stream, panelHandler);
 
@@ -742,6 +776,7 @@ public class LD extends Module {
 			}
 		};
 
+		saxParser = factory.newSAXParser();
 		stream = new ByteArrayInputStream(baos.toByteArray());
 		saxParser.parse(stream, ballotHandler);
 
@@ -831,6 +866,7 @@ public class LD extends Module {
 			}
 		};
 
+		saxParser = factory.newSAXParser();
 		stream = new ByteArrayInputStream(baos.toByteArray());
 		saxParser.parse(stream, resultHandler);
 
