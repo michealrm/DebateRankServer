@@ -2,11 +2,7 @@ package io.micheal.debaterank.modules.tabroom;
 
 import static io.micheal.debaterank.util.DebateHelper.TABROOM;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 import java.net.URL;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -30,6 +26,7 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.apache.logging.log4j.Logger;
 import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;
+import org.xml.sax.SAXParseException;
 import org.xml.sax.helpers.DefaultHandler;
 
 import io.micheal.debaterank.Debater;
@@ -46,15 +43,11 @@ public class LD extends Module {
 	private WorkerPool manager;
 	private final boolean overwrite;
 	private SAXParserFactory factory;
-	private ArrayList<Runnable> getTournamentRoundEntries;
-	private ArrayList<Runnable> enterTournament;
 
 	public LD(SQLHelper sql, Logger log, ArrayList<Tournament> tournaments, WorkerPool manager) {
 		super(sql, log);
 		this.tournaments = tournaments;
 		this.manager = manager;
-		getTournamentRoundEntries = new ArrayList<>();
-		enterTournament = new ArrayList<>();
 		
 		Configuration config;
 		boolean temp;
@@ -89,13 +82,12 @@ public class LD extends Module {
 						}
 
 						int tourn_id = Integer.parseInt(tournIDStr);
+						int eid = 0;
 
 						String[] split = t.getDate().split("-| ");
 						URL url = new URL("https://www.tabroom.com/api/current_tournaments.mhtml?timestring=" + split[0] + "-" + split[1] + "-" + split[2] + "T12:00:00");
 
 						factory = SAXParserFactory.newInstance();
-						factory.setFeature("http://xml.org/sax/features/namespaces", false);
-						factory.setFeature("http://xml.org/sax/features/validation", false);
 						SAXParser saxParser = factory.newSAXParser();
 
 						DefaultHandler handler = new DefaultHandler() {
@@ -165,19 +157,8 @@ public class LD extends Module {
 //												
 //													}
 //												});
-												
-												enterTournament.add(new Runnable() {
-													
-													@Override
-													public void run() {
-														try {
-															enterTournament(t, tourn_id, event_id);
-														} catch(Exception e) {
-															log.log(TABROOM, "Could not update " + t.getName());
-															e.printStackTrace();
-														}
-													}
-												});
+
+											enterTournament(t, tourn_id, event_id);
 
 										} catch(Exception e) {e.printStackTrace();}
 									}
@@ -185,7 +166,19 @@ public class LD extends Module {
 							}
 						};
 
-						saxParser.parse(url.openStream(), handler);
+						InputStream iStream = url.openStream();
+						ByteArrayOutputStream baos = new ByteArrayOutputStream();
+						byte[] buffer = new byte[1024];
+						int len;
+						while ((len = iStream.read(buffer)) > -1 ) {
+							baos.write(buffer, 0, len);
+						}
+						baos.flush();
+						iStream.close();
+
+						saxParser.parse(new ByteArrayInputStream(baos.toByteArray()), handler);
+
+						baos.close();
 
 					} catch(IOException ioe) {ioe.printStackTrace();}
 					catch (SAXException e) { e.printStackTrace();
@@ -206,12 +199,6 @@ public class LD extends Module {
 		}
 		
 		System.out.println("Done");
-		
-		// getTournamentRoundEntries
-		
-		for(Runnable runnable : enterTournament) {
-			manager.newModule(runnable);;
-		}
 
 	}
 
@@ -220,8 +207,16 @@ public class LD extends Module {
 	private int getTournamentRoundEntries(int tourn_id, int event_id) throws XMLStreamException, IOException, SAXException, ParserConfigurationException {
 		size.set(0);
 		URL url = new URL("https://www.tabroom.com/api/tourn_published.mhtml?tourn_id=" + tourn_id + "&event_id=" + event_id);
-		InputStream stream = url.openStream();
-
+		InputStream iStream = url.openStream();
+		ByteArrayOutputStream baos = new ByteArrayOutputStream();
+		byte[] buffer = new byte[1024];
+		int len;
+		while ((len = iStream.read(buffer)) > -1 ) {
+			baos.write(buffer, 0, len);
+		}
+		baos.flush();
+		iStream.close();
+		InputStream stream = new ByteArrayInputStream(baos.toByteArray());
 		SAXParser saxParser = factory.newSAXParser();
 		DefaultHandler resultHandler = new DefaultHandler() {
 
@@ -258,17 +253,48 @@ public class LD extends Module {
 			}
 		};
 
-		saxParser.parse(stream, resultHandler);
+		System.out.println(getStringFromInputStream(new ByteArrayInputStream(baos.toByteArray())));
+		saxParser.parse(new ByteArrayInputStream(baos.toByteArray()), resultHandler);
 		int localSize = size.get().intValue();
 
 		return localSize;
+	}
+
+	// convert InputStream to String
+	private static String getStringFromInputStream(InputStream is) {
+
+		BufferedReader br = null;
+		StringBuilder sb = new StringBuilder();
+
+		String line;
+		try {
+
+			br = new BufferedReader(new InputStreamReader(is));
+			while ((line = br.readLine()) != null) {
+				sb.append(line);
+			}
+
+		} catch (IOException e) {
+			e.printStackTrace();
+		} finally {
+			if (br != null) {
+				try {
+					br.close();
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+			}
+		}
+
+		return sb.toString();
+
 	}
 
 	private void enterTournament(Tournament t, int tourn_id, int event_id) throws ParserConfigurationException,IOException, SAXException, XMLStreamException {
 		
 		if (getTournamentRoundEntries(tourn_id, event_id) == 0)
 			return;
-		
+
 		log.log(TABROOM, "Updating " + t.getName() + ". Tournament ID: " + tourn_id + " Event ID: " + event_id);
 		
 		//Overwrite
@@ -291,7 +317,7 @@ public class LD extends Module {
 
 		InputStream iStream = url.openStream();
 		ByteArrayOutputStream baos = new ByteArrayOutputStream();
-		byte[] buffer = new byte[8192];
+		byte[] buffer = new byte[1024];
 		int len;
 		while ((len = iStream.read(buffer)) > -1 ) {
 			baos.write(buffer, 0, len);
