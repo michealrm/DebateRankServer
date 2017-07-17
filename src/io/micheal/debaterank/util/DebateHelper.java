@@ -29,8 +29,8 @@ public class DebateHelper {
 			return team.getID();
 		ResultSet index = sql.executeQueryPreparedStatement("SELECT tm.id, d1.school, d2.school FROM teams tm JOIN debaters AS d1 ON d1.id=tm.debater1 JOIN debaters AS d2 ON d2.id=tm.debater2 WHERE ((d1.first_clean<=>? AND d1.middle_clean<=>? AND d1.last_clean<=>? AND d1.surname_clean<=>? AND d2.first_clean<=>? AND d2.middle_clean<=>? AND d2.last_clean<=>? AND d2.surname_clean<=>?) OR (d2.first_clean<=>? AND d2.middle_clean<=>? AND d2.last_clean<=>? AND d2.surname_clean<=>? AND d1.first_clean<=>? AND d1.middle_clean<=>? AND d1.last_clean<=>? AND d1.surname_clean<=>?)) AND event<=>?", cleanString(team.getLeft().getFirst()), cleanString(team.getLeft().getMiddle()), cleanString(team.getLeft().getLast()), cleanString(team.getLeft().getSurname()), cleanString(team.getRight().getFirst()), cleanString(team.getRight().getMiddle()), cleanString(team.getRight().getLast()), cleanString(team.getRight().getSurname()), cleanString(team.getLeft().getFirst()), cleanString(team.getLeft().getMiddle()), cleanString(team.getLeft().getLast()), cleanString(team.getLeft().getSurname()), cleanString(team.getRight().getFirst()), cleanString(team.getRight().getMiddle()), cleanString(team.getRight().getLast()), cleanString(team.getRight().getSurname()), event);
 		if(index.next()) {
-			Debater clone1 = new Debater(team.getLeft().getFirst(), team.getLeft().getMiddle(), team.getLeft().getLast(), team.getLeft().getSurname(), index.getString(2));
-			Debater clone2 = new Debater(team.getRight().getFirst(), team.getRight().getMiddle(), team.getRight().getLast(), team.getRight().getSurname(), index.getString(3));
+			Debater clone1 = new Debater(team.getLeft().getFirst(), team.getLeft().getMiddle(), team.getLeft().getLast(), team.getLeft().getSurname(), getSchool(sql, index.getInt(2)));
+			Debater clone2 = new Debater(team.getRight().getFirst(), team.getRight().getMiddle(), team.getRight().getLast(), team.getRight().getSurname(), getSchool(sql, index.getInt(3)));
 			if((team.getLeft().equals(clone1) && team.getRight().equals(clone2)) || (team.getLeft().equals(clone2) && team.getRight().equals(clone1))) {
 				int ret = index.getInt(1);
 				index.close();
@@ -70,11 +70,11 @@ public class DebateHelper {
 	 * @throws SQLException
 	 */
 	public static ArrayList<Debater> getDebaters(SQLHelper sql) throws SQLException {
-		ResultSet debatersSet = sql.executeQuery("SELECT id, first, middle, last, surname, school_old FROM debaters"); // TODO: Change this back to school
+		ResultSet debatersSet = sql.executeQuery("SELECT id, first, middle, last, surname, school FROM debaters"); // TODO: Change this back to school
 		ArrayList<Debater> debaters = new ArrayList<Debater>();
 		while(debatersSet.next()) {
 			try {
-				Debater debater = new Debater(debatersSet.getString(2), debatersSet.getString(3), debatersSet.getString(4), debatersSet.getString(5), debatersSet.getString(6));
+				Debater debater = new Debater(debatersSet.getString(2), debatersSet.getString(3), debatersSet.getString(4), debatersSet.getString(5), getSchool(sql, debatersSet.getInt(6)));
 				debater.setID(debatersSet.getInt(1));
 				debaters.add(debater);
 			} catch (SQLException e) {}
@@ -88,9 +88,9 @@ public class DebateHelper {
 		ArrayList<Team> teams = new ArrayList<Team>();
 		while(teamsSet.next()) {
 			try {
-				Debater d1 = new Debater(teamsSet.getString(2), teamsSet.getString(3), teamsSet.getString(4), teamsSet.getString(5), teamsSet.getString(6));
+				Debater d1 = new Debater(teamsSet.getString(2), teamsSet.getString(3), teamsSet.getString(4), teamsSet.getString(5), getSchool(sql, teamsSet.getInt(6)));
 				d1.setID(teamsSet.getInt(1));
-				Debater d2 = new Debater(teamsSet.getString(8), teamsSet.getString(9), teamsSet.getString(10), teamsSet.getString(11), teamsSet.getString(12));
+				Debater d2 = new Debater(teamsSet.getString(8), teamsSet.getString(9), teamsSet.getString(10), teamsSet.getString(11), getSchool(sql, teamsSet.getInt(12)));
 				d2.setID(teamsSet.getInt(7));
 				Team team = new Team(d1, d2);
 				team.setID(teamsSet.getInt(13));
@@ -106,9 +106,9 @@ public class DebateHelper {
 		if(index.next()) {
 			do {
 				Debater debater = new Debater(index.getString(3), index.getString(4), index.getString(5), index.getString(6), school);
-				Debater clone = new Debater(index.getString(3), index.getString(4), index.getString(5), index.getString(6), index.getString(7));
+				Debater clone = new Debater(index.getString(3), index.getString(4), index.getString(5), index.getString(6), getSchool(sql, index.getInt(7)));
 				Debater debater2 = new Debater(index.getString(9), index.getString(10), index.getString(11), index.getString(12), school);
-				Debater clone2 = new Debater(index.getString(9), index.getString(10), index.getString(11), index.getString(12), index.getString(13));
+				Debater clone2 = new Debater(index.getString(9), index.getString(10), index.getString(11), index.getString(12), getSchool(sql, index.getInt(13)));
 				if(debater.equals(clone) && debater2.equals(clone2)) {
 					debater.setID(index.getInt(1));
 					debater2.setID(index.getInt(8));
@@ -129,7 +129,7 @@ public class DebateHelper {
 	 * @throws SQLException
 	 */
 	public static int insertDebater(SQLHelper sql, Debater debater) throws SQLException {
-		return sql.executePreparedStatementArgs("INSERT INTO debaters (first, middle, last, surname, school, first_clean, middle_clean, last_clean, surname_clean, school_clean, state, year) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", debater.getFirst(), debater.getMiddle(), debater.getLast(), debater.getSurname(), debater.getSchool().name, cleanString(debater.getFirst()), cleanString(debater.getMiddle()), cleanString(debater.getLast()), cleanString(debater.getSurname()), cleanString(debater.getSchool().name), debater.getState(), debater.getYear());
+		return sql.executePreparedStatementArgs("INSERT INTO debaters (first, middle, last, surname, school, first_clean, middle_clean, last_clean, surname_clean, school_clean, state, year) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", debater.getFirst(), debater.getMiddle(), debater.getLast(), debater.getSurname(), debater.getSchool(), cleanString(debater.getFirst()), cleanString(debater.getMiddle()), cleanString(debater.getLast()), cleanString(debater.getSurname()), cleanString(debater.getSchool().name), debater.getState(), debater.getYear());
 	}
 
 	/**
@@ -162,12 +162,29 @@ public class DebateHelper {
 	public static void updateTeamWithLastNames(SQLHelper sql, Team team, String event) throws SQLException {
 		ResultSet index = sql.executeQueryPreparedStatement("SELECT tm.id, d1.id, d1.first, d1.middle, d1.last, d1.surname, d1.school, d2.id, d2.first, d2.middle, d2.last, d2.surname, d2.school FROM teams tm JOIN debaters AS d1 ON d1.id=tm.debater1 JOIN debaters AS d2 ON d2.id=tm.debater2 WHERE ((d1.last_clean=? AND d2.last_clean=?) OR (d2.last_clean=? AND d1.last_clean=?)) AND ((d1.school_clean=? AND d2.school_clean=?) OR (d2.school_clean=? AND d1.school_clean=?)) AND event<=>?", cleanString(team.getLeft().getLast()), cleanString(team.getRight().getLast()), cleanString(team.getLeft().getLast()), cleanString(team.getRight().getLast()), cleanString(team.getLeft().getSchool().name), cleanString(team.getRight().getSchool().name), cleanString(team.getLeft().getSchool().name), cleanString(team.getRight().getSchool().name), event);
 		if(index.next()) {
-			team.newPair(new Debater(index.getString(3), index.getString(4), index.getString(5), index.getString(6), index.getString(7)), new Debater(index.getString(9), index.getString(10), index.getString(11), index.getString(12), index.getString(13)));
+			team.newPair(new Debater(index.getString(3), index.getString(4), index.getString(5), index.getString(6), getSchool(sql, index.getInt(7))), new Debater(index.getString(9), index.getString(10), index.getString(11), index.getString(12), getSchool(sql, index.getInt(13))));
 			team.getLeft().setID(index.getInt(2));
 			team.getRight().setID(index.getInt(8));
 			team.setID(index.getInt(1));
 			index.close();
 		}
+	}
+
+	public static School getSchool(SQLHelper sql, Integer id) throws SQLException {
+		if(id == null)
+			throw new NullPointerException();
+		ResultSet set = sql.executeQueryPreparedStatement("SELECT * FROM schools WHERE id = ?", id);
+		if(set.next()) {
+			School school = new School();
+			school.setID(set.getInt(1));
+			school.name = set.getString(2);
+			school.clean = set.getString(3);
+			school.link = set.getString(4);
+			school.address = set.getString(5);
+			school.state = set.getString(6);
+			return school;
+		}
+		return null;
 	}
 	
 	public static Round getBracketRound(Document doc, int col) {
