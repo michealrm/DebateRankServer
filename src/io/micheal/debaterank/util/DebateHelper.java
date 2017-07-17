@@ -69,12 +69,18 @@ public class DebateHelper {
 	 * @return All debaters within the database
 	 * @throws SQLException
 	 */
-	public static ArrayList<Debater> getDebaters(SQLHelper sql) throws SQLException {
-		ResultSet debatersSet = sql.executeQuery("SELECT id, first, middle, last, surname, school FROM debaters"); // TODO: Change this back to school
+	public static ArrayList<Debater> getDebaters(SQLHelper sql) throws SQLException { // QA tested
+		ResultSet debatersSet = sql.executeQuery("SELECT d.id, first, middle, last, surname, s.name, s.clean, s.nsda_link, s.address, s.state FROM debaters d JOIN schools AS s ON s.id=d.school"); // TODO: Change this back to school
 		ArrayList<Debater> debaters = new ArrayList<Debater>();
 		while(debatersSet.next()) {
 			try {
-				Debater debater = new Debater(debatersSet.getString(2), debatersSet.getString(3), debatersSet.getString(4), debatersSet.getString(5), getSchool(sql, debatersSet.getInt(6)));
+				School school = new School();
+				school.name = debatersSet.getString(6);
+				school.clean = debatersSet.getString(7);
+				school.link = debatersSet.getString(8);
+				school.address = debatersSet.getString(9);
+				school.state = debatersSet.getString(10);
+				Debater debater = new Debater(debatersSet.getString(2), debatersSet.getString(3), debatersSet.getString(4), debatersSet.getString(5), school);
 				debater.setID(debatersSet.getInt(1));
 				debaters.add(debater);
 			} catch (SQLException e) {}
@@ -101,8 +107,8 @@ public class DebateHelper {
 		teamsSet.close();
 		return teams;
 	}
-	public static Team getTeamFromLastName(SQLHelper sql, String last1, String last2, String school) throws SQLException {
-		ResultSet index = sql.executeQueryPreparedStatement("SELECT team.id, o.id, o.first, o.middle, o.last, o.surname, o.school, t.id, t.first, t.middle, t.last, t.surname, t.school FROM teams team JOIN debaters AS o ON o.id=team.debater1 JOIN debaters AS t ON t.id=team.debater2 WHERE (o.last_clean<=>? OR t.last_clean<=>?) AND (o.last_clean<=>? OR t.last_clean<=>?)", cleanString(last1), cleanString(last2), cleanString(last1), cleanString(last2));
+	public static Team getTeamFromLastName(SQLHelper sql, String last1, String last2, String school) throws SQLException { // QA tested
+		ResultSet index = sql.executeQueryPreparedStatement("SELECT team.id, o.id, o.first, o.middle, o.last, o.surname, o.school, t.id, t.first, t.middle, t.last, t.surname, t.school FROM teams team JOIN debaters AS o ON o.id=team.debater1 JOIN debaters AS t ON t.id=team.debater2 WHERE (o.last_clean<=>? AND t.last_clean<=>?) OR (t.last_clean<=>? AND o.last_clean<=>?)", cleanString(last1), cleanString(last2), cleanString(last1), cleanString(last2));
 		if(index.next()) {
 			do {
 				Debater debater = new Debater(index.getString(3), index.getString(4), index.getString(5), index.getString(6), school);
@@ -171,8 +177,9 @@ public class DebateHelper {
 	}
 
 	public static School getSchool(SQLHelper sql, Integer id) throws SQLException {
+		School emptySchool = new School();
 		if(id == null)
-			throw new NullPointerException();
+			return emptySchool;
 		ResultSet set = sql.executeQueryPreparedStatement("SELECT * FROM schools WHERE id = ?", id);
 		if(set.next()) {
 			School school = new School();
@@ -184,7 +191,7 @@ public class DebateHelper {
 			school.state = set.getString(6);
 			return school;
 		}
-		return null;
+		return emptySchool;
 	}
 	
 	public static Round getBracketRound(Document doc, int col) {

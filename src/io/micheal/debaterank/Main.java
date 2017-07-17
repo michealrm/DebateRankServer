@@ -63,7 +63,7 @@ public class Main {
 			ResultSet set = sql.executeQuery("SELECT old_first, old_middle, old_last, old_surname, old_school, first, middle, last, surname, school, `to` FROM pointers p JOIN debaters AS d ON d.id=p.to");
 			while(set.next()) {
 				Debater one = new Debater(set.getString(1), set.getString(2), set.getString(3), set.getString(4), set.getString(5));
-				Debater two = new Debater(set.getString(6), set.getString(7), set.getString(8), set.getString(9), set.getString(10));
+				Debater two = new Debater(set.getString(6), set.getString(7), set.getString(8), set.getString(9), DebateHelper.getSchool(sql, set.getInt(10)));
 				two.setID(set.getInt(11));
 				pointers.put(one, two);
 			}
@@ -78,36 +78,6 @@ public class Main {
 			// TODO: Change to next update time
 			// TODO: Check if thread pool = 0
 
-			try {
-				ArrayList<Debater> debaters = DebateHelper.getDebaters(sql);
-				ArrayList<School> schools = DebateHelper.getSchools(sql);
-				HashMap<String, School> schoolsHM = new HashMap<>();
-				for(School school : schools)
-					schoolsHM.put(SQLHelper.cleanString(school.name), school);
-				String query = "INSERT INTO debaters (school, id) VALUES ";
-				ArrayList<Object> args = new ArrayList<Object>();
-				for(Debater debater : debaters) {
-					Integer id = new Integer(-1);
-					if(debater.getSchool().name != null) {
-						School school = schoolsHM.get(SQLHelper.cleanString(debater.getSchool().name));
-						if(school != null)
-							id = school.getID(sql);
-					}
-					if(id == -1)
-						id = debater.getSchool().getID(sql);
-					else
-						debater.getSchool().setID(id);
-					query += "(?, ?), ";
-					args.add(id);
-					args.add(debater.getID(sql));
-				}
-				query = query.substring(0, query.lastIndexOf(", "));
-				query += " ON DUPLICATE KEY UPDATE school=VALUES(school),id=VALUES(id)";
-				sql.executePreparedStatementArgs(query, args.toArray());
-			} catch(SQLException sqle) {
-				sqle.printStackTrace();
-			}
-System.exit(0);
 //			// TEMP CALCULATIONS
 //
 //			try {
@@ -383,7 +353,41 @@ System.exit(0);
 				}
 			} while(moduleManager.getActiveCount() != 0 || workerManager.getActiveCount() != 0);
 
-			// Update debaters' states
+			// Update debaters' schools //
+
+			log.info("Updating debaters' schools");
+			try {
+				ArrayList<Debater> debaters = DebateHelper.getDebaters(sql);
+				ArrayList<School> schools = DebateHelper.getSchools(sql);
+				HashMap<String, School> schoolsHM = new HashMap<>();
+				for(School school : schools)
+					schoolsHM.put(SQLHelper.cleanString(school.name), school);
+				String query = "INSERT INTO debaters (school, id) VALUES ";
+				ArrayList<Object> args = new ArrayList<Object>();
+				for(Debater debater : debaters) {
+					Integer id = new Integer(-1);
+					if(debater.getSchool().name != null) {
+						School school = schoolsHM.get(SQLHelper.cleanString(debater.getSchool().name));
+						if(school != null)
+							id = school.getID(sql);
+					}
+					if(id == -1)
+						id = debater.getSchool().getID(sql);
+					else
+						debater.getSchool().setID(id);
+					query += "(?, ?), ";
+					args.add(id);
+					args.add(debater.getID(sql));
+				}
+				query = query.substring(0, query.lastIndexOf(", "));
+				query += " ON DUPLICATE KEY UPDATE school=VALUES(school),id=VALUES(id)";
+				sql.executePreparedStatementArgs(query, args.toArray());
+			} catch(SQLException sqle) {
+				sqle.printStackTrace();
+			}
+			log.info("Updated debaters' schools.");
+
+			// Update debaters' states //
 
 			// Debaters //
 

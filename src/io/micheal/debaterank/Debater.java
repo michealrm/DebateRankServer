@@ -2,6 +2,7 @@ package io.micheal.debaterank;
 
 import com.sun.istack.internal.NotNull;
 import io.micheal.debaterank.util.SQLHelper;
+import org.apache.commons.lang.ObjectUtils;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -93,7 +94,7 @@ public class Debater implements IDClass {
 		changeInfoIfMatchesPointer();
 	}
 
-	public Debater(String first, String middle, String last, String surname, String school) {
+	public Debater(String first, String middle, String last, String surname, String school) throws NullPointerException {
 		this.first = first;
 		this.middle = middle;
 		this.last = last;
@@ -167,7 +168,6 @@ public class Debater implements IDClass {
 				return false;
 			else
 				replaceThis = true;
-			
 		}
 		else if(this.school == null && this.school.name == null && school.name != null)
 			replaceThis = true;
