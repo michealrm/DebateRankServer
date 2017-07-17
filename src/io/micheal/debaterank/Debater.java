@@ -1,5 +1,6 @@
 package io.micheal.debaterank;
 
+import com.sun.istack.internal.NotNull;
 import io.micheal.debaterank.util.SQLHelper;
 
 import java.sql.ResultSet;
@@ -11,26 +12,62 @@ import java.util.Map;
 import static io.micheal.debaterank.util.DebateHelper.insertDebater;
 import static io.micheal.debaterank.util.SQLHelper.cleanString;
 
-public class Debater {
+public class Debater implements IDClass {
 
-	private String first, middle, last, surname, school, state;
+	private String first, middle, last, surname, state;
+	@NotNull
+	private School school;
 	private String year; // Format: FR (Freshman), SM (Sophomore), JR (Junior), SR (Senior), Year (Grad Year)
 	private Integer id;
-	
+
 	public Debater(String name, String school){
 		this(name, school, null);
 	}
-	
+
+	public Debater(String name, School school) {
+		name = name.trim().replaceAll(" \\(.+?\\)", "");
+		state = school.state;
+		this.school = school;
+		String[] blocks = name.split(" ");
+		if(blocks.length == 0)
+			first = "";
+		else
+			first = blocks[0];
+		if(blocks.length == 2)
+			last = blocks[1];
+		else if(blocks.length == 3) {
+			if(blocks[2].endsWith(".") || blocks[2].length() == 2 || blocks[2].matches("III|IV|V|VI|VII|VIII|IX|X|Junior")) {
+				last = blocks[1];
+				surname = blocks[2];
+			}
+			else {
+				middle = blocks[1];
+				last = blocks[2];
+			}
+		}
+		else if(blocks.length >= 4) {
+			middle = blocks[1];
+			last = blocks[2];
+			surname = blocks[3];
+		}
+		changeInfoIfMatchesPointer();
+	}
+
 	public Debater(String name, String school, String state) {
 		name = name.trim().replaceAll(" \\(.+?\\)", "");
 		if(state != null)
 			this.state = state.trim();
 		else
 			this.state = null;
-		if(school != null)
-			this.school = school.trim();
-		else
-			this.school = school;
+		School oSchool = new School();
+		if(school != null) {
+			oSchool.name = school.trim().equals(" ") ? null : school.trim();
+			this.school = oSchool;
+		}
+		else {
+			oSchool.name = null;
+			this.school = oSchool;
+		}
 		String[] blocks = name.split(" ");
 		if(blocks.length == 0)
 			first = "";
@@ -61,10 +98,24 @@ public class Debater {
 		this.middle = middle;
 		this.last = last;
 		this.surname = surname;
-		if(school != null)
-			this.school = school.trim();
-		else
-			this.school = school;
+		School oSchool = new School();
+		if(school != null) {
+			oSchool.name = school.trim().equals(" ") ? null : school.trim();
+			this.school = oSchool;
+		}
+		else {
+			oSchool.name = null;
+			this.school = oSchool;
+		}
+		changeInfoIfMatchesPointer();
+	}
+
+	public Debater(String first, String middle, String last, String surname, School school) {
+		this.first = first;
+		this.middle = middle;
+		this.last = last;
+		this.surname = surname;
+		this.school = school;
 		changeInfoIfMatchesPointer();
 	}
 	
@@ -102,14 +153,14 @@ public class Debater {
 		boolean replaceThis = false;
 		String first = debater.getFirst();
 		String last = debater.getLast();
-		String school = debater.getSchool();
-		if(school != null && this.school != null) {
+		School school = debater.getSchool();
+		if(school.name != null && this.school.name != null) {
 			
-			ArrayList<String> compare = new ArrayList<String>(Arrays.asList(SQLHelper.cleanString(this.school).split(" ")));
-			ArrayList<String> against = new ArrayList<String>(Arrays.asList(SQLHelper.cleanString(school).split(" ")));
-			if(SQLHelper.cleanString(this.school).split(" ").length < SQLHelper.cleanString(school).split(" ").length) {
-				compare = new ArrayList<String>(Arrays.asList(SQLHelper.cleanString(school).split(" ")));
-				against = new ArrayList<String>(Arrays.asList(SQLHelper.cleanString(this.school).split(" ")));
+			ArrayList<String> compare = new ArrayList<String>(Arrays.asList(SQLHelper.cleanString(this.school.name).split(" ")));
+			ArrayList<String> against = new ArrayList<String>(Arrays.asList(SQLHelper.cleanString(school.name).split(" ")));
+			if(SQLHelper.cleanString(this.school.name).split(" ").length < SQLHelper.cleanString(school.name).split(" ").length) {
+				compare = new ArrayList<String>(Arrays.asList(SQLHelper.cleanString(school.name).split(" ")));
+				against = new ArrayList<String>(Arrays.asList(SQLHelper.cleanString(this.school.name).split(" ")));
 			}
 			
 			if(!compare.containsAll(against))
@@ -118,7 +169,7 @@ public class Debater {
 				replaceThis = true;
 			
 		}
-		else if(this.school == null && school != null)
+		else if(this.school == null && this.school.name == null && school.name != null)
 			replaceThis = true;
 		if(((first == null && this.first == null) || (this.first != null && SQLHelper.cleanString(this.first).equals(SQLHelper.cleanString(first)))) &&
 				(((this.last == null || last == null) || (this.last != null && SQLHelper.cleanString(this.last).equals(SQLHelper.cleanString(last)))))) {
@@ -180,7 +231,7 @@ public class Debater {
 		return surname;
 	}
 
-	public String getSchool() {
+	public School getSchool() {
 		return school;
 	}
 	
@@ -188,7 +239,7 @@ public class Debater {
 		return state;
 	}
 	
-	public void setID(int id) {
+	public void setID(Integer id) {
 		this.id = id;
 	}
 
@@ -229,8 +280,8 @@ public class Debater {
 			str += " " + last;
 		if(surname != null)
 			str += " " + surname;
-		if(school != null)
-			str += " (" + school + ")";
+		if(school.name != null)
+			str += " (" + school.name + ")";
 		return str;
 	}
 	

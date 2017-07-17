@@ -32,8 +32,8 @@ public class Schools extends Module {
 			ArrayList<Debater> debaters = DebateHelper.getDebaters(sql);
 			HashSet<String> schoolNames = new HashSet<String>();
 			for(Debater debater : debaters)
-				if(debater.getSchool() != null && !schoolNames.contains(debater.getSchool() + " | " + debater.getSchool().replaceAll("[,'\".]", "")))
-					schoolNames.add(debater.getSchool() + "|" + debater.getSchool().replaceAll("[,'\".]", ""));
+				if(debater.getSchool().name != null && !schoolNames.contains(debater.getSchool().name + " | " + debater.getSchool().name.replaceAll("[,'\".]", "")))
+					schoolNames.add(debater.getSchool().name + "|" + debater.getSchool().name.replaceAll("[,'\".]", ""));
 			for(String str : schoolNames) {
 				manager.newModule(new Runnable() {
 					public void run() {

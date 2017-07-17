@@ -25,6 +25,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 
 public class Main {
 
@@ -77,6 +78,36 @@ public class Main {
 			// TODO: Change to next update time
 			// TODO: Check if thread pool = 0
 
+			try {
+				ArrayList<Debater> debaters = DebateHelper.getDebaters(sql);
+				ArrayList<School> schools = DebateHelper.getSchools(sql);
+				HashMap<String, School> schoolsHM = new HashMap<>();
+				for(School school : schools)
+					schoolsHM.put(SQLHelper.cleanString(school.name), school);
+				String query = "INSERT INTO debaters (school, id) VALUES ";
+				ArrayList<Object> args = new ArrayList<Object>();
+				for(Debater debater : debaters) {
+					Integer id = new Integer(-1);
+					if(debater.getSchool().name != null) {
+						School school = schoolsHM.get(SQLHelper.cleanString(debater.getSchool().name));
+						if(school != null)
+							id = school.getID(sql);
+					}
+					if(id == -1)
+						id = debater.getSchool().getID(sql);
+					else
+						debater.getSchool().setID(id);
+					query += "(?, ?), ";
+					args.add(id);
+					args.add(debater.getID(sql));
+				}
+				query = query.substring(0, query.lastIndexOf(", "));
+				query += " ON DUPLICATE KEY UPDATE school=VALUES(school),id=VALUES(id)";
+				sql.executePreparedStatementArgs(query, args.toArray());
+			} catch(SQLException sqle) {
+				sqle.printStackTrace();
+			}
+System.exit(0);
 //			// TEMP CALCULATIONS
 //
 //			try {

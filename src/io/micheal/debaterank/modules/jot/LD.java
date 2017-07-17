@@ -274,7 +274,7 @@ public class LD extends Module {
 										if(last == Round.FINALS) {
 											Element element = doc.select("table[cellspacing=0] > tbody > tr > td.top:eq(" + i + ")").first();
 											Element debater = element.parent().previousElementSibling().select("td:eq(" + i + ")").first();
-											currentMatchup.add(Pair.of(new Debater(debater.text().substring(debater.text().indexOf(' ') + 1), null), null));
+											currentMatchup.add(Pair.of(new Debater(debater.text().substring(debater.text().indexOf(' ') + 1), (String)null), null));
 										}
 										else {
 											// Add all debaters to an arraylist of pairs
