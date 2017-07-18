@@ -43,7 +43,7 @@ public class DebateHelper {
 	}
 
 	/**
-	 * @return All debaters within the database
+	 * @return All schools within the database
 	 * @throws SQLException
 	 */
 	public static ArrayList<School> getSchools(SQLHelper sql) throws SQLException {
@@ -63,6 +63,44 @@ public class DebateHelper {
 		}
 		schoolsSet.close();
 		return schools;
+	}
+
+	/**
+	 * @return All judges within the database
+	 * @throws SQLException
+	 */
+	/*public static ArrayList<Judge> getJudges(SQLHelper sql) throws SQLException {
+		ResultSet judgesSet = sql.executeQuery("SELECT j.id, first, middle, last, surname, s.name, s.clean, s.nsda_link, s.address, s.state FROM judges j JOIN schools AS s ON s.id=j.school"); // TODO: Change this back to school
+		ArrayList<Judge> judges = new ArrayList<Judge>();
+		while(judgesSet.next()) {
+			try {
+				School school = new School();
+				school.name = judgesSet.getString(6);
+				school.clean = judgesSet.getString(7);
+				school.link = judgesSet.getString(8);
+				school.address = judgesSet.getString(9);
+				school.state = judgesSet.getString(10);
+				Judge judge = new Judge(judgesSet.getString(2), judgesSet.getString(3), judgesSet.getString(4), judgesSet.getString(5), school);
+				judge.setID(judgesSet.getInt(1));
+				judges.add(judge);
+			} catch (SQLException e) {}
+		}
+		judgesSet.close();
+		return judges;
+	}*/
+
+	public static ArrayList<Judge> getJudges(SQLHelper sql) throws SQLException {
+		ResultSet judgesSet = sql.executeQuery("SELECT id, first, middle, last, surname, school_old FROM judges"); // TODO: Change this back to school
+		ArrayList<Judge> judges = new ArrayList<Judge>();
+		while(judgesSet.next()) {
+			try {
+				Judge judge = new Judge(judgesSet.getString(2), judgesSet.getString(3), judgesSet.getString(4), judgesSet.getString(5), judgesSet.getString(6));
+				judge.setID(judgesSet.getInt(1));
+				judges.add(judge);
+			} catch (SQLException e) {}
+		}
+		judgesSet.close();
+		return judges;
 	}
 
 	/**
@@ -135,7 +173,7 @@ public class DebateHelper {
 	 * @throws SQLException
 	 */
 	public static int insertDebater(SQLHelper sql, Debater debater) throws SQLException {
-		return sql.executePreparedStatementArgs("INSERT INTO debaters (first, middle, last, surname, school, first_clean, middle_clean, last_clean, surname_clean, school_clean, state, year) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", debater.getFirst(), debater.getMiddle(), debater.getLast(), debater.getSurname(), debater.getSchool(), cleanString(debater.getFirst()), cleanString(debater.getMiddle()), cleanString(debater.getLast()), cleanString(debater.getSurname()), cleanString(debater.getSchool().name), debater.getState(), debater.getYear());
+		return sql.executePreparedStatementArgs("INSERT INTO debaters (first, middle, last, surname, school, first_clean, middle_clean, last_clean, surname_clean, school_clean, state, year) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", debater.getFirst(), debater.getMiddle(), debater.getLast(), debater.getSurname(), debater.getSchool().getID(sql), cleanString(debater.getFirst()), cleanString(debater.getMiddle()), cleanString(debater.getLast()), cleanString(debater.getSurname()), cleanString(debater.getSchool().name), debater.getState(), debater.getYear());
 	}
 
 	/**

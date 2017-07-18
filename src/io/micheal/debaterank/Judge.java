@@ -16,6 +16,9 @@ public class Judge extends Debater {
 	public Judge(String first, String middle, String last, String surname, String school) {
 		super(first, middle, last, surname, school);
 	}
+	public Judge(String first, String middle, String last, String surname, School school) {
+		super(first, middle, last, surname, school);
+	}
 
 	@Override
 	public Integer getID(SQLHelper sql) throws SQLException {

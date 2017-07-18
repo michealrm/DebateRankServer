@@ -6,6 +6,7 @@ import io.micheal.debaterank.modules.WorkerPool;
 import io.micheal.debaterank.modules.WorkerPoolManager;
 import io.micheal.debaterank.modules.nsda.Schools;
 import io.micheal.debaterank.util.DebateHelper;
+import io.micheal.debaterank.util.FileHelper;
 import io.micheal.debaterank.util.SQLHelper;
 import org.apache.commons.configuration2.Configuration;
 import org.apache.commons.configuration2.builder.fluent.Configurations;
@@ -34,7 +35,28 @@ public class Main {
 	private SQLHelper sql;
 	private Configuration config;
 	public static HashMap<Debater, Debater> pointers; // From, To
-	
+	private static ArrayList<Debater> debaters;
+	private static ArrayList<School> schools;
+	private static ArrayList<Judge> judges;
+
+	public static ArrayList<Debater> getDebaters(SQLHelper sql) throws SQLException {
+		if(debaters == null)
+			debaters = DebateHelper.getDebaters(sql);
+		return debaters;
+	}
+
+	public static ArrayList<School> getSchools(SQLHelper sql) throws SQLException {
+		if(schools == null)
+			schools = DebateHelper.getSchools(sql);
+		return schools;
+	}
+
+	public static ArrayList<Judge> getJudges(SQLHelper sql) throws SQLException {
+		if(judges == null)
+			judges = DebateHelper.getJudges(sql);
+		return judges;
+	}
+
 	public static void main(String[] args) {
 		new Main().run();
 	}
@@ -307,23 +329,23 @@ public class Main {
 			// Schools //
 			/////////////
 
-//			try {
-//				ArrayList<Debater> debaters = DebateHelper.getDebaters(sql);
-//				String query = "INSERT IGNORE INTO schools (name, clean) VALUES ";
-//				ArrayList<Object> args = new ArrayList<Object>();
-//				for(Debater debater : debaters) {
-//					query += "(?, ?), ";
-//					args.add(debater.getSchool());
-//					args.add(SQLHelper.cleanString(debater.getSchool()));
-//				}
-//				if (!query.equals("INSERT IGNORE INTO schools (name, clean) VALUES ")) {
-//					query = query.substring(0, query.lastIndexOf(", "));
-//					sql.executePreparedStatement(query, args.toArray());
-//					log.info("Schools inserted into database.");
-//				}
-//			} catch(SQLException sqle) {
-//				log.error("Couldn't update schools: " + sqle);
-//			}
+			try {
+				ArrayList<Debater> debaters = Main.getDebaters(sql);
+				String query = "INSERT IGNORE INTO schools (name, clean) VALUES ";
+				ArrayList<Object> args = new ArrayList<Object>();
+				for(Debater debater : debaters) {
+					query += "(?, ?), ";
+					args.add(debater.getSchool().name);
+					args.add(SQLHelper.cleanString(debater.getSchool().name));
+				}
+				if (!query.equals("INSERT IGNORE INTO schools (name, clean) VALUES ")) {
+					query = query.substring(0, query.lastIndexOf(", "));
+					sql.executePreparedStatement(query, args.toArray());
+					log.info("Schools inserted into database.");
+				}
+			} catch(SQLException sqle) {
+				log.error("Couldn't update schools: " + sqle);
+			}
 
 			//////////
 			// NSDA //
@@ -334,9 +356,9 @@ public class Main {
 
 			// Schools //
 
-			WorkerPool schoolsPool = new WorkerPool();
-			workerManager.add(schoolsPool);
-			moduleManager.newModule(new Schools(sql, log, schoolsPool));
+			//WorkerPool schoolsPool = new WorkerPool();
+			//workerManager.add(schoolsPool);
+			//moduleManager.newModule(new Schools(sql, log, schoolsPool));
 
 			// Execute //
 
@@ -353,18 +375,19 @@ public class Main {
 				}
 			} while(moduleManager.getActiveCount() != 0 || workerManager.getActiveCount() != 0);
 
+			// Geocoding //
+
 			// Update debaters' schools //
 
 			log.info("Updating debaters' schools");
 			try {
-				ArrayList<Debater> debaters = DebateHelper.getDebaters(sql);
-				ArrayList<School> schools = DebateHelper.getSchools(sql);
+				ArrayList<School> schools = Main.getSchools(sql);
 				HashMap<String, School> schoolsHM = new HashMap<>();
 				for(School school : schools)
 					schoolsHM.put(SQLHelper.cleanString(school.name), school);
 				String query = "INSERT INTO debaters (school, id) VALUES ";
 				ArrayList<Object> args = new ArrayList<Object>();
-				for(Debater debater : debaters) {
+				for(Debater debater : Main.getDebaters(sql)) {
 					Integer id = new Integer(-1);
 					if(debater.getSchool().name != null) {
 						School school = schoolsHM.get(SQLHelper.cleanString(debater.getSchool().name));
@@ -378,6 +401,39 @@ public class Main {
 					query += "(?, ?), ";
 					args.add(id);
 					args.add(debater.getID(sql));
+				}
+				query = query.substring(0, query.lastIndexOf(", "));
+				query += " ON DUPLICATE KEY UPDATE school=VALUES(school),id=VALUES(id)";
+				sql.executePreparedStatementArgs(query, args.toArray());
+			} catch(SQLException sqle) {
+				sqle.printStackTrace();
+			}
+			log.info("Updated debaters' schools.");
+
+			// Update judges' schools //
+
+			log.info("Updating judges' schools");
+			try {
+				ArrayList<School> schools = Main.getSchools(sql);
+				HashMap<String, School> schoolsHM = new HashMap<>();
+				for(School school : schools)
+					schoolsHM.put(SQLHelper.cleanString(school.name), school);
+				String query = "INSERT INTO judges (school, id) VALUES ";
+				ArrayList<Object> args = new ArrayList<Object>();
+				for(Judge judge : Main.getJudges(sql)) {
+					Integer id = new Integer(-1);
+					if(judge.getSchool().name != null) {
+						School school = schoolsHM.get(SQLHelper.cleanString(judge.getSchool().name));
+						if(school != null)
+							id = school.getID(sql);
+					}
+					if(id == -1)
+						id = judge.getSchool().getID(sql);
+					else
+						judge.getSchool().setID(id);
+					query += "(?, ?), ";
+					args.add(id);
+					args.add(judge.getID(sql));
 				}
 				query = query.substring(0, query.lastIndexOf(", "));
 				query += " ON DUPLICATE KEY UPDATE school=VALUES(school),id=VALUES(id)";
@@ -478,7 +534,7 @@ public class Main {
 //
 //				// Sort by ratings
 //				Collections.sort(debaters, new RatingsComparator());
-//				ArrayList<Debater> debatersList = DebateHelper.getDebaters(sql);
+//				ArrayList<Debater> debatersList = Main.getDebaters(sql);
 //				for(int i = 1;i<=debaters.size();i++) {
 //					Debater debater = null;
 //					for(Debater d : debatersList)
