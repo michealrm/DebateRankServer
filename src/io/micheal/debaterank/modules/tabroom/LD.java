@@ -4,7 +4,6 @@ import static io.micheal.debaterank.util.DebateHelper.TABROOM;
 
 import java.io.*;
 import java.net.URL;
-import java.net.URLConnection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -19,17 +18,12 @@ import javax.xml.parsers.*;
 import javax.xml.stream.XMLStreamException;
 
 import io.micheal.debaterank.*;
-import io.micheal.debaterank.util.FileHelper;
 import org.apache.commons.configuration2.Configuration;
 import org.apache.commons.configuration2.builder.fluent.Configurations;
 import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.logging.log4j.Logger;
-import org.w3c.dom.Document;
-import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
 import org.xml.sax.Attributes;
-import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 import org.xml.sax.SAXParseException;
 import org.xml.sax.helpers.DefaultHandler;

@@ -4,9 +4,7 @@ import io.micheal.debaterank.modules.ModuleManager;
 import io.micheal.debaterank.modules.PoolSizeException;
 import io.micheal.debaterank.modules.WorkerPool;
 import io.micheal.debaterank.modules.WorkerPoolManager;
-import io.micheal.debaterank.modules.nsda.Schools;
 import io.micheal.debaterank.util.DebateHelper;
-import io.micheal.debaterank.util.FileHelper;
 import io.micheal.debaterank.util.SQLHelper;
 import org.apache.commons.configuration2.Configuration;
 import org.apache.commons.configuration2.builder.fluent.Configurations;
@@ -19,14 +17,11 @@ import org.jsoup.select.Elements;
 
 import java.io.File;
 import java.io.IOException;
-import java.net.SocketTimeoutException;
-import java.net.URL;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 
 public class Main {
 
