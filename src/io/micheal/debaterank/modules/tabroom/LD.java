@@ -18,14 +18,13 @@ import javax.xml.parsers.*;
 import javax.xml.stream.XMLStreamException;
 
 import io.micheal.debaterank.*;
+import io.micheal.debaterank.util.TournamentRunnable;
 import org.apache.commons.configuration2.Configuration;
 import org.apache.commons.configuration2.builder.fluent.Configurations;
 import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.logging.log4j.Logger;
-import org.xml.sax.Attributes;
-import org.xml.sax.SAXException;
-import org.xml.sax.SAXParseException;
+import org.xml.sax.*;
 import org.xml.sax.helpers.DefaultHandler;
 
 import io.micheal.debaterank.modules.Module;
@@ -38,11 +37,13 @@ public class LD extends Module {
 	private ArrayList<Tournament> tournaments;
 	private WorkerPool manager;
 	private final boolean overwrite;
+	private ArrayList<TournamentRunnable> runnables;
 
 	public LD(SQLHelper sql, Logger log, ArrayList<Tournament> tournaments, WorkerPool manager) {
 		super(sql, log);
 		this.tournaments = tournaments;
 		this.manager = manager;
+		runnables = new ArrayList<>();
 
 		Configuration config;
 		boolean temp;
@@ -137,7 +138,6 @@ public class LD extends Module {
 									bevent = false;
 									if (eventname.matches("^.*(LD|Lincoln|L-D).*$") && tourn_id == tid) {
 
-										try {
 												log.log(TABROOM, "Queuing " + t.getName() + ". Tournament ID: " + tourn_id + " Event ID: " + event_id);
 //												getTournamentRoundEntries.add(new Runnable() {
 //													
@@ -152,9 +152,14 @@ public class LD extends Module {
 //													}
 //												});
 
-											enterTournament(t, factory, tourn_id, event_id);
-
-										} catch(Exception e) {e.printStackTrace();}
+											runnables.add(new TournamentRunnable(saxParser, tourn_id, event_id) {
+												@Override
+												public void run() {
+													try{
+														enterTournament(t, saxParser, tourn, event);
+													} catch(Exception e) {e.printStackTrace();}
+												}
+											});
 									}
 								}
 							}
@@ -194,17 +199,18 @@ public class LD extends Module {
 			running = manager.getActiveCount() != 0;
 		}
 
+		for(TournamentRunnable runnable : runnables)
+			manager.newModule(runnable);
+
 		System.out.println("Done");
 
 	}
 
 	private ThreadLocal<Integer> size = new ThreadLocal<Integer>(); // for getTournamentRoundEntries
 
-	private int getTournamentRoundEntries(InputStream stream, int tourn_id, int event_id) throws XMLStreamException, IOException, ParserConfigurationException, SAXParseException, SAXException {
+	private synchronized int getTournamentRoundEntries(SAXParser saxParser, InputStream stream, int tourn_id, int event_id) throws XMLStreamException, IOException, ParserConfigurationException, SAXParseException, SAXException {
 		size.set(0);
 
-		SAXParserFactory factory = SAXParserFactory.newInstance();
-		SAXParser saxParser = factory.newSAXParser();
 		DefaultHandler resultHandler = new DefaultHandler() {
 
 			private boolean bballot_score, bscore_id;
@@ -242,7 +248,9 @@ public class LD extends Module {
 			}
 		};
 		try {
-			saxParser.parse(stream, resultHandler);
+			synchronized (saxParser) {
+				saxParser.parse(stream, resultHandler);
+			}
 		} catch(SAXParseException e) {
 			throw new SAXParseException(e.getMessage(), e.getPublicId(), e.getSystemId(), e.getLineNumber(), e.getColumnNumber());
 		}
@@ -251,7 +259,7 @@ public class LD extends Module {
 		return localSize;
 	}
 
-	private void enterTournament(Tournament t, SAXParserFactory factory, int tourn_id, int event_id) throws ParserConfigurationException,IOException, SAXException, XMLStreamException {
+	private void enterTournament(Tournament t, SAXParser saxParser, int tourn_id, int event_id) throws ParserConfigurationException,IOException, SAXException, XMLStreamException {
 
 
 		URL url = new URL("https://www.tabroom.com/api/tourn_published.mhtml?tourn_id=" + tourn_id + "&event_id=" + event_id);
@@ -268,7 +276,7 @@ public class LD extends Module {
 		InputStream stream = new ByteArrayInputStream(baos.toByteArray());
 
 		try {
-		if (getTournamentRoundEntries(stream, tourn_id, event_id) == 0)
+		if (getTournamentRoundEntries(saxParser, stream, tourn_id, event_id) == 0)
 			return;
 		} catch(SAXParseException e) {
 			throw new SAXParseException(e.getMessage(), e.getPublicId(), e.getSystemId(), e.getLineNumber(), e.getColumnNumber());
@@ -290,8 +298,6 @@ public class LD extends Module {
 			log.fatal("Could not update " + t.getName() + " - " + sqle.getErrorCode());
 			return;
 		}
-
-		SAXParser saxParser = factory.newSAXParser();
 
 		// Getting schools
 		HashMap<Integer, String> schools = new HashMap<Integer, String>();
@@ -398,7 +404,6 @@ public class LD extends Module {
 			}
 		};
 
-		saxParser = factory.newSAXParser();
 		stream = new ByteArrayInputStream(baos.toByteArray());
 		saxParser.parse(stream, competitorHandler);
 
@@ -446,7 +451,6 @@ public class LD extends Module {
 			}
 		};
 
-		saxParser = factory.newSAXParser();
 		stream = new ByteArrayInputStream(baos.toByteArray());
 		saxParser.parse(stream, entryHandler);
 
@@ -516,7 +520,6 @@ public class LD extends Module {
 			}
 		};
 
-		saxParser = factory.newSAXParser();
 		stream = new ByteArrayInputStream(baos.toByteArray());
 		saxParser.parse(stream, judgeHandler);
 
@@ -579,7 +582,6 @@ public class LD extends Module {
 			}
 		};
 
-		saxParser = factory.newSAXParser();
 		stream = new ByteArrayInputStream(baos.toByteArray());
 		saxParser.parse(stream, roundHandler);
 
@@ -642,7 +644,6 @@ public class LD extends Module {
 			}
 		};
 
-		saxParser = factory.newSAXParser();
 		stream = new ByteArrayInputStream(baos.toByteArray());
 		saxParser.parse(stream, panelHandler);
 
@@ -770,7 +771,6 @@ public class LD extends Module {
 			}
 		};
 
-		saxParser = factory.newSAXParser();
 		stream = new ByteArrayInputStream(baos.toByteArray());
 		saxParser.parse(stream, ballotHandler);
 
@@ -860,9 +860,10 @@ public class LD extends Module {
 			}
 		};
 
-		saxParser = factory.newSAXParser();
 		stream = new ByteArrayInputStream(baos.toByteArray());
 		saxParser.parse(stream, resultHandler);
+
+		System.out.println("made it");
 
 		HashMap<Integer, String> sqlRoundStrings = roundToSQLFriendlyRound(new ArrayList<Round>(rounds.values()));
 		String query = "INSERT INTO ld_rounds (tournament, absUrl, debater, against, round, side, decision) VALUES ";
