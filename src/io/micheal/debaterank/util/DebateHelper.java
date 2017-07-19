@@ -182,7 +182,7 @@ public class DebateHelper {
 	 * @throws SQLException
 	 */
 	public static int insertJudge(SQLHelper sql, Judge judge) throws SQLException {
-		return sql.executePreparedStatementArgs("INSERT INTO judges (first, middle, last, surname, school, first_clean, middle_clean, last_clean, surname_clean, school_clean) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", judge.getFirst(), judge.getMiddle(), judge.getLast(), judge.getSurname(), judge.getSchool().name, cleanString(judge.getFirst()), cleanString(judge.getMiddle()), cleanString(judge.getLast()), cleanString(judge.getSurname()), cleanString(judge.getSchool().name));
+		return sql.executePreparedStatementArgs("INSERT INTO judges (first, middle, last, surname, school, first_clean, middle_clean, last_clean, surname_clean, school_clean) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", judge.getFirst(), judge.getMiddle(), judge.getLast(), judge.getSurname(), judge.getSchool().getID(sql), cleanString(judge.getFirst()), cleanString(judge.getMiddle()), cleanString(judge.getLast()), cleanString(judge.getSurname()), cleanString(judge.getSchool().name));
 	}
 
 	/**
@@ -230,6 +230,17 @@ public class DebateHelper {
 			return school;
 		}
 		return emptySchool;
+	}
+
+	public static Debater getDebater(SQLHelper sql, Integer id) throws SQLException {
+		if(id == null)
+			return null;
+		ResultSet set = sql.executeQueryPreparedStatement("SELECT id, first, middle, last, surname, s.name FROM debaters d JOIN schools AS s ON s.id=d.school");
+		if(set.next()) {
+			Debater debater = new Debater(set.getString(2), set.getString(3), set.getString(4), set.getString(5), set.getString(6));
+			return debater;
+		}
+		return null;
 	}
 	
 	public static Round getBracketRound(Document doc, int col) {

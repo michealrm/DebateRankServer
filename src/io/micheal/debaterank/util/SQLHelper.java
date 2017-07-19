@@ -4,6 +4,8 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.sql.*;
+import java.util.ArrayList;
+import java.util.Arrays;
 
 public class SQLHelper {
 
@@ -72,7 +74,12 @@ public class SQLHelper {
 				ps.setNull(i+1, Types.NULL);
 		}
 		log.debug("Executing --> " + ps);
-		ps.executeUpdate();
+		try {
+			ps.executeUpdate();
+		} catch(SQLException e) {
+			System.out.println(ps);
+			e.printStackTrace();
+		}
 		ResultSet rs = ps.getGeneratedKeys();
         if(rs.next()) {
         	int ret = rs.getInt(1);

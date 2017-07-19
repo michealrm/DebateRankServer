@@ -24,7 +24,7 @@ public class Judge extends Debater {
 	public Integer getID(SQLHelper sql) throws SQLException {
 		if(getRawID() != null)
 			return getRawID();
-		ResultSet index = sql.executeQueryPreparedStatement("SELECT id, school FROM judges WHERE first_clean<=>? AND middle_clean<=>? AND last_clean<=>? AND surname_clean<=>?", cleanString(getFirst()), cleanString(getMiddle()), cleanString(getLast()), cleanString(getSurname()));
+		ResultSet index = sql.executeQueryPreparedStatement("SELECT debaters.id, s.name FROM debaters JOIN schools AS s ON debaters.school=s.id WHERE first_clean<=>? AND middle_clean<=>? AND last_clean<=>? AND surname_clean<=>?", cleanString(getFirst()), cleanString(getMiddle()), cleanString(getLast()), cleanString(getSurname()));
 		if(index.next()) {
 			do {
 				Judge clone = new Judge(getFirst(), getMiddle(), getLast(), getSurname(), index.getString(2));

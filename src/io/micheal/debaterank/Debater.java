@@ -250,7 +250,7 @@ public class Debater implements IDClass {
 	public Integer getID(SQLHelper sql) throws SQLException {
 		if(id != null)
 			return id;
-		ResultSet index = sql.executeQueryPreparedStatement("SELECT id, school FROM debaters WHERE first_clean<=>? AND middle_clean<=>? AND last_clean<=>? AND surname_clean<=>?", cleanString(first), cleanString(middle), cleanString(last), cleanString(surname));
+		ResultSet index = sql.executeQueryPreparedStatement("SELECT debaters.id, s.name FROM debaters JOIN schools AS s ON debaters.school=s.id WHERE first_clean<=>? AND middle_clean<=>? AND last_clean<=>? AND surname_clean<=>?", cleanString(first), cleanString(middle), cleanString(last), cleanString(surname));
 		if(index.next()) {
 			do {
 				Debater clone = new Debater(first, middle, last, surname, index.getString(2));
@@ -261,6 +261,20 @@ public class Debater implements IDClass {
 					return ret;
 				}
 			} while(index.next());
+		}
+		if(school.name == null) {
+			index = sql.executeQueryPreparedStatement("SELECT debaters.id, school FROM debaters WHERE first_clean<=>? AND middle_clean<=>? AND last_clean<=>? AND surname_clean<=>?", cleanString(first), cleanString(middle), cleanString(last), cleanString(surname));
+			if(index.next()) {
+				do {
+					Debater clone = new Debater(first, middle, last, surname, index.getString(2));
+					if(this.equals(clone)) {
+						int ret = index.getInt(1);
+						index.close();
+						id = ret;
+						return ret;
+					}
+				} while(index.next());
+			}
 		}
 		index.close();
 		id = insertDebater(sql, this);
