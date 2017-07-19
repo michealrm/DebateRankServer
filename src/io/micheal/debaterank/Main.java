@@ -436,7 +436,7 @@ public class Main {
 			} catch(SQLException sqle) {
 				sqle.printStackTrace();
 			}
-			log.info("Updated debaters' schools.");
+			log.info("Updated judges' schools.");
 
 			// Update debaters' states //
 
