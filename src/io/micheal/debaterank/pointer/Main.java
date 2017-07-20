@@ -5,6 +5,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Scanner;
 
+import io.micheal.debaterank.util.DataSource;
 import org.apache.commons.configuration2.Configuration;
 import org.apache.commons.configuration2.builder.fluent.Configurations;
 
@@ -15,7 +16,7 @@ import io.micheal.debaterank.util.SQLHelper;
 public class Main {
 
 	public static void main(String[] args) {
-		SQLHelper sql = null;
+		DataSource ds = null;
 		Configurations configs = new Configurations();
 		try
 		{
@@ -24,13 +25,20 @@ public class Main {
 		    String name = config.getString("db.name");
 		    String user = config.getString("db.username");
 		    String pass = config.getString("db.password");
-		    int port = config.getInt("db.port");
+			int port = config.getInt("db.port");
+			int pool = config.getInt("pool");
 
-			sql = new SQLHelper(host, port, name, user, pass);
+			ds = new DataSource("jdbc:mysql://" + host + ":" + port + "/" + name, user, pass, pool);
 		} catch (Exception e) {
 			System.exit(1);
 		}
-		
+		SQLHelper sql = null;
+		try {
+			sql = new SQLHelper(ds.getBds().getConnection());
+		} catch(Exception e) {
+			e.printStackTrace();
+			return;
+		}
 		Scanner in = new Scanner(System.in);
 		System.out.print("Enter debater id to pointer to: ");
 		int to = in.nextInt();
@@ -68,6 +76,11 @@ public class Main {
 			e.printStackTrace();
 		}
 		System.out.println("Done");
+		try {
+			sql.close();
+		} catch(SQLException e) {
+			e.printStackTrace();
+		}
 		in.close();
 	}
 	

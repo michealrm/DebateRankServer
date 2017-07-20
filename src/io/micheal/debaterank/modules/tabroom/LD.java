@@ -21,6 +21,7 @@ import javax.xml.parsers.*;
 import javax.xml.stream.XMLStreamException;
 
 import io.micheal.debaterank.*;
+import io.micheal.debaterank.util.DataSource;
 import io.micheal.debaterank.util.TournamentRunnable;
 import org.apache.commons.configuration2.Configuration;
 import org.apache.commons.configuration2.builder.fluent.Configurations;
@@ -44,8 +45,8 @@ public class LD extends Module {
 	private final boolean overwrite;
 	private ArrayList<TournamentRunnable> runnables;
 
-	public LD(SQLHelper sql, Logger log, ArrayList<Tournament> tournaments, WorkerPool manager) {
-		super(sql, log);
+	public LD(SQLHelper sql, Logger log, ArrayList<Tournament> tournaments, WorkerPool manager, DataSource ds) {
+		super(sql, log, ds);
 		this.tournaments = tournaments;
 		this.manager = manager;
 		runnables = new ArrayList<>();
@@ -66,20 +67,22 @@ public class LD extends Module {
 	public void run() {
 		for(Tournament t : tournaments) {
 			manager.newModule(new Runnable() {
+				SQLHelper sql;
 				public void run() {
 					try {
+						sql = new SQLHelper(ds.getBds().getConnection());
 
 						String tournIDStr = "";
-						int index = t.getLink().indexOf("tourn_id=") + 8;
+						int index = t.getLink().indexOf("tourn_id=") + 9;
 						while(index < t.getLink().length()) {
-							index++;
 							try {
 								Integer.parseInt(Character.toString(t.getLink().toCharArray()[index]));
 							}
-							catch(Exception e) {
+							catch(NumberFormatException e) {
 								break;
 							}
 							tournIDStr += Character.toString(t.getLink().toCharArray()[index]);
+							++index;
 						}
 
 						int tourn_id = Integer.parseInt(tournIDStr);
@@ -149,7 +152,7 @@ public class LD extends Module {
 											if(!set.next()) {
 												log.log(TABROOM, "Queuing " + t.getName() + ". Tournament ID: " + tourn_id + " Event ID: " + event_id);
 												try {
-													enterTournament(t, factory, tourn_id, event_id);
+													enterTournament(sql, t, factory, tourn_id, event_id);
 												} catch (Exception e) {
 													e.printStackTrace();
 												}
@@ -184,10 +187,23 @@ public class LD extends Module {
 
 						stream.close();
 						baos.close();
+						try {
+							sql.close();
+						} catch(SQLException sqle) {
+							log.error(sqle);
+							log.error("Could not close SQLHelper");
+						}
 
-					} catch(IOException ioe) {ioe.printStackTrace();}
-					catch (SAXException e) { e.printStackTrace();
-					} catch (ParserConfigurationException e) { e.printStackTrace();
+					} catch(Exception e) {
+						e.printStackTrace();
+						if(sql != null) {
+							try {
+								sql.close();
+							} catch(SQLException sqle) {
+								log.error(sqle);
+								log.error("Could not close SQLHelper");
+							}
+						}
 					}
 				}
 			});
@@ -197,6 +213,7 @@ public class LD extends Module {
 		while(running) {
 			try {
 				Thread.sleep(5000);
+				manager.notifyAll();
 			} catch(InterruptedException e) {
 				return;
 			}
@@ -258,7 +275,7 @@ public class LD extends Module {
 	private int counter = 0;
 	private int skipped = 0;
 	private int errors = 0;
-	private void enterTournament(Tournament t, SAXParserFactory factory, int tourn_id, int event_id) throws ParserConfigurationException,IOException, SAXException, XMLStreamException {
+	private void enterTournament(SQLHelper sql, Tournament t, SAXParserFactory factory, int tourn_id, int event_id) throws ParserConfigurationException,IOException, SAXException, XMLStreamException {
 		SAXParser saxParser = factory.newSAXParser();
         String endpoint = "https://www.tabroom.com/api/tourn_published.mhtml?tourn_id=" + tourn_id + "&event_id=" + event_id;
         BufferedInputStream iStream = null;

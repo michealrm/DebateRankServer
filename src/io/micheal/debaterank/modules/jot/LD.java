@@ -4,6 +4,7 @@ import io.micheal.debaterank.Debater;
 import io.micheal.debaterank.Tournament;
 import io.micheal.debaterank.modules.Module;
 import io.micheal.debaterank.modules.WorkerPool;
+import io.micheal.debaterank.util.DataSource;
 import io.micheal.debaterank.util.Round;
 import io.micheal.debaterank.util.SQLHelper;
 import org.apache.commons.configuration2.Configuration;
@@ -34,8 +35,8 @@ public class LD extends Module {
 	private WorkerPool manager;
 	private final boolean overwrite;
 	
-	public LD(ArrayList<Tournament> tournaments, SQLHelper sql, WorkerPool manager) {
-		super(sql, LogManager.getLogger(LD.class));
+	public LD(ArrayList<Tournament> tournaments, SQLHelper sql, WorkerPool manager, DataSource ds) {
+		super(sql, LogManager.getLogger(LD.class), ds);
 		this.tournaments = tournaments;
 		this.manager = manager;
 		

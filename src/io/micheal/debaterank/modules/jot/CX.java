@@ -5,6 +5,7 @@ import io.micheal.debaterank.Team;
 import io.micheal.debaterank.Tournament;
 import io.micheal.debaterank.modules.Module;
 import io.micheal.debaterank.modules.WorkerPool;
+import io.micheal.debaterank.util.DataSource;
 import io.micheal.debaterank.util.DebateHelper;
 import io.micheal.debaterank.util.Round;
 import io.micheal.debaterank.util.SQLHelper;
@@ -37,8 +38,8 @@ public class CX extends Module {
 	private WorkerPool manager;
 	private final boolean overwrite;
 	
-	public CX(ArrayList<Tournament> tournaments, SQLHelper sql, WorkerPool manager) {
-		super(sql, LogManager.getLogger(CX.class));
+	public CX(ArrayList<Tournament> tournaments, SQLHelper sql, WorkerPool manager, DataSource ds) {
+		super(sql, LogManager.getLogger(CX.class), ds);
 		this.tournaments = tournaments;
 		this.manager = manager;
 		

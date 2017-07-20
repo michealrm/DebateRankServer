@@ -31,7 +31,10 @@ public class WorkerPool {
 			newModule(r);
 		queue = new ArrayList<Runnable>();
 	}
-	
+
+	public void notifyAllThreads() {
+		executor.
+	}
 	public void shutdown() {
 		executor.shutdown();
 	}

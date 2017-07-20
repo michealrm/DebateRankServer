@@ -4,6 +4,7 @@ import io.micheal.debaterank.modules.ModuleManager;
 import io.micheal.debaterank.modules.PoolSizeException;
 import io.micheal.debaterank.modules.WorkerPool;
 import io.micheal.debaterank.modules.WorkerPoolManager;
+import io.micheal.debaterank.util.DataSource;
 import io.micheal.debaterank.util.DebateHelper;
 import io.micheal.debaterank.util.SQLHelper;
 import org.apache.commons.configuration2.Configuration;
@@ -17,6 +18,7 @@ import org.jsoup.select.Elements;
 
 import java.io.File;
 import java.io.IOException;
+import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -27,12 +29,13 @@ public class Main {
 
 	public Logger log;
 	public boolean active = true;
-	private SQLHelper sql;
+	private DataSource ds;
 	private Configuration config;
 	public static HashMap<Debater, Debater> pointers; // From, To
 	private static ArrayList<Debater> debaters;
 	private static ArrayList<School> schools;
 	private static ArrayList<Judge> judges;
+	private String url, username, password;
 
 	public static ArrayList<Debater> getDebaters(SQLHelper sql) throws SQLException {
 		if(debaters == null)
@@ -69,14 +72,16 @@ public class Main {
 		    String user = config.getString("db.username");
 		    String pass = config.getString("db.password");
 		    int port = config.getInt("db.port");
+			int pool = config.getInt("pool");
 
-			sql = new SQLHelper(host, port, name, user, pass);
+			ds = new DataSource("jdbc:mysql://" + host + ":" + port + "/" + name, user, pass, pool);
 		} catch (Exception e) {
 			log.error(e);
 			System.exit(1);
 		}
 		try {
 			pointers = new HashMap<Debater, Debater>();
+			SQLHelper sql = new SQLHelper(ds.getBds().getConnection());
 			ResultSet set = sql.executeQuery("SELECT old_first, old_middle, old_last, old_surname, old_school, first, middle, last, surname, school, `to` FROM pointers p JOIN debaters AS d ON d.id=p.to");
 			while(set.next()) {
 				Debater one = new Debater(set.getString(1), set.getString(2), set.getString(3), set.getString(4), set.getString(5));
@@ -84,16 +89,21 @@ public class Main {
 				two.setID(set.getInt(11));
 				pointers.put(one, two);
 			}
-		} catch (SQLException e) {}
+			sql.close();
+		} catch (SQLException | ClassNotFoundException e) {
+			e.printStackTrace();
+			log.error(e);
+			log.error("Could not load pointers");
+		}
 	}
 	
 	public void run() {
 
 		while(active) {
-
-			active = false;
-			// TODO: Change to next update time
-			// TODO: Check if thread pool = 0
+			try {
+				active = false;
+				// TODO: Change to next update time
+				// TODO: Check if thread pool = 0
 
 //			// TEMP CALCULATIONS
 //
@@ -120,109 +130,111 @@ public class Main {
 //
 //			} catch(SQLException e) {}
 
-			///////////////
-			// Variables //
-			///////////////
-			
-			ModuleManager moduleManager = new ModuleManager();
-			WorkerPoolManager workerManager = new WorkerPoolManager();
-			
-			/////////
-			// JOT //
-			/////////
-			
-			ArrayList<Tournament> jotTournaments = null;
-			try {
-				// Get seasons so we can iterate through all the jotTournaments
-				Document tlist = Jsoup.connect("http://www.joyoftournaments.com/results.asp").get();
-				ArrayList<String> years = new ArrayList<String>();
-				for(Element select : tlist.select("select"))
-					if(select.attr("name").equals("season"))
-						for(Element option : select.select("option"))
-							years.add(option.attr("value"));
+				///////////////
+				// Variables //
+				///////////////
 
-				// Get all the tournaments
-				jotTournaments = new ArrayList<Tournament>();
-				for(String year : years) {
-					Document tournamentDoc = Jsoup.connect("http://www.joyoftournaments.com/results.asp").timeout(10 * 1000)
-						.data("state","")
-						.data("month", "0")
-						.data("season", year)
-						.post();
-					
-					Element table = tournamentDoc.select("table.bc").first();
-					Elements rows = table.select("tr");
-					for(int i = 1;i<rows.size();i++) {
-						Elements cols = rows.get(i).select("td");
-						jotTournaments.add(new Tournament(cols.select("a").first().text(), cols.select("a").first().absUrl("href"), cols.select("[align=center]").first().text(), cols.select("[align=right]").first().text()));
-					}
-				}
-				// Remove duplicates
-				for(int i = 0;i<jotTournaments.size();i++)
-					for(int k = 0;k<jotTournaments.size();k++)
-						if(jotTournaments.get(i).getLink().equals(jotTournaments.get(k).getLink()) && i != k) {
-							jotTournaments.remove(k);
-							k--;
-						}
-				// Update DB / Remove cached jotTournaments from the queue
-				log.debug(jotTournaments.size() + " tournaments scraped from JOT");
+				ModuleManager moduleManager = new ModuleManager();
+				WorkerPoolManager workerManager = new WorkerPoolManager();
+				SQLHelper sql = null;
+				sql = new SQLHelper(ds.getBds().getConnection());
+
+				/////////
+				// JOT //
+				/////////
+
+				ArrayList<Tournament> jotTournaments = null;
 				try {
-					String query = "INSERT IGNORE INTO tournaments (name, state, link, date) VALUES ";
-					ArrayList<String> args = new ArrayList<String>();
-					for(Tournament t : jotTournaments) {
-						query += "(?,?,?,STR_TO_DATE(?, '%m/%d/%Y')), ";
-						args.add(t.getName());
-						args.add(t.getState());
-						args.add(t.getLink());
-						args.add(t.getDate());
-					}
-					query = query.substring(0, query.lastIndexOf(", "));
-					sql.executePreparedStatement(query, args.toArray(new String[args.size()]));
-				} catch (SQLException e) {
-					e.printStackTrace();
-					log.error(e);
-					log.fatal("DB could not be updated with JOT tournament info. " + e.getErrorCode());
-				}
-				
-				log.info(jotTournaments.size() + " tournaments queued from JOT");
-			
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
+					// Get seasons so we can iterate through all the jotTournaments
+					Document tlist = Jsoup.connect("http://www.joyoftournaments.com/results.asp").get();
+					ArrayList<String> years = new ArrayList<String>();
+					for (Element select : tlist.select("select"))
+						if (select.attr("name").equals("season"))
+							for (Element option : select.select("option"))
+								years.add(option.attr("value"));
 
-			// Modules //
-			
+					// Get all the tournaments
+					jotTournaments = new ArrayList<Tournament>();
+					for (String year : years) {
+						Document tournamentDoc = Jsoup.connect("http://www.joyoftournaments.com/results.asp").timeout(10 * 1000)
+								.data("state", "")
+								.data("month", "0")
+								.data("season", year)
+								.post();
+
+						Element table = tournamentDoc.select("table.bc").first();
+						Elements rows = table.select("tr");
+						for (int i = 1; i < rows.size(); i++) {
+							Elements cols = rows.get(i).select("td");
+							jotTournaments.add(new Tournament(cols.select("a").first().text(), cols.select("a").first().absUrl("href"), cols.select("[align=center]").first().text(), cols.select("[align=right]").first().text()));
+						}
+					}
+					// Remove duplicates
+					for (int i = 0; i < jotTournaments.size(); i++)
+						for (int k = 0; k < jotTournaments.size(); k++)
+							if (jotTournaments.get(i).getLink().equals(jotTournaments.get(k).getLink()) && i != k) {
+								jotTournaments.remove(k);
+								k--;
+							}
+					// Update DB / Remove cached jotTournaments from the queue
+					log.debug(jotTournaments.size() + " tournaments scraped from JOT");
+					try {
+						String query = "INSERT IGNORE INTO tournaments (name, state, link, date) VALUES ";
+						ArrayList<String> args = new ArrayList<String>();
+						for (Tournament t : jotTournaments) {
+							query += "(?,?,?,STR_TO_DATE(?, '%m/%d/%Y')), ";
+							args.add(t.getName());
+							args.add(t.getState());
+							args.add(t.getLink());
+							args.add(t.getDate());
+						}
+						query = query.substring(0, query.lastIndexOf(", "));
+						sql.executePreparedStatement(query, args.toArray(new String[args.size()]));
+					} catch (SQLException e) {
+						e.printStackTrace();
+						log.error(e);
+						log.fatal("DB could not be updated with JOT tournament info. " + e.getErrorCode());
+					}
+
+					log.info(jotTournaments.size() + " tournaments queued from JOT");
+
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+
+				// Modules //
+
 //			WorkerPool jotLD = new WorkerPool();
 //			workerManager.add(jotLD);
 //			moduleManager.newModule(new io.micheal.debaterank.modules.jot.LDOld(jotTournaments, sql, jotLD));
-			
+
 //			WorkerPool jotPF = new WorkerPool();
 //			workerManager.add(jotPF);
 //			moduleManager.newModule(new io.micheal.debaterank.modules.jot.PF(jotTournaments, sql, jotPF));
-			
+
 //			WorkerPool jotCX = new WorkerPool();
 //			workerManager.add(jotCX);
 //			moduleManager.newModule(new io.micheal.debaterank.modules.jot.CX(jotTournaments, sql, jotCX));
-				
-			/////////////
-			// Tabroom //
-			/////////////
 
-			ArrayList<Tournament> tabroomTournaments = null;
-			try {
-				// Get seasons so we can iterate through all the tournaments
-				Document tlist = Jsoup.connect("https://www.tabroom.com/index/results/").get();
-				ArrayList<String> years = new ArrayList<String>();
-				for(Element select : tlist.select("select[name=year] > option"))
-					years.add(select.attr("value"));
-				Collections.reverse(years);
-				// Get all the tournaments
-				tabroomTournaments = new ArrayList<Tournament>();
-				ArrayList<Tournament> dbTournaments = new ArrayList<>();
-				ResultSet tournamentRS = sql.executeQuery("SELECT name, link, state, date FROM tournaments WHERE link LIKE 'https://www.tabroom.com/index/tourn/results/index.mhtml?tourn_id=%'");
-				while(tournamentRS.next()) // TODO: Remove this when not testing
-					dbTournaments.add(new Tournament(tournamentRS.getString(1), tournamentRS.getString(2), tournamentRS.getString(3), tournamentRS.getString(4)));
-				tabroomTournaments = new ArrayList<>(dbTournaments);
+				/////////////
+				// Tabroom //
+				/////////////
+
+				ArrayList<Tournament> tabroomTournaments = null;
+				try {
+					// Get seasons so we can iterate through all the tournaments
+					Document tlist = Jsoup.connect("https://www.tabroom.com/index/results/").get();
+					ArrayList<String> years = new ArrayList<String>();
+					for (Element select : tlist.select("select[name=year] > option"))
+						years.add(select.attr("value"));
+					Collections.reverse(years);
+					// Get all the tournaments
+					tabroomTournaments = new ArrayList<Tournament>();
+					ArrayList<Tournament> dbTournaments = new ArrayList<>();
+					ResultSet tournamentRS = sql.executeQuery("SELECT name, link, state, date FROM tournaments WHERE link LIKE 'https://www.tabroom.com/index/tourn/results/index.mhtml?tourn_id=%'");
+					while (tournamentRS.next()) // TODO: Remove this when not testing
+						dbTournaments.add(new Tournament(tournamentRS.getString(1), tournamentRS.getString(2), tournamentRS.getString(3), tournamentRS.getString(4)));
+					tabroomTournaments = new ArrayList<>(dbTournaments);
 //				for(String year : years) {
 //					Document tournamentDoc = Jsoup.connect("https://www.tabroom.com/index/results/")
 //						.data("year", year)
@@ -260,219 +272,221 @@ public class Main {
 //						}
 //					}
 //				}
-				
-				// Remove duplicates
-				for(int i = 0;i<tabroomTournaments.size();i++)
-					for(int k = 0;k<tabroomTournaments.size();k++)
-						if(tabroomTournaments.get(i).getLink().equals(tabroomTournaments.get(k).getLink()) && i != k) {
-							tabroomTournaments.remove(k);
-							k--;
-						}
 
-				// Update DB / Remove cached tournaments from the queue
-				log.debug(tabroomTournaments.size() + " tournaments scraped from tabroom");
-				try {
-					String query = "INSERT IGNORE INTO tournaments (name, state, link, date) VALUES ";
-					ArrayList<String> args = new ArrayList<String>();
-					for(Tournament t : tabroomTournaments) {
-						query += "(?,?,?,STR_TO_DATE(?, '%m/%d/%Y')), ";
-						args.add(t.getName());
-						args.add(t.getState());
-						args.add(t.getLink());
-						args.add(t.getDate());
+					// Remove duplicates
+					for (int i = 0; i < tabroomTournaments.size(); i++)
+						for (int k = 0; k < tabroomTournaments.size(); k++)
+							if (tabroomTournaments.get(i).getLink().equals(tabroomTournaments.get(k).getLink()) && i != k) {
+								tabroomTournaments.remove(k);
+								k--;
+							}
+
+					// Update DB / Remove cached tournaments from the queue
+					log.debug(tabroomTournaments.size() + " tournaments scraped from tabroom");
+					try {
+						String query = "INSERT IGNORE INTO tournaments (name, state, link, date) VALUES ";
+						ArrayList<String> args = new ArrayList<String>();
+						for (Tournament t : tabroomTournaments) {
+							query += "(?,?,?,STR_TO_DATE(?, '%m/%d/%Y')), ";
+							args.add(t.getName());
+							args.add(t.getState());
+							args.add(t.getLink());
+							args.add(t.getDate());
+						}
+						query = query.substring(0, query.lastIndexOf(", "));
+						sql.executePreparedStatement(query, args.toArray(new String[args.size()]));
+					} catch (SQLException e) {
+						e.printStackTrace();
+						log.error(e);
+						log.fatal("DB could not be updated with tabroom tournament info. " + e.getErrorCode());
 					}
-					query = query.substring(0, query.lastIndexOf(", "));
-					sql.executePreparedStatement(query, args.toArray(new String[args.size()]));
-				} catch (SQLException e) {
+
+					log.info(tabroomTournaments.size() + " tournaments queued from tabroom");
+
+				} catch (IOException | SQLException e) {
 					e.printStackTrace();
 					log.error(e);
-					log.fatal("DB could not be updated with tabroom tournament info. " + e.getErrorCode());
+					log.fatal("Tabroom could not be updated");
 				}
-				
-				log.info(tabroomTournaments.size() + " tournaments queued from tabroom");
 
-			} catch (IOException | SQLException e) {
-				e.printStackTrace();
-				log.error(e);
-				log.fatal("Tabroom could not be updated");
-			}
+				// Modules //
 
-			// Modules //
+				WorkerPool tabroomLD = new WorkerPool();
+				workerManager.add(tabroomLD);
+				moduleManager.newModule(new io.micheal.debaterank.modules.tabroom.LD(new SQLHelper(ds.getBds().getConnection()), log, tabroomTournaments, tabroomLD, ds));
 
-			WorkerPool tabroomLD = new WorkerPool();
-			workerManager.add(tabroomLD);
-			moduleManager.newModule(new io.micheal.debaterank.modules.tabroom.LD(sql, log, tabroomTournaments, tabroomLD));
+				/////////////
+				// Execute //
+				/////////////
 
-			/////////////
-			// Execute //
-			/////////////
-				
-			try {
-				workerManager.start();
-			} catch (PoolSizeException e) {}
-			
-			do {
 				try {
-					Thread.sleep(5000);
-				} catch (InterruptedException e) {
-					log.error(e);
-					System.exit(1);
+					workerManager.start();
+				} catch (PoolSizeException e) {
 				}
-			} while(moduleManager.getActiveCount() != 0 || workerManager.getActiveCount() != 0);
 
-			/////////////
-			// Schools //
-			/////////////
+				do {
+					try {
+						Thread.sleep(5000);
+					} catch (InterruptedException e) {
+						log.error(e);
+						System.exit(1);
+					}
+				} while (moduleManager.getActiveCount() != 0 || workerManager.getActiveCount() != 0);
 
-			try {
-				ArrayList<Debater> debaters = Main.getDebaters(sql);
-				String query = "INSERT IGNORE INTO schools (name, clean) VALUES ";
-				ArrayList<Object> args = new ArrayList<Object>();
-				for(Debater debater : debaters) {
-					query += "(?, ?), ";
-					args.add(debater.getSchool().name);
-					args.add(SQLHelper.cleanString(debater.getSchool().name));
+				/////////////
+				// Schools //
+				/////////////
+
+				try {
+					ArrayList<Debater> debaters = Main.getDebaters(sql);
+					String query = "INSERT IGNORE INTO schools (name, clean) VALUES ";
+					ArrayList<Object> args = new ArrayList<Object>();
+					for (Debater debater : debaters) {
+						query += "(?, ?), ";
+						args.add(debater.getSchool().name);
+						args.add(SQLHelper.cleanString(debater.getSchool().name));
+					}
+					if (!query.equals("INSERT IGNORE INTO schools (name, clean) VALUES ")) {
+						query = query.substring(0, query.lastIndexOf(", "));
+						sql.executePreparedStatement(query, args.toArray());
+						log.info("Schools inserted into database.");
+					}
+				} catch (SQLException sqle) {
+					log.error("Couldn't update schools: " + sqle);
 				}
-				if (!query.equals("INSERT IGNORE INTO schools (name, clean) VALUES ")) {
+
+				//////////
+				// NSDA //
+				//////////
+
+				moduleManager = new ModuleManager();
+				workerManager = new WorkerPoolManager();
+
+				// Schools //
+
+				//WorkerPool schoolsPool = new WorkerPool();
+				//workerManager.add(schoolsPool);
+				//moduleManager.newModule(new Schools(sql, log, schoolsPool));
+
+				// Execute //
+
+				try {
+					workerManager.start();
+				} catch (PoolSizeException e) {
+				}
+
+				do {
+					try {
+						Thread.sleep(5000);
+					} catch (InterruptedException e) {
+						log.error(e);
+						System.exit(1);
+					}
+				} while (moduleManager.getActiveCount() != 0 || workerManager.getActiveCount() != 0);
+
+				// Geocoding //
+
+				// Update debaters' schools //
+
+				log.info("Updating debaters' schools");
+				try {
+					ArrayList<School> schools = Main.getSchools(sql);
+					HashMap<String, School> schoolsHM = new HashMap<>();
+					for (School school : schools)
+						schoolsHM.put(SQLHelper.cleanString(school.name), school);
+					String query = "INSERT INTO debaters (school, id) VALUES ";
+					ArrayList<Object> args = new ArrayList<Object>();
+					for (Debater debater : Main.getDebaters(sql)) {
+						Integer id = new Integer(-1);
+						if (debater.getSchool().name != null) {
+							School school = schoolsHM.get(SQLHelper.cleanString(debater.getSchool().name));
+							if (school != null)
+								id = school.getID(sql);
+						}
+						if (id == -1)
+							id = debater.getSchool().getID(sql);
+						else
+							debater.getSchool().setID(id);
+						query += "(?, ?), ";
+						args.add(id);
+						args.add(debater.getID(sql));
+					}
 					query = query.substring(0, query.lastIndexOf(", "));
-					sql.executePreparedStatement(query, args.toArray());
-					log.info("Schools inserted into database.");
+					query += " ON DUPLICATE KEY UPDATE school=VALUES(school),id=VALUES(id)";
+					sql.executePreparedStatementArgs(query, args.toArray());
+				} catch (SQLException sqle) {
+					sqle.printStackTrace();
 				}
-			} catch(SQLException sqle) {
-				log.error("Couldn't update schools: " + sqle);
-			}
+				log.info("Updated debaters' schools.");
 
-			//////////
-			// NSDA //
-			//////////
+				// Update judges' schools //
 
-			moduleManager = new ModuleManager();
-			workerManager = new WorkerPoolManager();
-
-			// Schools //
-
-			//WorkerPool schoolsPool = new WorkerPool();
-			//workerManager.add(schoolsPool);
-			//moduleManager.newModule(new Schools(sql, log, schoolsPool));
-
-			// Execute //
-
-			try {
-				workerManager.start();
-			} catch (PoolSizeException e) {}
-
-			do {
+				log.info("Updating judges' schools");
 				try {
-					Thread.sleep(5000);
-				} catch (InterruptedException e) {
-					log.error(e);
-					System.exit(1);
-				}
-			} while(moduleManager.getActiveCount() != 0 || workerManager.getActiveCount() != 0);
-
-			// Geocoding //
-
-			// Update debaters' schools //
-
-			log.info("Updating debaters' schools");
-			try {
-				ArrayList<School> schools = Main.getSchools(sql);
-				HashMap<String, School> schoolsHM = new HashMap<>();
-				for(School school : schools)
-					schoolsHM.put(SQLHelper.cleanString(school.name), school);
-				String query = "INSERT INTO debaters (school, id) VALUES ";
-				ArrayList<Object> args = new ArrayList<Object>();
-				for(Debater debater : Main.getDebaters(sql)) {
-					Integer id = new Integer(-1);
-					if(debater.getSchool().name != null) {
-						School school = schoolsHM.get(SQLHelper.cleanString(debater.getSchool().name));
-						if(school != null)
-							id = school.getID(sql);
+					ArrayList<School> schools = Main.getSchools(sql);
+					HashMap<String, School> schoolsHM = new HashMap<>();
+					for (School school : schools)
+						schoolsHM.put(SQLHelper.cleanString(school.name), school);
+					String query = "INSERT INTO judges (school, id) VALUES ";
+					ArrayList<Object> args = new ArrayList<Object>();
+					for (Judge judge : Main.getJudges(sql)) {
+						Integer id = new Integer(-1);
+						if (judge.getSchool().name != null) {
+							School school = schoolsHM.get(SQLHelper.cleanString(judge.getSchool().name));
+							if (school != null)
+								id = school.getID(sql);
+						}
+						if (id == -1)
+							id = judge.getSchool().getID(sql);
+						else
+							judge.getSchool().setID(id);
+						query += "(?, ?), ";
+						args.add(id);
+						args.add(judge.getID(sql));
 					}
-					if(id == -1)
-						id = debater.getSchool().getID(sql);
-					else
-						debater.getSchool().setID(id);
-					query += "(?, ?), ";
-					args.add(id);
-					args.add(debater.getID(sql));
+					query = query.substring(0, query.lastIndexOf(", "));
+					query += " ON DUPLICATE KEY UPDATE school=VALUES(school),id=VALUES(id)";
+					sql.executePreparedStatementArgs(query, args.toArray());
+				} catch (SQLException sqle) {
+					sqle.printStackTrace();
 				}
-				query = query.substring(0, query.lastIndexOf(", "));
-				query += " ON DUPLICATE KEY UPDATE school=VALUES(school),id=VALUES(id)";
-				sql.executePreparedStatementArgs(query, args.toArray());
-			} catch(SQLException sqle) {
-				sqle.printStackTrace();
-			}
-			log.info("Updated debaters' schools.");
+				log.info("Updated judges' schools.");
 
-			// Update judges' schools //
+				// Update debaters' states //
 
-			log.info("Updating judges' schools");
-			try {
-				ArrayList<School> schools = Main.getSchools(sql);
-				HashMap<String, School> schoolsHM = new HashMap<>();
-				for(School school : schools)
-					schoolsHM.put(SQLHelper.cleanString(school.name), school);
-				String query = "INSERT INTO judges (school, id) VALUES ";
-				ArrayList<Object> args = new ArrayList<Object>();
-				for(Judge judge : Main.getJudges(sql)) {
-					Integer id = new Integer(-1);
-					if(judge.getSchool().name != null) {
-						School school = schoolsHM.get(SQLHelper.cleanString(judge.getSchool().name));
-						if(school != null)
-							id = school.getID(sql);
-					}
-					if(id == -1)
-						id = judge.getSchool().getID(sql);
-					else
-						judge.getSchool().setID(id);
-					query += "(?, ?), ";
-					args.add(id);
-					args.add(judge.getID(sql));
-				}
-				query = query.substring(0, query.lastIndexOf(", "));
-				query += " ON DUPLICATE KEY UPDATE school=VALUES(school),id=VALUES(id)";
-				sql.executePreparedStatementArgs(query, args.toArray());
-			} catch(SQLException sqle) {
-				sqle.printStackTrace();
-			}
-			log.info("Updated judges' schools.");
+				// Debaters //
 
-			// Update debaters' states //
+				//JsoupHelper.retryIfTimeout("http://points.speechanddebate.org/points_application/showreport.php?fname=Micheal&lname=Myers&rpt=findstudent", times)
 
-			// Debaters //
+				////////////////
+				// TFA Points //
+				////////////////
 
-			//JsoupHelper.retryIfTimeout("http://points.speechanddebate.org/points_application/showreport.php?fname=Micheal&lname=Myers&rpt=findstudent", times)
-			
-			////////////////
-			// TFA Points //
-			////////////////
-			
-			///////////////////////
-			// Judgephilosophies //
-			///////////////////////
-			
-			///////////////
-			// NDCA Wiki //
-			///////////////
-			
-			// Begin tasks that are not multi-threaded / order dependent
-			
-			//////////////
-			// Clean-up //
-			//////////////
-			
-			/////////////////
-			// Calculation //
-			/////////////////
-			
-			// Bids
-				
-			// Glicko-2 //
-			
-			// LD
-			
-			// Establish rating periods by tournaments
+				///////////////////////
+				// Judgephilosophies //
+				///////////////////////
+
+				///////////////
+				// NDCA Wiki //
+				///////////////
+
+				// Begin tasks that are not multi-threaded / order dependent
+
+				//////////////
+				// Clean-up //
+				//////////////
+
+				/////////////////
+				// Calculation //
+				/////////////////
+
+				// Bids
+
+				// Glicko-2 //
+
+				// LD
+
+				// Establish rating periods by tournaments
 //			try {
 //				ArrayList<DateTime> newWeeks = new ArrayList<DateTime>();
 //				ResultSet orderedTournaments = sql.executeQuery("SELECT date FROM tournaments WHERE date>'2016-07-01 00:00:00.000' ORDER BY date");
@@ -542,7 +556,7 @@ public class Main {
 //				log.error(e);
 //				log.fatal("Could not update debater ratings.");
 //			}
-			
+
 //			// PF
 //			
 //			// Establish rating periods by tournaments
@@ -619,9 +633,9 @@ public class Main {
 //				log.error(e);
 //				log.fatal("Could not update debater ratings.");
 //			}
-			
-			// CX
-			
+
+				// CX
+
 //			// Establish rating periods by tournaments
 //			try {
 //				ArrayList<DateTime> newWeeks = new ArrayList<DateTime>();
@@ -696,8 +710,13 @@ public class Main {
 //				log.error(e);
 //				log.fatal("Could not update debater ratings.");
 //			}
-			
-			System.exit(0); // Temp - 1 loop
+
+				System.exit(0); // Temp - 1 loop
+			} catch(Exception e) {
+				e.printStackTrace();
+				log.error(e);
+				log.error("Could not execute Main");
+			}
 		}
 	}
 }

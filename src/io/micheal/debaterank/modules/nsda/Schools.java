@@ -4,6 +4,7 @@ import io.micheal.debaterank.Debater;
 import io.micheal.debaterank.School;
 import io.micheal.debaterank.modules.Module;
 import io.micheal.debaterank.modules.WorkerPool;
+import io.micheal.debaterank.util.DataSource;
 import io.micheal.debaterank.util.DebateHelper;
 import io.micheal.debaterank.util.SQLHelper;
 import org.apache.logging.log4j.Logger;
@@ -21,8 +22,8 @@ public class Schools extends Module {
 	private List<School> schools;
 
 
-	public Schools(SQLHelper sql, Logger log, WorkerPool manager) {
-		super(sql, log);
+	public Schools(SQLHelper sql, Logger log, WorkerPool manager, DataSource ds) {
+		super(sql, log, ds);
 		this.manager = manager;
 		schools = Collections.synchronizedList(new ArrayList<School>());
 	}

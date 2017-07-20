@@ -4,7 +4,7 @@ import org.apache.commons.dbcp2.BasicDataSource;
 
 public class DataSource {
 
-	private static final String DRIVER_CLASS_NAME = "com.mysql.jdbc.Driver";
+	private static final String DRIVER_CLASS_NAME = "com.mysql.cj.jdbc.Driver";
 
 	private BasicDataSource bds = new BasicDataSource();
 

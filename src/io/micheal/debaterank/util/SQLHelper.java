@@ -13,10 +13,10 @@ public class SQLHelper {
 	private Statement st;
 	private Logger log;
 	
-	public SQLHelper(String host, Integer port, String name, String user, String pass) throws ClassNotFoundException, SQLException {
+	public SQLHelper(Connection connection) throws ClassNotFoundException, SQLException {
 		this.log = LogManager.getLogger(SQLHelper.class);
 		Class.forName("com.mysql.cj.jdbc.Driver");
-		sql = DriverManager.getConnection("jdbc:mysql://" + host + ":" + port + "/" + name + "?user=" + user + "&password=" + pass + "&bind-address=0.0.0.0");
+		sql = connection;
 		st = sql.createStatement();
 		st.setFetchSize(5000);
 	}
@@ -49,7 +49,8 @@ public class SQLHelper {
 				ps.setNull(i+1, Types.NULL);
 		}
 		log.debug("Executing query --> " + ps);
-		return ps.executeQuery();
+		ResultSet set = ps.executeQuery();
+		return set;
 	}
 	
 	public int executePreparedStatementArgs(String query, Object... values) throws SQLException {
@@ -95,6 +96,11 @@ public class SQLHelper {
 			return null;
 		else
 			return s.toLowerCase().replaceAll("[^A-Za-z ]", "");
+	}
+
+	public void close() throws SQLException {
+		st.close();
+		sql.close();
 	}
 	
 }
