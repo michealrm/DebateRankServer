@@ -61,8 +61,10 @@ public class CX extends Module {
 		// Scrape events per tournament
 		for(Tournament t : tournaments) {
 			manager.newModule(new Runnable() {
+				private SQLHelper sql;
 				public void run() {
 					try {
+						sql = new SQLHelper(ds.getBds().getConnection());
 						log.log(JOT, "Updating " + t.getName());
 						Document tPage = Jsoup.connect(t.getLink()).timeout(10*1000).get();
 						Elements eventRows = tPage.select("tr:has(td:matches(CX|Cross|Policy|C-X)");
@@ -478,12 +480,9 @@ public class CX extends Module {
 								}
 							}
 						}
-					} catch(IOException ioe) {
-						log.error(ioe);
+					} catch(Exception e) {
+						log.error(e);
 						log.fatal("Could not update " + t.getName());
-					} catch(SQLException sqle) {
-						log.error(sqle);
-						log.fatal("Could not update " + t.getName() + " - " + sqle.getErrorCode());
 					}
 				}
 			});

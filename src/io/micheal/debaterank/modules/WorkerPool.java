@@ -21,8 +21,9 @@ public class WorkerPool {
 	public void newModule(Runnable runnable) {
 		if(executor == null)
 			queue.add(runnable);
-		else
+		else {
 			executor.execute(runnable);
+		}
 	}
 	
 	public void start(int pool_length) {
@@ -32,9 +33,6 @@ public class WorkerPool {
 		queue = new ArrayList<Runnable>();
 	}
 
-	public void notifyAllThreads() {
-		executor.
-	}
 	public void shutdown() {
 		executor.shutdown();
 	}

@@ -67,7 +67,7 @@ public class LD extends Module {
 	public void run() {
 		for(Tournament t : tournaments) {
 			manager.newModule(new Runnable() {
-				SQLHelper sql;
+				private SQLHelper sql;
 				public void run() {
 					try {
 						sql = new SQLHelper(ds.getBds().getConnection());
