@@ -63,7 +63,6 @@ public class LD extends Module {
 		overwrite = temp;
 	}
 
-	private int tournamentCount = 0;
 	public void run() {
 		for(Tournament t : tournaments) {
 			manager.newModule(new Runnable() {
@@ -144,25 +143,27 @@ public class LD extends Module {
 									bevent = false;
 									if (eventname.matches("^.*(LD|Lincoln|L-D).*$") && tourn_id == tid) {
 
+										try {
+											ResultSet set = sql.executeQueryPreparedStatement("SELECT id FROM ld_rounds WHERE absUrl=?", t.getLink() + "|" + event_id); // TODO: Temp
+
+											if(!set.next()) {
 												log.log(TABROOM, "Queuing " + t.getName() + ". Tournament ID: " + tourn_id + " Event ID: " + event_id);
-//												getTournamentRoundEntries.add(new Runnable() {
-//
-//													@Override
-//													public void run() {
-//														//If we have the same amount of entries, then do not check
-//														if (tournamentExists(t.getLink() + "|" + event_id, getTournamentRoundEntries(tourn_id, event_id), sql, "ld_rounds")) {
-//															log.log(TABROOM, t.getName() + " prelims is up to date.");
-//															return;
-//														}
-//
-//													}
-//												});
-												tournamentCount++;
 												try {
 													enterTournament(t, factory, tourn_id, event_id);
-												} catch(Exception e) {
+												} catch (Exception e) {
 													e.printStackTrace();
 												}
+											}
+											else {
+												log.log(TABROOM, t.getName() + " is up to date.");
+												return;
+											}
+										} catch(SQLException sqle) {
+											sqle.printStackTrace();
+											log.error(sqle);
+											log.fatal("Could not update " + t.getName() + " - " + sqle.getErrorCode());
+											return;
+										}
 									}
 								}
 							}
@@ -201,8 +202,6 @@ public class LD extends Module {
 			}
 			running = manager.getActiveCount() != 0;
 		}
-
-		System.out.println("Done - Tournament count: " + tournamentCount);
 
 	}
 
@@ -297,6 +296,7 @@ public class LD extends Module {
 			try {
 				if (getTournamentRoundEntries(saxParser, iStream, tourn_id, event_id) == 0) {
 					System.out.println("Skipped: " + ++skipped);
+					log.log(TABROOM, "Skipping " + t.getName());
 					return;
 				}
 			} catch (SAXParseException e) {
