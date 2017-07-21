@@ -148,9 +148,9 @@ public class LD extends Module {
 									if (eventname.matches("^.*(LD|Lincoln|L-D).*$") && tourn_id == tid) {
 
 										try {
-											ResultSet set = sql.executeQueryPreparedStatement("SELECT id FROM ld_rounds WHERE absUrl=?", t.getLink() + "|" + event_id); // TODO: Temp
+											ResultSet set = sql.executeQueryPreparedStatement("SELECT id FROM ld_rounds WHERE absUrl=? LIMIT 0,1", t.getLink() + "|" + event_id); // TODO: Temp
 
-											if(event_id == 57528) {
+											if(!set.next()) {
 												log.log(TABROOM, "Queuing " + t.getName() + ". Tournament ID: " + tourn_id + " Event ID: " + event_id);
 												try {
 													enterTournament(sql, t, factory, tourn_id, event_id);
@@ -329,9 +329,7 @@ public class LD extends Module {
 		try {
 			if (overwrite) {
 				sql.executePreparedStatementArgs("DELETE FROM ld_judges WHERE round IN (SELECT id FROM ld_rounds WHERE absUrl=?)", t.getLink() + "|" + event_id);
-				sql.executeStatement("SET FOREIGN_KEY_CHECKS=0");
 				sql.executePreparedStatementArgs("DELETE FROM ld_rounds WHERE absUrl=?", t.getLink() + "|" + event_id);
-				sql.executeStatement("SET FOREIGN_KEY_CHECKS=1");
 			}
 		} catch(SQLException sqle) {
 			sqle.printStackTrace();
