@@ -272,9 +272,7 @@ public class LD extends Module {
 
 		return localSize;
 	}
-	private int counter = 0;
-	private int skipped = 0;
-	private int errors = 0;
+
 	private void enterTournament(SQLHelper sql, Tournament t, SAXParserFactory factory, int tourn_id, int event_id) throws ParserConfigurationException,IOException, SAXException, XMLStreamException {
 		SAXParser saxParser = factory.newSAXParser();
         String endpoint = "https://www.tabroom.com/api/tourn_published.mhtml?tourn_id=" + tourn_id + "&event_id=" + event_id;
@@ -312,7 +310,6 @@ public class LD extends Module {
 			}
 			try {
 				if (getTournamentRoundEntries(saxParser, iStream, tourn_id, event_id) == 0) {
-					System.out.println("Skipped: " + ++skipped);
 					log.log(TABROOM, "Skipping " + t.getName());
 					return;
 				}
@@ -320,7 +317,6 @@ public class LD extends Module {
 				saxpe = true;
 				if(k == MAX_RETRY) {
 					iStream.close();
-					System.out.println("Errors: " + ++errors);
 					throw new SAXParseExceptionTournaments(endpoint, e.getMessage(), e.getPublicId(), e.getSystemId(), e.getLineNumber(), e.getColumnNumber());
 				}
 				//throw new SAXParseExceptionTournaments(endpoint, e.getMessage(), e.getPublicId(), e.getSystemId(), e.getLineNumber(), e.getColumnNumber());
@@ -329,7 +325,6 @@ public class LD extends Module {
 
 		log.log(TABROOM, "Updating " + t.getName() + ". Tournament ID: " + tourn_id + " Event ID: " + event_id);
 
-		System.out.println("Counter: " + ++counter);
 		//Overwrite
 		try {
 			if (overwrite) {
