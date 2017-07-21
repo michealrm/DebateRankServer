@@ -1,6 +1,7 @@
 package io.micheal.debaterank.modules.nsda;
 
 import io.micheal.debaterank.Debater;
+import io.micheal.debaterank.Main;
 import io.micheal.debaterank.School;
 import io.micheal.debaterank.modules.Module;
 import io.micheal.debaterank.modules.WorkerPool;
@@ -30,11 +31,12 @@ public class Schools extends Module {
 
 	public void run() {
 		try {
-			ArrayList<Debater> debaters = DebateHelper.getDebaters(sql);
+			ArrayList<Debater> debaters = Main.getDebaters(sql);
 			HashSet<String> schoolNames = new HashSet<String>();
 			for(Debater debater : debaters)
 				if(debater.getSchool().name != null && !schoolNames.contains(debater.getSchool().name + " | " + debater.getSchool().name.replaceAll("[,'\".]", "")))
 					schoolNames.add(debater.getSchool().name + "|" + debater.getSchool().name.replaceAll("[,'\".]", ""));
+			System.out.println(schoolNames.contains("Friona HS | friona hs"));
 			for(String str : schoolNames) {
 				manager.newModule(new Runnable() {
 					public void run() {

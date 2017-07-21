@@ -141,8 +141,7 @@ public class Main {
 
 				ModuleManager moduleManager = new ModuleManager();
 				WorkerPoolManager workerManager = new WorkerPoolManager();
-				SQLHelper sql = null;
-				sql = new SQLHelper(ds.getBds().getConnection());
+				SQLHelper sql = new SQLHelper(ds.getBds().getConnection());
 
 				/////////
 				// JOT //

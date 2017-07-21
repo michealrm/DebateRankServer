@@ -66,6 +66,7 @@ public class LD extends Module {
 
 	public void run() {
 		for(Tournament t : tournaments) {
+			if(t.getName().contains("Strake Jesuit LD"))
 			manager.newModule(new Runnable() {
 				private SQLHelper sql;
 				public void run() {
@@ -149,7 +150,7 @@ public class LD extends Module {
 										try {
 											ResultSet set = sql.executeQueryPreparedStatement("SELECT id FROM ld_rounds WHERE absUrl=?", t.getLink() + "|" + event_id); // TODO: Temp
 
-											if(!set.next()) {
+											if(event_id == 57528) {
 												log.log(TABROOM, "Queuing " + t.getName() + ". Tournament ID: " + tourn_id + " Event ID: " + event_id);
 												try {
 													enterTournament(sql, t, factory, tourn_id, event_id);
@@ -213,7 +214,6 @@ public class LD extends Module {
 		while(running) {
 			try {
 				Thread.sleep(5000);
-				manager.notifyAll();
 			} catch(InterruptedException e) {
 				return;
 			}
