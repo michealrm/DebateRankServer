@@ -2,12 +2,10 @@ package io.micheal.debaterank.modules.tabroom;
 
 import static io.micheal.debaterank.util.DebateHelper.TABROOM;
 import static io.micheal.debaterank.util.DebateHelper.getDebater;
-import static io.micheal.debaterank.util.DebateHelper.tournamentExists;
 
 import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.nio.charset.Charset;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -30,9 +28,6 @@ import org.apache.commons.configuration2.builder.fluent.Configurations;
 import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.logging.log4j.Logger;
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
 import org.xml.sax.*;
 import org.xml.sax.helpers.DefaultHandler;
 
@@ -41,16 +36,16 @@ import io.micheal.debaterank.modules.WorkerPool;
 import io.micheal.debaterank.util.SQLHelper;
 
 // XML Parsing sucks.
-public class LD extends Module {
+public class PF extends Module {
 
-    private static final int MAX_RETRY = 5;
+	private static final int MAX_RETRY = 5;
 
-    private ArrayList<Tournament> tournaments;
+	private ArrayList<Tournament> tournaments;
 	private WorkerPool manager;
 	private final boolean overwrite;
 	private ArrayList<TournamentRunnable> runnables;
 
-	public LD(SQLHelper sql, Logger log, ArrayList<Tournament> tournaments, WorkerPool manager, DataSource ds) {
+	public PF(SQLHelper sql, Logger log, ArrayList<Tournament> tournaments, WorkerPool manager, DataSource ds) {
 		super(sql, log, ds);
 		this.tournaments = tournaments;
 		this.manager = manager;
@@ -71,197 +66,147 @@ public class LD extends Module {
 
 	public void run() {
 		for(Tournament t : tournaments) {
-			manager.newModule(new Runnable() {
-				private SQLHelper sql;
-				public void run() {
-					try {
-						sql = new SQLHelper(ds.getBds().getConnection());
+				manager.newModule(new Runnable() {
+					private SQLHelper sql;
+					public void run() {
+						try {
+							sql = new SQLHelper(ds.getBds().getConnection());
 
-						String tournIDStr = "";
-						int index = t.getLink().indexOf("tourn_id=") + 9;
-						while(index < t.getLink().length()) {
-							try {
-								Integer.parseInt(Character.toString(t.getLink().toCharArray()[index]));
-							}
-							catch(NumberFormatException e) {
-								break;
-							}
-							tournIDStr += Character.toString(t.getLink().toCharArray()[index]);
-							++index;
-						}
-
-						int tourn_id = Integer.parseInt(tournIDStr);
-
-						String[] split = t.getDate().split("-| ");
-						URL url = new URL("https://www.tabroom.com/api/current_tournaments.mhtml?timestring=" + split[0] + "-" + split[1] + "-" + split[2] + "T12:00:00");
-
-						SAXParserFactory factory = SAXParserFactory.newInstance();
-						SAXParser saxParser = factory.newSAXParser();
-
-						DefaultHandler handler = new DefaultHandler() {
-
-							private boolean bevent, beventname, bid, btourn;
-							private String eventname;
-							private int event_id, tid;
-
-							public void startElement(String uri, String localName, String qName, Attributes attributes) throws SAXException {
-								if(qName.equalsIgnoreCase("EVENT")) {
-									bevent = true;
-									eventname = null;
-									event_id = 0;
-									tid = 0;
+							String tournIDStr = "";
+							int index = t.getLink().indexOf("tourn_id=") + 9;
+							while(index < t.getLink().length()) {
+								try {
+									Integer.parseInt(Character.toString(t.getLink().toCharArray()[index]));
 								}
-								if(qName.equalsIgnoreCase("EVENTNAME") && bevent)
-									beventname = true;
-								if(qName.equalsIgnoreCase("ID") && bevent)
-									bid = true;
-								if(qName.equalsIgnoreCase("TOURN") && bevent)
-									btourn = true;
+								catch(NumberFormatException e) {
+									break;
+								}
+								tournIDStr += Character.toString(t.getLink().toCharArray()[index]);
+								++index;
 							}
 
-							public void endElement(String uri, String localName, String qName) throws SAXException {
-								if(qName.equalsIgnoreCase("EVENT")) {
-									bevent = false;
-									eventname = null;
-									event_id = 0;
-									tid = 0;
+							int tourn_id = Integer.parseInt(tournIDStr);
+
+							String[] split = t.getDate().split("-| ");
+							URL url = new URL("https://www.tabroom.com/api/current_tournaments.mhtml?timestring=" + split[0] + "-" + split[1] + "-" + split[2] + "T12:00:00");
+
+							SAXParserFactory factory = SAXParserFactory.newInstance();
+							SAXParser saxParser = factory.newSAXParser();
+
+							DefaultHandler handler = new DefaultHandler() {
+
+								private boolean bevent, beventname, bid, btourn;
+								private String eventname;
+								private int event_id, tid;
+
+								public void startElement(String uri, String localName, String qName, Attributes attributes) throws SAXException {
+									if(qName.equalsIgnoreCase("EVENT")) {
+										bevent = true;
+										eventname = null;
+										event_id = 0;
+										tid = 0;
+									}
+									if(qName.equalsIgnoreCase("EVENTNAME") && bevent)
+										beventname = true;
+									if(qName.equalsIgnoreCase("ID") && bevent)
+										bid = true;
+									if(qName.equalsIgnoreCase("TOURN") && bevent)
+										btourn = true;
 								}
-								if(qName.equalsIgnoreCase("EVENTNAME") && bevent)
-									beventname = false;
-								if(qName.equalsIgnoreCase("ID") && bevent)
-									bid = false;
-								if(qName.equalsIgnoreCase("TOURN") && bevent)
-									btourn = false;
-							}
 
-							public void characters(char ch[], int start, int length) throws SAXException {
-								if(beventname) {
-									beventname = false;
-									eventname = new String(ch, start, length);
+								public void endElement(String uri, String localName, String qName) throws SAXException {
+									if(qName.equalsIgnoreCase("EVENT")) {
+										bevent = false;
+										eventname = null;
+										event_id = 0;
+										tid = 0;
+									}
+									if(qName.equalsIgnoreCase("EVENTNAME") && bevent)
+										beventname = false;
+									if(qName.equalsIgnoreCase("ID") && bevent)
+										bid = false;
+									if(qName.equalsIgnoreCase("TOURN") && bevent)
+										btourn = false;
 								}
-								if(bid) {
-									bid = false;
-									event_id = Integer.parseInt(new String(ch, start, length));
-								}
-								if(btourn) {
-									btourn = false;
-									tid = Integer.parseInt(new String(ch, start, length));
-								}
-								if(eventname != null && event_id != 0 && tid != 0 && bevent) {
-									bevent = false;
-									if (eventname.matches("^.*(LD|Lincoln|L-D).*$") && tourn_id == tid) {
 
-										try {
-											ResultSet set = sql.executeQueryPreparedStatement("SELECT id FROM ld_rounds WHERE absUrl=? LIMIT 0,1", t.getLink() + "|" + event_id); // TODO: Temp
+								public void characters(char ch[], int start, int length) throws SAXException {
+									if(beventname) {
+										beventname = false;
+										eventname = new String(ch, start, length);
+									}
+									if(bid) {
+										bid = false;
+										event_id = Integer.parseInt(new String(ch, start, length));
+									}
+									if(btourn) {
+										btourn = false;
+										tid = Integer.parseInt(new String(ch, start, length));
+									}
+									if(eventname != null && event_id != 0 && tid != 0 && bevent) {
+										bevent = false;
+										if (eventname.matches("^.*(PF|Public|P-F).*$") && tourn_id == tid) {
 
-											if(true) {
-												try {
+											try {
+												ResultSet set = sql.executeQueryPreparedStatement("SELECT id FROM ld_rounds WHERE absUrl=? LIMIT 0,1", t.getLink() + "|" + event_id); // TODO: Temp
 
-													String endpoint = "https://www.tabroom.com/api/tourn_published.mhtml?tourn_id=" + tourn_id + "&event_id=" + event_id + "&output=json";
-													BufferedInputStream iStream = null;
-													int k = 0;
-													boolean saxpe = false;
-													do {
-														saxpe = false;
-														for (int i = 0; i < MAX_RETRY; i++) {
-															URL url = new URL(endpoint);
-															HttpURLConnection urlConnection = (HttpURLConnection) url.openConnection();
-															if (urlConnection.getResponseCode() != 200) {
-																log.warn("Bad response code: " + urlConnection.getResponseCode());
-															}
-															int l = Integer.parseInt(Optional.ofNullable(urlConnection.getHeaderField("Content-length")).orElse("65535"));
-															if (l > 0 && urlConnection.getResponseCode() == 200) {
-																iStream = new BufferedInputStream(urlConnection.getInputStream()) {
-																	@Override
-																	public void close() throws IOException {
-																		//ignoring close as we going read it several times
-																	}
-																};
-																iStream.mark(l + 1);
-																break;
-															}
-															log.warn("Received empty response from server. Retry in 1 sec");
-															try {
-																Thread.sleep(5000);
-															} catch (InterruptedException e) {
-																e.printStackTrace();
-															}
-														}
-														if (iStream == null) {
-															throw new RuntimeException("Cannot load xml from server");
-														}
-														try {
-															int rounds = getTournamentRoundEntries(factory.newSAXParser(), iStream, tourn_id, event_id);
-															if (rounds == 0 || tournamentExists(t.getLink() + "|" + event_id, rounds, sql, "ld_rounds")) {
-																log.log(TABROOM, "Skipping " + t.getName());
-																return;
-															}
-														} catch (SAXParseException e) {
-															saxpe = true;
-															if(k == MAX_RETRY) {
-																iStream.close();
-																throw new SAXParseExceptionTournaments(endpoint, e.getMessage(), e.getPublicId(), e.getSystemId(), e.getLineNumber(), e.getColumnNumber());
-															}
-															//throw new SAXParseExceptionTournaments(endpoint, e.getMessage(), e.getPublicId(), e.getSystemId(), e.getLineNumber(), e.getColumnNumber());
-														}
-													} while(saxpe && k++ < MAX_RETRY);
-
+												if(!set.next()) {
 													log.log(TABROOM, "Queuing " + t.getName() + ". Tournament ID: " + tourn_id + " Event ID: " + event_id);
-													enterTournament(iStream, sql, t, factory, tourn_id, event_id);
-												} catch (Exception e) {
-													e.printStackTrace();
+													try {
+														enterTournament(sql, t, factory, tourn_id, event_id);
+													} catch (Exception e) {
+														e.printStackTrace();
+													}
 												}
-											}
-											else {
-												log.log(TABROOM, t.getName() + " is up to date.");
+												else {
+													log.log(TABROOM, t.getName() + " is up to date.");
+													return;
+												}
+											} catch(SQLException sqle) {
+												sqle.printStackTrace();
+												log.error(sqle);
+												log.fatal("Could not update " + t.getName() + " - " + sqle.getErrorCode());
 												return;
 											}
-										} catch(SQLException sqle) {
-											sqle.printStackTrace();
-											log.error(sqle);
-											log.fatal("Could not update " + t.getName() + " - " + sqle.getErrorCode());
-											return;
 										}
 									}
 								}
+							};
+
+							InputStream iStream = url.openStream();
+							ByteArrayOutputStream baos = new ByteArrayOutputStream();
+							byte[] buffer = new byte[1024];
+							int len;
+							while ((len = iStream.read(buffer)) > -1 ) {
+								baos.write(buffer, 0, len);
 							}
-						};
+							baos.flush();
+							iStream.close();
 
-						InputStream iStream = url.openStream();
-						ByteArrayOutputStream baos = new ByteArrayOutputStream();
-						byte[] buffer = new byte[1024];
-						int len;
-						while ((len = iStream.read(buffer)) > -1 ) {
-							baos.write(buffer, 0, len);
-						}
-						baos.flush();
-						iStream.close();
+							InputStream stream = new ByteArrayInputStream(baos.toByteArray());
+							saxParser.parse(stream, handler);
 
-						InputStream stream = new ByteArrayInputStream(baos.toByteArray());
-						saxParser.parse(stream, handler);
-
-						stream.close();
-						baos.close();
-						try {
-							sql.close();
-						} catch(SQLException sqle) {
-							log.error(sqle);
-							log.error("Could not close SQLHelper");
-						}
-
-					} catch(Exception e) {
-						e.printStackTrace();
-						if(sql != null) {
+							stream.close();
+							baos.close();
 							try {
 								sql.close();
 							} catch(SQLException sqle) {
 								log.error(sqle);
 								log.error("Could not close SQLHelper");
 							}
+
+						} catch(Exception e) {
+							e.printStackTrace();
+							if(sql != null) {
+								try {
+									sql.close();
+								} catch(SQLException sqle) {
+									log.error(sqle);
+									log.error("Could not close SQLHelper");
+								}
+							}
 						}
 					}
-				}
-			});
+				});
 		}
 
 		boolean running = true; // TODO: Remove this
@@ -276,43 +221,106 @@ public class LD extends Module {
 
 	}
 
-	private int getTournamentRoundEntries(InputStream stream) throws IOException {
-		int size = 0;
-		JSONObject jsonObject = readJsonFromInputStream(stream);
+	private ThreadLocal<Integer> size = new ThreadLocal<Integer>(); // for getTournamentRoundEntries
 
-		JSONArray ballot_score = jsonObject.getJSONArray("ballot_score");
-		for(int i = 0; i<ballot_score.length();i++) {
-			JSONObject jObject = ballot_score.getJSONObject(i);
-			if(jObject.getString("SCORE_ID").equals("WIN") && jObject.getInt("SCORE") == 1)
-				size++;
-		}
+	private int getTournamentRoundEntries(SAXParser saxParser, InputStream stream, int tourn_id, int event_id) throws XMLStreamException, IOException, ParserConfigurationException, SAXParseException, SAXException {
+		size.set(0);
 
-		return size;
-	}
+		DefaultHandler resultHandler = new DefaultHandler() {
 
-	private static String readAll(Reader rd) throws IOException {
-		StringBuilder sb = new StringBuilder();
-		int cp;
-		while ((cp = rd.read()) != -1) {
-			sb.append((char) cp);
-		}
-		return sb.toString();
-	}
+			private boolean bballot_score, bscore_id;
+			private String score_id;
 
-	public static JSONObject readJsonFromInputStream(InputStream is) throws IOException, JSONException {
+			public void startElement(String uri, String localName, String qName, Attributes attributes) throws SAXException {
+				if (qName.equalsIgnoreCase("BALLOT_SCORE")) {
+					bballot_score = true;
+					score_id = null;
+				}
+				if (qName.equalsIgnoreCase("SCORE_ID") && bballot_score)
+					bscore_id = true;
+			}
+
+			public void endElement(String uri, String localName, String qName) throws SAXException {
+				if (qName.equalsIgnoreCase("BALLOT_SCORE")) {
+					bballot_score = false;
+					score_id = null;
+				}
+				if (qName.equalsIgnoreCase("SCORE_ID") && bballot_score)
+					bscore_id = false;
+			}
+
+			public void characters(char ch[], int start, int length) throws SAXException {
+				if (bscore_id) {
+					bscore_id = false;
+					score_id = new String(ch, start, length);
+				}
+				if (score_id != null && bballot_score) {
+					bballot_score = false;
+					if (score_id.equals("WIN")) {
+						size.set(size.get() + 1);
+					}
+				}
+			}
+		};
 		try {
-			BufferedReader rd = new BufferedReader(new InputStreamReader(is, Charset.forName("UTF-8")));
-			String jsonText = readAll(rd);
-			JSONObject json = new JSONObject(jsonText);
-			return json;
-		} finally {
-			is.close();
+			saxParser.parse(stream, resultHandler);
+		} catch(SAXParseException e) {
+			throw new SAXParseException(e.getMessage(), e.getPublicId(), e.getSystemId(), e.getLineNumber(), e.getColumnNumber());
 		}
+		int localSize = size.get().intValue();
+
+		return localSize;
 	}
 
-	private void enterTournament(BufferedInputStream iStream, SQLHelper sql, Tournament t, SAXParserFactory factory, int tourn_id, int event_id) throws ParserConfigurationException,IOException, SAXException, XMLStreamException {
+	private void enterTournament(SQLHelper sql, Tournament t, SAXParserFactory factory, int tourn_id, int event_id) throws ParserConfigurationException,IOException, SAXException, XMLStreamException {
 		SAXParser saxParser = factory.newSAXParser();
-		JSONObject jsonObject = readJsonFromInputStream(iStream);
+		String endpoint = "https://www.tabroom.com/api/tourn_published.mhtml?tourn_id=" + tourn_id + "&event_id=" + event_id;
+		BufferedInputStream iStream = null;
+		int k = 0;
+		boolean saxpe = false;
+		do {
+			saxpe = false;
+			for (int i = 0; i < MAX_RETRY; i++) {
+				URL url = new URL(endpoint);
+				HttpURLConnection urlConnection = (HttpURLConnection) url.openConnection();
+				if (urlConnection.getResponseCode() != 200) {
+					log.warn("Bad response code: " + urlConnection.getResponseCode());
+				}
+				int length = Integer.parseInt(Optional.ofNullable(urlConnection.getHeaderField("Content-length")).orElse("65535"));
+				if (length > 0 && urlConnection.getResponseCode() == 200) {
+					iStream = new BufferedInputStream(urlConnection.getInputStream()) {
+						@Override
+						public void close() throws IOException {
+							//ignoring close as we going read it several times
+						}
+					};
+					iStream.mark(length + 1);
+					break;
+				}
+				log.warn("Received empty response from server. Retry in 1 sec");
+				try {
+					Thread.sleep(5000);
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				}
+			}
+			if (iStream == null) {
+				throw new RuntimeException("Cannot load xml from server");
+			}
+			try {
+				if (getTournamentRoundEntries(saxParser, iStream, tourn_id, event_id) == 0) {
+					log.log(TABROOM, "Skipping " + t.getName());
+					return;
+				}
+			} catch (SAXParseException e) {
+				saxpe = true;
+				if(k == MAX_RETRY) {
+					iStream.close();
+					throw new SAXParseExceptionTournaments(endpoint, e.getMessage(), e.getPublicId(), e.getSystemId(), e.getLineNumber(), e.getColumnNumber());
+				}
+				//throw new SAXParseExceptionTournaments(endpoint, e.getMessage(), e.getPublicId(), e.getSystemId(), e.getLineNumber(), e.getColumnNumber());
+			}
+		} while(saxpe && k++ < MAX_RETRY);
 
 		log.log(TABROOM, "Updating " + t.getName() + ". Tournament ID: " + tourn_id + " Event ID: " + event_id);
 
@@ -327,15 +335,6 @@ public class LD extends Module {
 			log.error(sqle);
 			log.fatal("Could not update " + t.getName() + " - " + sqle.getErrorCode());
 			return;
-		}
-
-		JSONArray school = jsonObject.getJSONArray("school");
-		for(int i = 0;i<school.length();i++) {
-			int id = school.getJSONObject(i).getInt("ID");
-			String schoolName = school.getJSONObject(i).getString("SCHOOLNAME");
-			System.out.println(id);
-			System.out.println(schoolName);
-			System.exit(0);
 		}
 
 		// Getting schools
@@ -383,7 +382,7 @@ public class LD extends Module {
 				}
 			}
 		};
-        iStream.reset();
+		iStream.reset();
 		saxParser.parse(iStream, schoolHandler);
 
 		// Getting competitors
@@ -442,7 +441,7 @@ public class LD extends Module {
 			}
 		};
 
-        iStream.reset();
+		iStream.reset();
 		saxParser.parse(iStream, competitorHandler);
 
 		HashMap<Integer, Integer> entryStudents = new HashMap<Integer, Integer>();
@@ -488,7 +487,7 @@ public class LD extends Module {
 				}
 			}
 		};
-        iStream.reset();
+		iStream.reset();
 		saxParser.parse(iStream, entryHandler);
 
 		// Getting judges
@@ -556,7 +555,7 @@ public class LD extends Module {
 				}
 			}
 		};
-        iStream.reset();
+		iStream.reset();
 		saxParser.parse(iStream, judgeHandler);
 
 		// Getting round keys / names
@@ -618,7 +617,7 @@ public class LD extends Module {
 			}
 		};
 
-        iStream.reset();
+		iStream.reset();
 		saxParser.parse(iStream, roundHandler);
 
 		// Getting panels
@@ -680,7 +679,7 @@ public class LD extends Module {
 			}
 		};
 
-        iStream.reset();
+		iStream.reset();
 		saxParser.parse(iStream, panelHandler);
 
 		// Finally, ballot parsing
@@ -795,7 +794,7 @@ public class LD extends Module {
 							jBallot.ballots.add(id);
 						}
 					}
-					if(!found && judges.get(judge) != null) {
+					if(!found) {
 						JudgeBallot jBallot = new JudgeBallot();
 						jBallot.ballots = new ArrayList<Integer>();
 						jBallot.ballots.add(id);
@@ -807,7 +806,7 @@ public class LD extends Module {
 			}
 		};
 
-        iStream.reset();
+		iStream.reset();
 		saxParser.parse(iStream, ballotHandler);
 
 		// Round results
@@ -874,8 +873,8 @@ public class LD extends Module {
 					if(score_id.equals("WIN")) { // Test to see if this even updates
 						for (Map.Entry<Integer, Round> entry : roundsSet) {
 							for (JudgeBallot jBallot : entry.getValue().judges)
-									if (score == 1 && jBallot.ballots.contains(ballot))
-										jBallot.winner = competitors.get(recipient);
+								if (score == 1 && jBallot.ballots.contains(ballot))
+									jBallot.winner = competitors.get(recipient);
 						}
 					}
 					if(score_id.equals("POINTS")) {
@@ -896,7 +895,7 @@ public class LD extends Module {
 			}
 		};
 
-        iStream.reset();
+		iStream.reset();
 		saxParser.parse(iStream, resultHandler);
 		iStream.close();
 		iStream = null;
@@ -1028,6 +1027,7 @@ public class LD extends Module {
 					round.roundInfo.letter = idStatement.getString(12).charAt(0);
 					ld_rounds.put(Integer.parseInt(idStatement.getString(1)), round);
 				}
+				System.out.println("but does it make it here?");
 				StringBuilder judgeQuery = new StringBuilder("INSERT INTO ld_judges (round, judge_id, decision, aff_speaks, neg_speaks) VALUES ");
 				ArrayList<Object> judgeArgs = new ArrayList<Object>();
 				for (Round round : rounds.values()) {

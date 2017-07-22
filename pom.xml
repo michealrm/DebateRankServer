@@ -109,6 +109,13 @@
           <version>2.4.2</version>
       </dependency>
 
+      <!-- https://mvnrepository.com/artifact/org.json/json -->
+      <dependency>
+          <groupId>org.json</groupId>
+          <artifactId>json</artifactId>
+          <version>20170516</version>
+      </dependency>
+
 
 
   </dependencies>

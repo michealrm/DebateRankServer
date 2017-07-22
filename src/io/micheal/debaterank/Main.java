@@ -118,30 +118,30 @@ public class Main {
 				WorkerPoolManager workerManager = new WorkerPoolManager();
 				SQLHelper sql = new SQLHelper(ds.getBds().getConnection());
 
-				// TEMP CALCULATIONS
-
-				try {
-					int aff = 0, neg = 0;
-					ResultSet set = sql.executeQuery("SELECT side, decision FROM ld_rounds JOIN tournaments as t ON t.id=ld_rounds.tournament WHERE t.date>'2016-07-01 00:00:00.000' AND absUrl like '%tabroom%'");
-					while(set.next()) {
-						if(set.getString(1) != null && set.getString(2) != null) {
-							if(set.getString(1).equals("A") && set.getString(2).equals("1-0"))
-								aff++;
-							else if(set.getString(1).equals("A") && set.getString(2).equals("0-1"))
-								neg++;
-							System.out.println("Aff: " + aff);
-							System.out.println("Neg: " + neg);
-						}
-
-
-
-					}
-
-					System.out.println("\nFinal");
-					System.out.println("Aff: " + aff);
-					System.out.println("Neg: " + neg);
-
-				} catch(SQLException e) {}
+//				// TEMP CALCULATIONS
+//
+//				try {
+//					int aff = 0, neg = 0;
+//					ResultSet set = sql.executeQuery("SELECT side, decision FROM ld_rounds JOIN tournaments as t ON t.id=ld_rounds.tournament WHERE t.date>'2016-07-01 00:00:00.000' AND absUrl like '%tabroom%'");
+//					while(set.next()) {
+//						if(set.getString(1) != null && set.getString(2) != null) {
+//							if(set.getString(1).equals("A") && set.getString(2).equals("1-0"))
+//								aff++;
+//							else if(set.getString(1).equals("A") && set.getString(2).equals("0-1"))
+//								neg++;
+//							System.out.println("Aff: " + aff);
+//							System.out.println("Neg: " + neg);
+//						}
+//
+//
+//
+//					}
+//
+//					System.out.println("\nFinal");
+//					System.out.println("Aff: " + aff);
+//					System.out.println("Neg: " + neg);
+//
+//				} catch(SQLException e) {}
 
 				/////////
 				// JOT //
@@ -315,9 +315,9 @@ public class Main {
 
 				// Modules //
 
-				//WorkerPool tabroomLD = new WorkerPool();
-				//workerManager.add(tabroomLD);
-				//moduleManager.newModule(new io.micheal.debaterank.modules.tabroom.LD(new SQLHelper(ds.getBds().getConnection()), log, tabroomTournaments, tabroomLD, ds));
+				WorkerPool tabroomLD = new WorkerPool();
+				workerManager.add(tabroomLD);
+				moduleManager.newModule(new io.micheal.debaterank.modules.tabroom.LD(new SQLHelper(ds.getBds().getConnection()), log, tabroomTournaments, tabroomLD, ds));
 
 				/////////////
 				// Execute //
