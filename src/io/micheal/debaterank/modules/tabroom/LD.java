@@ -160,9 +160,9 @@ public class LD extends Module {
 													String endpoint = "https://www.tabroom.com/api/tourn_published.mhtml?tourn_id=" + tourn_id + "&event_id=" + event_id + "&output=json";
 													BufferedInputStream iStream = null;
 													int k = 0;
-													boolean saxpe = false;
+													boolean ioe = false;
 													do {
-														saxpe = false;
+														ioe = false;
 														for (int i = 0; i < MAX_RETRY; i++) {
 															URL url = new URL(endpoint);
 															HttpURLConnection urlConnection = (HttpURLConnection) url.openConnection();
@@ -191,20 +191,20 @@ public class LD extends Module {
 															throw new RuntimeException("Cannot load xml from server");
 														}
 														try {
-															int rounds = getTournamentRoundEntries(factory.newSAXParser(), iStream, tourn_id, event_id);
+															int rounds = getTournamentRoundEntries(iStream);
 															if (rounds == 0 || tournamentExists(t.getLink() + "|" + event_id, rounds, sql, "ld_rounds")) {
 																log.log(TABROOM, "Skipping " + t.getName());
 																return;
 															}
-														} catch (SAXParseException e) {
-															saxpe = true;
+														} catch (IOException e) {
+															ioe = true;
 															if(k == MAX_RETRY) {
 																iStream.close();
-																throw new SAXParseExceptionTournaments(endpoint, e.getMessage(), e.getPublicId(), e.getSystemId(), e.getLineNumber(), e.getColumnNumber());
+																throw new IOException(e.getMessage(), e.getCause());
 															}
 															//throw new SAXParseExceptionTournaments(endpoint, e.getMessage(), e.getPublicId(), e.getSystemId(), e.getLineNumber(), e.getColumnNumber());
 														}
-													} while(saxpe && k++ < MAX_RETRY);
+													} while(ioe && k++ < MAX_RETRY);
 
 													log.log(TABROOM, "Queuing " + t.getName() + ". Tournament ID: " + tourn_id + " Event ID: " + event_id);
 													enterTournament(iStream, sql, t, factory, tourn_id, event_id);
@@ -278,6 +278,8 @@ public class LD extends Module {
 
 	private int getTournamentRoundEntries(InputStream stream) throws IOException {
 		int size = 0;
+
+		long one = System.currentTimeMillis();
 		JSONObject jsonObject = readJsonFromInputStream(stream);
 
 		JSONArray ballot_score = jsonObject.getJSONArray("ballot_score");
@@ -313,6 +315,8 @@ public class LD extends Module {
 	private void enterTournament(BufferedInputStream iStream, SQLHelper sql, Tournament t, SAXParserFactory factory, int tourn_id, int event_id) throws ParserConfigurationException,IOException, SAXException, XMLStreamException {
 		SAXParser saxParser = factory.newSAXParser();
 		JSONObject jsonObject = readJsonFromInputStream(iStream);
+		iStream.close();
+		iStream = null;
 
 		log.log(TABROOM, "Updating " + t.getName() + ". Tournament ID: " + tourn_id + " Event ID: " + event_id);
 
@@ -329,577 +333,166 @@ public class LD extends Module {
 			return;
 		}
 
-		JSONArray school = jsonObject.getJSONArray("school");
-		for(int i = 0;i<school.length();i++) {
-			int id = school.getJSONObject(i).getInt("ID");
-			String schoolName = school.getJSONObject(i).getString("SCHOOLNAME");
-			System.out.println(id);
-			System.out.println(schoolName);
-			System.exit(0);
-		}
-
 		// Getting schools
 		HashMap<Integer, String> schools = new HashMap<Integer, String>();
-		DefaultHandler schoolHandler = new DefaultHandler() {
-
-			private boolean bschool, bid, bschoolname;
-			private String schoolname;
-			private int id;
-
-			public void startElement(String uri, String localName, String qName, Attributes attributes) throws SAXException {
-				if(qName.equalsIgnoreCase("SCHOOL")) {
-					bschool = true;
-					schoolname = null;
-					id = 0;
-				}
-				if(qName.equalsIgnoreCase("ID") && bschool)
-					bid = true;
-				if(qName.equalsIgnoreCase("SCHOOLNAME") && bschool)
-					bschoolname = true;
-			}
-			public void endElement(String uri, String localName, String qName) throws SAXException {
-				if(qName.equalsIgnoreCase("SCHOOL")) {
-					bschool = false;
-					schoolname = null;
-					id = 0;
-				}
-				if(qName.equalsIgnoreCase("ID") && bschool)
-					bid = false;
-				if(qName.equalsIgnoreCase("SCHOOLNAME") && bschool)
-					bschoolname = false;
-			}
-			public void characters(char ch[], int start, int length) throws SAXException {
-				if(bid) {
-					bid = false;
-					id = Integer.parseInt(new String(ch, start, length));
-				}
-				if (bschoolname) {
-					bschoolname = false;
-					schoolname = new String(ch, start, length);
-				}
-				if(id != 0 && schoolname != null && bschool) {
-					bschool = false;
-					schools.put(id, schoolname);
-				}
-			}
-		};
-        iStream.reset();
-		saxParser.parse(iStream, schoolHandler);
+		JSONArray jsonSchool = jsonObject.getJSONArray("school");
+		for(int i = 0;i<jsonSchool.length();i++) {
+			JSONObject jObject = jsonSchool.getJSONObject(i);
+			int id = jObject.getInt("ID");
+			String schoolName = jObject.getString("SCHOOLNAME");
+			schools.put(id, schoolName);
+		}
 
 		// Getting competitors
 		HashMap<Integer, Debater> competitors = new HashMap<Integer, Debater>();
-		DefaultHandler competitorHandler = new DefaultHandler() {
+		JSONArray jsonEntry = jsonObject.getJSONArray("entry");
+		for(int i = 0;i<jsonEntry.length();i++) {
+			JSONObject jObject = jsonEntry.getJSONObject(i);
+			String fullname = jObject.getString("FULLNAME");
+			int id = jObject.getInt("ID");
+			String school = schools.get(jObject.getInt("SCHOOL"));
+			competitors.put(id, new Debater(fullname, school));
+		}
 
-			private boolean bentry, bid, bschool, bfullname;
-			private String fullname;
-			private int id, school;
-
-			public void startElement(String uri, String localName, String qName, Attributes attributes) throws SAXException {
-				if(qName.equalsIgnoreCase("ENTRY")) {
-					bentry = true;
-					fullname = null;
-					id = 0;
-					school = 0;
-				}
-				if(qName.equalsIgnoreCase("FULLNAME") && bentry)
-					bfullname = true;
-				if(qName.equalsIgnoreCase("SCHOOL") && bentry)
-					bschool = true;
-				if(qName.equalsIgnoreCase("ID") && bentry)
-					bid = true;
-			}
-			public void endElement(String uri, String localName, String qName) throws SAXException {
-				if(qName.equalsIgnoreCase("ENTRY")) {
-					bentry = false;
-					fullname = null;
-					id = 0;
-					school = 0;
-				}
-				if(qName.equalsIgnoreCase("FULLNAME") && bentry)
-					bfullname = false;
-				if(qName.equalsIgnoreCase("SCHOOL") && bentry)
-					bschool = false;
-				if(qName.equalsIgnoreCase("ID") && bentry)
-					bid = false;
-			}
-			public void characters(char ch[], int start, int length) throws SAXException {
-				if(bfullname) {
-					bfullname = false;
-					fullname = new String(ch, start, length);
-				}
-				if(bschool) {
-					bschool = false;
-					school = Integer.parseInt(new String(ch, start, length));
-				}
-				if(bid) {
-					bid = false;
-					id = Integer.parseInt(new String(ch, start, length));
-				}
-				if(id != 0 && fullname != null && school != 0 && bentry) {
-					bentry = false;
-					competitors.put(id, new Debater(fullname, schools.get(school)));
-				}
-			}
-		};
-
-        iStream.reset();
-		saxParser.parse(iStream, competitorHandler);
-
+		// Getting entry students
 		HashMap<Integer, Integer> entryStudents = new HashMap<Integer, Integer>();
-		DefaultHandler entryHandler = new DefaultHandler() {
-
-			private boolean bentry_student, bentry, bid;
-			private int id, entry;
-
-			public void startElement(String uri, String localName, String qName, Attributes attributes) throws SAXException {
-				if(qName.equalsIgnoreCase("ENTRY_STUDENT")) {
-					bentry_student = true;
-					id = 0;
-					entry = 0;
-				}
-				if(qName.equalsIgnoreCase("ENTRY") && bentry_student)
-					bentry = true;
-				if(qName.equalsIgnoreCase("ID") && bentry_student)
-					bid = true;
-			}
-			public void endElement(String uri, String localName, String qName) throws SAXException {
-				if(qName.equalsIgnoreCase("ENTRY_STUDENT")) {
-					bentry_student = false;
-					id = 0;
-					entry = 0;
-				}
-				if(qName.equalsIgnoreCase("ENTRY") && bentry_student)
-					bentry = false;
-				if(qName.equalsIgnoreCase("ID") && bentry_student)
-					bid = false;
-			}
-			public void characters(char ch[], int start, int length) throws SAXException {
-				if(bentry) {
-					bentry = false;
-					entry = Integer.parseInt(new String(ch, start, length));
-				}
-				if(bid) {
-					bid = false;
-					id = Integer.parseInt(new String(ch, start, length));
-				}
-				if(id != 0 && entry != 0 && bentry_student) {
-					bentry_student = false;
-					entryStudents.put(id, entry);
-				}
-			}
-		};
-        iStream.reset();
-		saxParser.parse(iStream, entryHandler);
+		JSONArray jsonEntry_student = jsonObject.getJSONArray("entry");
+		for(int i = 0;i<jsonEntry_student.length();i++) {
+			JSONObject jObject = jsonEntry_student.getJSONObject(i);
+			int id = jObject.getInt("ID");
+			int entry = jObject.getInt("SCHOOL");
+			entryStudents.put(id, entry);
+		}
 
 		// Getting judges
 		HashMap<Integer, Judge> judges = new HashMap<Integer, Judge>();
-		DefaultHandler judgeHandler = new DefaultHandler() {
+		JSONArray jsonJudge = jsonObject.getJSONArray("judge");
+		for(int i = 0;i<jsonJudge.length();i++) {
+			JSONObject jObject = jsonJudge.getJSONObject(i);
+			int id = jObject.getInt("ID");
+			String first = jObject.getString("FIRST");
+			String last = jObject.getString("LAST");
+			String school = schools.get(jObject.getString("SCHOOL"));
+			judges.put(id, new Judge(first + " " + last, school));
 
-			private boolean bjudge, bid, bschool, bfirst, blast;
-			private String first, last;
-			private int id, school;
-
-			public void startElement(String uri, String localName, String qName, Attributes attributes) throws SAXException {
-				if(qName.equalsIgnoreCase("JUDGE")) {
-					bjudge = true;
-					first = null;
-					last = null;
-					id = 0;
-					school = 0;
-				}
-				if(qName.equalsIgnoreCase("FIRST") && bjudge)
-					bfirst = true;
-				if(qName.equalsIgnoreCase("LAST") && bjudge)
-					blast = true;
-				if(qName.equalsIgnoreCase("SCHOOL") && bjudge)
-					bschool = true;
-				if(qName.equalsIgnoreCase("ID") && bjudge)
-					bid = true;
-			}
-			public void endElement(String uri, String localName, String qName) throws SAXException {
-				if(qName.equalsIgnoreCase("JUDGE")) {
-					bjudge = false;
-					first = null;
-					last = null;
-					id = 0;
-					school = 0;
-				}
-				if(qName.equalsIgnoreCase("FIRST") && bjudge)
-					bfirst = false;
-				if(qName.equalsIgnoreCase("LAST") && bjudge)
-					blast = false;
-				if(qName.equalsIgnoreCase("SCHOOL") && bjudge)
-					bschool = false;
-				if(qName.equalsIgnoreCase("ID") && bjudge)
-					bid = false;
-			}
-			public void characters(char ch[], int start, int length) throws SAXException {
-				if(bfirst) {
-					bfirst = false;
-					first = new String(ch, start, length);
-				}
-				if(blast) {
-					blast = false;
-					last = new String(ch, start, length);
-				}
-				if(bschool) {
-					bschool = false;
-					school = Integer.parseInt(new String(ch, start, length));
-				}
-				if(bid) {
-					bid = false;
-					id = Integer.parseInt(new String(ch, start, length));
-				}
-				if(id != 0 && first != null && last != null && school != 0 && bjudge) {
-					bjudge = false;
-					judges.put(id, new Judge(first + " " + last, schools.get(school)));
-				}
-			}
-		};
-        iStream.reset();
-		saxParser.parse(iStream, judgeHandler);
+		}
 
 		// Getting round keys / names
 		HashMap<Integer, RoundInfo> roundInfo = new HashMap<Integer, RoundInfo>();
-		DefaultHandler roundHandler = new DefaultHandler() {
-
-			private boolean bround, brd_name, bpairingscheme, bid;
-			private int rd_name, id;
-			private String pairingScheme;
-
-			public void startElement(String uri, String localName, String qName, Attributes attributes) throws SAXException {
-				if(qName.equalsIgnoreCase("ROUND")) {
-					bround = true;
-					pairingScheme = null;
-					rd_name = 0;
-					id = 0;
-				}
-				if(qName.equalsIgnoreCase("RD_NAME") && bround)
-					brd_name = true;
-				if(qName.equalsIgnoreCase("PAIRINGSCHEME") && bround)
-					bpairingscheme = true;
-				if(qName.equalsIgnoreCase("ID") && bround)
-					bid = true;
-			}
-			public void endElement(String uri, String localName, String qName) throws SAXException {
-				if(qName.equalsIgnoreCase("ROUND")) {
-					bround = false;
-					pairingScheme = null;
-					rd_name = 0;
-					id = 0;
-				}
-				if(qName.equalsIgnoreCase("RD_NAME") && bround)
-					brd_name = false;
-				if(qName.equalsIgnoreCase("PAIRINGSCHEME") && bround)
-					bpairingscheme = false;
-				if(qName.equalsIgnoreCase("ID") && bround)
-					bid = false;
-			}
-			public void characters(char ch[], int start, int length) throws SAXException {
-				if(brd_name) {
-					brd_name = false;
-					rd_name = Integer.parseInt(new String(ch, start, length));
-				}
-				if(bid) {
-					bid = false;
-					id = Integer.parseInt(new String(ch, start, length));
-				}
-				if(bpairingscheme) {
-					bpairingscheme = false;
-					pairingScheme = new String(ch, start, length);
-				}
-				if(rd_name != 0 && id != 0 && pairingScheme != null && bround) {
-					bround = false;
-					RoundInfo info = new RoundInfo();
-					info.number = rd_name;
-					info.elim = pairingScheme.equals("Elim");
-					roundInfo.put(id, info);
-				}
-			}
-		};
-
-        iStream.reset();
-		saxParser.parse(iStream, roundHandler);
+		JSONArray jsonRound = jsonObject.getJSONArray("round");
+		for(int i = 0;i<jsonRound.length();i++) {
+			JSONObject jObject = jsonRound.getJSONObject(i);
+			int id = jObject.getInt("ID");
+			int rd_name = jObject.getInt("RD_NAME");
+			String pairingScheme = jObject.getString("PAIRINGSCHEME");
+			RoundInfo info = new RoundInfo();
+			info.number = rd_name;
+			info.elim = pairingScheme.equals("Elim");
+			roundInfo.put(id, info);
+		}
 
 		// Getting panels
 		HashMap<Integer, Round> panels = new HashMap<Integer, Round>(); // Only contains bye and roundInfo
-		DefaultHandler panelHandler = new DefaultHandler() {
-
-			private boolean bpanel, bround, bid, bbye;
-			private int round, id;
-			private Boolean bye = null; // Nullable
-
-			public void startElement(String uri, String localName, String qName, Attributes attributes) throws SAXException {
-				if(qName.equalsIgnoreCase("PANEL")) {
-					bpanel = true;
-					round = 0;
-					id = 0;
-					bye = null;
-				}
-				if(qName.equalsIgnoreCase("ROUND") && bpanel)
-					bround = true;
-				if(qName.equalsIgnoreCase("ID") && bpanel)
-					bid = true;
-				if(qName.equalsIgnoreCase("BYE") && bpanel)
-					bbye = true;
-			}
-			public void endElement(String uri, String localName, String qName) throws SAXException {
-				if(qName.equalsIgnoreCase("PANEL")) {
-					bpanel = false;
-					round = 0;
-					id = 0;
-					bye = null;
-				}
-				if(qName.equalsIgnoreCase("ROUND") && bpanel)
-					bround = false;
-				if(qName.equalsIgnoreCase("ID") && bpanel)
-					bid = false;
-				if(qName.equalsIgnoreCase("BYE") && bpanel)
-					bbye = false;
-			}
-			public void characters(char ch[], int start, int length) throws SAXException {
-				if(bround) {
-					bround = false;
-					round = Integer.parseInt(new String(ch, start, length));
-				}
-				if(bid) {
-					bid = false;
-					id = Integer.parseInt(new String(ch, start, length));
-				}
-				if(bbye) {
-					bbye = false;
-					bye = new String(ch, start, length).equals("1");
-				}
-				if(round != 0 && id != 0 && bye != null && bpanel) {
-					bpanel = false;
-					Round r = new Round();
-					r.roundInfo = roundInfo.get(round);
-					r.bye = bye;
-					panels.put(id, r);
-				}
-			}
-		};
-
-        iStream.reset();
-		saxParser.parse(iStream, panelHandler);
+		JSONArray jsonPanel = jsonObject.getJSONArray("panel");
+		for(int i = 0;i<jsonPanel.length();i++) {
+			JSONObject jObject = jsonPanel.getJSONObject(i);
+			int id = jObject.getInt("ID");
+			int round = jObject.getInt("ROUND");
+			boolean bye = jObject.getInt("BYE") == 1;
+			Round r = new Round();
+			r.roundInfo = roundInfo.get(round);
+			r.bye = bye;
+			panels.put(id, r);
+		}
 
 		// Finally, ballot parsing
 		HashMap<Integer, Round> rounds = new HashMap<Integer, Round>(); // Key is panel
-		DefaultHandler ballotHandler = new DefaultHandler() {
+		JSONArray jsonBallot = jsonObject.getJSONArray("ballot");
+		for(int i = 0;i<jsonBallot.length();i++) {
+			JSONObject jObject = jsonBallot.getJSONObject(i);
+			int id = jObject.getInt("ID");
+			int debater = jObject.getInt("ENTRY");
+			int panel = jObject.getInt("PANEL");
+			int judge = jObject.getInt("JUDGE");
+			int side = jObject.getInt("SIDE");
+			Boolean bye = null;
+			if(jObject.has("BYE"))
+				bye = jObject.getInt("BYE") == 1;
 
-			private boolean bballot, bid, bdebater, bpanel, bjudge, bside, bbye;
-			private int id, debater, panel, judge, side;
-			private Boolean bye = null; // Nullable
-
-			public void startElement(String uri, String localName, String qName, Attributes attributes) throws SAXException {
-				if(qName.equalsIgnoreCase("BALLOT")) {
-					bballot = true;
-					id = 0;
-					debater = 0;
-					panel = 0;
-					judge = 0;
-					side = 0;
-					bye = null;
-				}
-				if(qName.equalsIgnoreCase("ID") && bballot)
-					bid = true;
-				if(qName.equalsIgnoreCase("ENTRY") && bballot)
-					bdebater = true;
-				if(qName.equalsIgnoreCase("PANEL") && bballot)
-					bpanel = true;
-				if(qName.equalsIgnoreCase("JUDGE") && bballot)
-					bjudge = true;
-				if(qName.equalsIgnoreCase("SIDE") && bballot)
-					bside = true;
-				if(qName.equalsIgnoreCase("BYE") && bballot)
-					bbye = true;
+			// TODO: Rewrite this
+			if(rounds.get(panel) == null) {
+				Round round = new Round();
+				round.judges = new ArrayList<JudgeBallot>();
+				rounds.put(panel, round);
 			}
-			public void endElement(String uri, String localName, String qName) throws SAXException {
-				if(qName.equalsIgnoreCase("BALLOT")) {
-					bballot = false;
-					id = 0;
-					debater = 0;
-					panel = 0;
-					judge = 0;
-					side = 0;
-					bye = null;
-				}
-				if(qName.equalsIgnoreCase("ID") && bballot)
-					bid = false;
-				if(qName.equalsIgnoreCase("ENTRY") && bballot)
-					bdebater = false;
-				if(qName.equalsIgnoreCase("PANEL") && bballot)
-					bpanel = false;
-				if(qName.equalsIgnoreCase("JUDGE") && bballot)
-					bjudge = false;
-				if(qName.equalsIgnoreCase("SIDE") && bballot)
-					bside = false;
-				if(qName.equalsIgnoreCase("BYE") && bballot)
-					bbye = false;
+			Round round = rounds.get(panel);
+			if (side == 1 && round.aff == null)
+				round.aff = competitors.get(debater);
+			else if (side == 2 && round.neg == null)
+				round.neg = competitors.get(debater);
+			else if(side == -1) {
+				round.aff = competitors.get(debater);
+				round.neg = competitors.get(debater);
 			}
-			public void characters(char ch[], int start, int length) throws SAXException {
-				if(bdebater) {
-					bdebater = false;
-					debater = Integer.parseInt(new String(ch, start, length));
+			if(round.roundInfo == null)
+				round.roundInfo = panels.get(panel).roundInfo;
+			if(bye != null && round.bye == null)
+				round.bye = panels.get(panel).bye || bye;
+			else if(round.bye == null)
+				round.bye = panels.get(panel).bye;
+			boolean found = false;
+			for(JudgeBallot jBallot : round.judges) {
+				if (jBallot.judge == null) {
+					if (judges.containsValue(null))
+						found = true;
 				}
-				if(bpanel) {
-					bpanel = false;
-					panel = Integer.parseInt(new String(ch, start, length));
-				}
-				if(bjudge) {
-					bjudge = false;
-					judge = Integer.parseInt(new String(ch, start, length));
-				}
-				if(bid) {
-					bid = false;
-					id = Integer.parseInt(new String(ch, start, length));
-				}
-				if(bside) {
-					bside = false;
-					side = Integer.parseInt(new String(ch, start, length));
-				}
-				if(bbye) {
-					bbye = false;
-					bye = new String(ch, start, length).equals("1");
-				}
-				if(debater != 0 && id != 0 && judge != 0 && panel != 0 && bye != null && bballot) {
-					bballot = false;
-					if(rounds.get(panel) == null) {
-						Round round = new Round();
-						round.judges = new ArrayList<JudgeBallot>();
-						rounds.put(panel, round);
-					}
-					Round round = rounds.get(panel);
-					if (side == 1 && round.aff == null)
-						round.aff = competitors.get(debater);
-					else if (side == 2 && round.neg == null)
-						round.neg = competitors.get(debater);
-					else if(side == -1) {
-						round.aff = competitors.get(debater);
-						round.neg = competitors.get(debater);
-					}
-					if(round.roundInfo == null)
-						round.roundInfo = panels.get(panel).roundInfo;
-					if(bye != null && round.bye == null)
-						round.bye = panels.get(panel).bye || bye;
-					else if(round.bye == null)
-						round.bye = panels.get(panel).bye;
-					boolean found = false;
-					for(JudgeBallot jBallot : round.judges) {
-						if (jBallot.judge == null) {
-							if (judges.containsValue(null))
-								found = true;
-						}
-						else if(jBallot.judge.equals(judges.get(judge))) {
-							found = true;
-							jBallot.ballots.add(id);
-						}
-					}
-					if(!found && judges.get(judge) != null) {
-						JudgeBallot jBallot = new JudgeBallot();
-						jBallot.ballots = new ArrayList<Integer>();
-						jBallot.ballots.add(id);
-						jBallot.judge = judges.get(judge);
-						round.judges.add(jBallot);
-					}
-					rounds.put(panel, round); // May be redundant
+				else if(jBallot.judge.equals(judges.get(judge))) {
+					found = true;
+					jBallot.ballots.add(id);
 				}
 			}
-		};
-
-        iStream.reset();
-		saxParser.parse(iStream, ballotHandler);
+			if(!found && judges.get(judge) != null) {
+				JudgeBallot jBallot = new JudgeBallot();
+				jBallot.ballots = new ArrayList<Integer>();
+				jBallot.ballots.add(id);
+				jBallot.judge = judges.get(judge);
+				round.judges.add(jBallot);
+			}
+			rounds.put(panel, round); // May be redundant
+		}
 
 		// Round results
 		Set<Map.Entry<Integer, Round>> roundsSet = rounds.entrySet();
-		DefaultHandler resultHandler = new DefaultHandler() {
+		JSONArray jsonBallot_score = jsonObject.getJSONArray("ballot_score");
+		for(int i = 0;i<jsonBallot_score.length();i++) {
+			JSONObject jObject = jsonBallot_score.getJSONObject(i);
+			int ballot = jObject.getInt("BALLOT");
+			int recipient = jObject.getInt("RECIPIENT");
+			String score_id = jObject.getString("SCORE_ID");
+			double score = jObject.getDouble("SCORE");
 
-			private boolean bballot_score, bballot, bscore_id, bscore, brecipient;
-			private int ballot, recipient;
-			private String score_id;
-			private Double score;
-
-			public void startElement(String uri, String localName, String qName, Attributes attributes) throws SAXException {
-				if(qName.equalsIgnoreCase("BALLOT_SCORE")) {
-					bballot_score = true;
-					ballot = 0;
-					score_id = null;
-					score = null;
-					recipient = 0;
+			if(score_id.equals("WIN")) { // Test to see if this even updates
+				for (Map.Entry<Integer, Round> entry : roundsSet) {
+					for (JudgeBallot jBallot : entry.getValue().judges)
+						if (score == 1 && jBallot.ballots.contains(ballot))
+							jBallot.winner = competitors.get(recipient);
 				}
-				if(qName.equalsIgnoreCase("BALLOT") && bballot_score)
-					bballot = true;
-				if(qName.equalsIgnoreCase("SCORE_ID") && bballot_score)
-					bscore_id = true;
-				if(qName.equalsIgnoreCase("SCORE") && bballot_score)
-					bscore = true;
-				if(qName.equalsIgnoreCase("RECIPIENT") && bballot_score)
-					brecipient = true;
 			}
-			public void endElement(String uri, String localName, String qName) throws SAXException {
-				if(qName.equalsIgnoreCase("BALLOT_SCORE")) {
-					bballot_score = false;
-					ballot = 0;
-					score_id = null;
-					score = null;
-					recipient = 0;
-				}
-				if(qName.equalsIgnoreCase("BALLOT") && bballot_score)
-					bballot = false;
-				if(qName.equalsIgnoreCase("SCORE_ID") && bballot_score)
-					bscore_id = false;
-				if(qName.equalsIgnoreCase("SCORE") && bballot_score)
-					bscore = false;
-				if(qName.equalsIgnoreCase("RECIPIENT") && bballot_score)
-					brecipient = false;
-			}
-			public void characters(char ch[], int start, int length) throws SAXException {
-				if(bballot) {
-					bballot = false;
-					ballot = Integer.parseInt(new String(ch, start, length));
-				}
-				if(bscore_id) {
-					bscore_id = false;
-					score_id = new String(ch, start, length);
-				}
-				if(bscore) {
-					bscore = false;
-					score = Double.parseDouble(new String(ch, start, length));
-				}
-				if(brecipient) {
-					brecipient = false;
-					recipient = Integer.parseInt(new String(ch, start, length));
-				}
-				if(ballot != 0 && recipient != 0 && score_id != null && score != null && bballot_score) {
-					if(score_id.equals("WIN")) { // Test to see if this even updates
-						for (Map.Entry<Integer, Round> entry : roundsSet) {
-							for (JudgeBallot jBallot : entry.getValue().judges)
-									if (score == 1 && jBallot.ballots.contains(ballot))
-										jBallot.winner = competitors.get(recipient);
-						}
-					}
-					if(score_id.equals("POINTS")) {
-						for (Map.Entry<Integer, Round> entry : roundsSet) {
-							for (JudgeBallot jBallot : entry.getValue().judges) {
-								try {
-									if (jBallot.ballots.contains(ballot)) {
-										if (competitors.get(entryStudents.get(recipient)).equals(entry.getValue().aff))
-											jBallot.affSpeaks = score;
-										if (competitors.get(entryStudents.get(recipient)).equals(entry.getValue().neg))
-											jBallot.negSpeaks = score;
-									}
-								} catch(Exception e) {}
+			if(score_id.equals("POINTS")) {
+				for (Map.Entry<Integer, Round> entry : roundsSet) {
+					for (JudgeBallot jBallot : entry.getValue().judges) {
+						try {
+							if (jBallot.ballots.contains(ballot)) {
+								if (competitors.get(entryStudents.get(recipient)).equals(entry.getValue().aff))
+									jBallot.affSpeaks = score;
+								if (competitors.get(entryStudents.get(recipient)).equals(entry.getValue().neg))
+									jBallot.negSpeaks = score;
 							}
-						}
+						} catch(Exception e) {}
 					}
 				}
 			}
-		};
-
-        iStream.reset();
-		saxParser.parse(iStream, resultHandler);
-		iStream.close();
-		iStream = null;
+		}
 
 		HashMap<Integer, String> sqlRoundStrings = roundToSQLFriendlyRound(new ArrayList<Round>(rounds.values()));
 		StringBuilder query = new StringBuilder("INSERT INTO ld_rounds (tournament, absUrl, debater, against, round, side, decision) VALUES ");
