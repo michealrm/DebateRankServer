@@ -15,6 +15,7 @@ public class DataSource {
 		bds.setPassword(dbPassword);
 		bds.setInitialSize(poolSize);
 		bds.setMaxTotal(poolSize);
+		bds.setMaxIdle(0);
 	}
 
 	public BasicDataSource getBds() {

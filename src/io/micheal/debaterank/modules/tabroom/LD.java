@@ -165,8 +165,9 @@ public class LD extends Module {
 														ioe = false;
 														iStream = getInputStream(endpoint);
 														try {
+															ResultSet set = sql.executeQueryPreparedStatement("SELECT id FROM ld_rounds WHERE absUrl=? LIMIT 0,1", t.getLink() + "|" + event_id); // TODO: Temp & also need to add SQLException to catch
 															int rounds = getTournamentRoundEntries(iStream);
-															if (rounds == 0 || tournamentExists(t.getLink() + "|" + event_id, rounds, sql, "ld_rounds")) {
+															if (rounds == 0 || set.next() || tournamentExists(t.getLink() + "|" + event_id, rounds, sql, "ld_rounds")) {
 																log.log(TABROOM, "Skipping " + t.getName());
 																return;
 															}
@@ -216,36 +217,20 @@ public class LD extends Module {
 
 						stream.close();
 						baos.close();
+
+					} catch(Exception e) {
+						e.printStackTrace();
+					}
+					finally {
 						try {
 							sql.close();
 						} catch(SQLException sqle) {
 							log.error(sqle);
 							log.error("Could not close SQLHelper");
 						}
-
-					} catch(Exception e) {
-						e.printStackTrace();
-						if(sql != null) {
-							try {
-								sql.close();
-							} catch(SQLException sqle) {
-								log.error(sqle);
-								log.error("Could not close SQLHelper");
-							}
-						}
 					}
 				}
 			});
-		}
-
-		boolean running = true; // TODO: Remove this
-		while(running) {
-			try {
-				Thread.sleep(5000);
-			} catch(InterruptedException e) {
-				return;
-			}
-			running = manager.getActiveCount() != 0;
 		}
 
 	}
@@ -479,32 +464,37 @@ public class LD extends Module {
 		Set<Map.Entry<Integer, Round>> roundsSet = rounds.entrySet();
 		JSONArray jsonBallot_score = jsonObject.getJSONArray("ballot_score");
 		for(int i = 0;i<jsonBallot_score.length();i++) {
-			JSONObject jObject = jsonBallot_score.getJSONObject(i);
-			int ballot = jObject.getInt("BALLOT");
-			int recipient = jObject.getInt("RECIPIENT");
-			String score_id = jObject.getString("SCORE_ID");
-			double score = jObject.getDouble("SCORE");
+			try {
+				JSONObject jObject = jsonBallot_score.getJSONObject(i);
+				int ballot = jObject.getInt("BALLOT");
+				int recipient = jObject.getInt("RECIPIENT");
+				String score_id = jObject.getString("SCORE_ID");
+				double score = jObject.getDouble("SCORE");
 
-			if(score_id.equals("WIN")) { // Test to see if this even updates
-				for (Map.Entry<Integer, Round> entry : roundsSet) {
-					for (JudgeBallot jBallot : entry.getValue().judges)
-						if (score == 1 && jBallot.ballots.contains(ballot))
-							jBallot.winner = competitors.get(recipient);
-				}
-			}
-			if(score_id.equals("POINTS")) {
-				for (Map.Entry<Integer, Round> entry : roundsSet) {
-					for (JudgeBallot jBallot : entry.getValue().judges) {
-						try {
-							if (jBallot.ballots.contains(ballot)) {
-								if (competitors.get(entryStudents.get(recipient)).equals(entry.getValue().aff))
-									jBallot.affSpeaks = score;
-								if (competitors.get(entryStudents.get(recipient)).equals(entry.getValue().neg))
-									jBallot.negSpeaks = score;
-							}
-						} catch(Exception e) {}
+				if (score_id.equals("WIN")) { // Test to see if this even updates
+					for (Map.Entry<Integer, Round> entry : roundsSet) {
+						for (JudgeBallot jBallot : entry.getValue().judges)
+							if (score == 1 && jBallot.ballots.contains(ballot))
+								jBallot.winner = competitors.get(recipient);
 					}
 				}
+				if (score_id.equals("POINTS")) {
+					for (Map.Entry<Integer, Round> entry : roundsSet) {
+						for (JudgeBallot jBallot : entry.getValue().judges) {
+							try {
+								if (jBallot.ballots.contains(ballot)) {
+									if (competitors.get(entryStudents.get(recipient)).equals(entry.getValue().aff))
+										jBallot.affSpeaks = score;
+									if (competitors.get(entryStudents.get(recipient)).equals(entry.getValue().neg))
+										jBallot.negSpeaks = score;
+								}
+							} catch (Exception e) {
+							}
+						}
+					}
+				}
+			} catch(JSONException e) {
+				continue;
 			}
 		}
 
