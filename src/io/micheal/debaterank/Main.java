@@ -210,7 +210,7 @@ public class Main {
 
 //			WorkerPool jotLD = new WorkerPool();
 //			workerManager.add(jotLD);
-//			moduleManager.newModule(new io.micheal.debaterank.modules.jot.LDOld(jotTournaments, sql, jotLD));
+//			moduleManager.newModule(new io.micheal.debaterank.modules.jot.LD(jotTournaments, sql, jotLD, ds));
 
 //			WorkerPool jotPF = new WorkerPool();
 //			workerManager.add(jotPF);

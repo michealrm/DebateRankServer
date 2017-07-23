@@ -14,6 +14,7 @@ public class DataSource {
 		bds.setUsername(dbUser);
 		bds.setPassword(dbPassword);
 		bds.setInitialSize(poolSize);
+		bds.setMaxTotal(poolSize);
 	}
 
 	public BasicDataSource getBds() {

@@ -408,6 +408,14 @@ public class LD extends Module {
 						log.error(e);
 						log.fatal("Could not update " + t.getName());
 					}
+					finally {
+						try {
+							sql.close();
+						} catch(SQLException sqle) {
+							log.error(sqle);
+							log.error("Could not close SQL");
+						}
+					}
 				}
 			});
 		}

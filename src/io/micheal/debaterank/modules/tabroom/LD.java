@@ -6,6 +6,7 @@ import static io.micheal.debaterank.util.DebateHelper.tournamentExists;
 
 import java.io.*;
 import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.charset.Charset;
 import java.sql.ResultSet;
@@ -152,7 +153,6 @@ public class LD extends Module {
 									if (eventname.matches("^.*(LD|Lincoln|L-D).*$") && tourn_id == tid) {
 
 										try {
-											ResultSet set = sql.executeQueryPreparedStatement("SELECT id FROM ld_rounds WHERE absUrl=? LIMIT 0,1", t.getLink() + "|" + event_id); // TODO: Temp
 
 											if(true) {
 												try {
@@ -163,33 +163,7 @@ public class LD extends Module {
 													boolean ioe = false;
 													do {
 														ioe = false;
-														for (int i = 0; i < MAX_RETRY; i++) {
-															URL url = new URL(endpoint);
-															HttpURLConnection urlConnection = (HttpURLConnection) url.openConnection();
-															if (urlConnection.getResponseCode() != 200) {
-																log.warn("Bad response code: " + urlConnection.getResponseCode());
-															}
-															int l = Integer.parseInt(Optional.ofNullable(urlConnection.getHeaderField("Content-length")).orElse("65535"));
-															if (l > 0 && urlConnection.getResponseCode() == 200) {
-																iStream = new BufferedInputStream(urlConnection.getInputStream()) {
-																	@Override
-																	public void close() throws IOException {
-																		//ignoring close as we going read it several times
-																	}
-																};
-																iStream.mark(l + 1);
-																break;
-															}
-															log.warn("Received empty response from server. Retry in 1 sec");
-															try {
-																Thread.sleep(5000);
-															} catch (InterruptedException e) {
-																e.printStackTrace();
-															}
-														}
-														if (iStream == null) {
-															throw new RuntimeException("Cannot load xml from server");
-														}
+														iStream = getInputStream(endpoint);
 														try {
 															int rounds = getTournamentRoundEntries(iStream);
 															if (rounds == 0 || tournamentExists(t.getLink() + "|" + event_id, rounds, sql, "ld_rounds")) {
@@ -207,7 +181,7 @@ public class LD extends Module {
 													} while(ioe && k++ < MAX_RETRY);
 
 													log.log(TABROOM, "Queuing " + t.getName() + ". Tournament ID: " + tourn_id + " Event ID: " + event_id);
-													enterTournament(iStream, sql, t, factory, tourn_id, event_id);
+													enterTournament(getInputStream(endpoint), sql, t, factory, tourn_id, event_id);
 												} catch (Exception e) {
 													e.printStackTrace();
 												}
@@ -216,10 +190,10 @@ public class LD extends Module {
 												log.log(TABROOM, t.getName() + " is up to date.");
 												return;
 											}
-										} catch(SQLException sqle) {
-											sqle.printStackTrace();
-											log.error(sqle);
-											log.fatal("Could not update " + t.getName() + " - " + sqle.getErrorCode());
+										} catch(Exception e) {
+											e.printStackTrace();
+											log.error(e);
+											log.fatal("Could not update " + t.getName());
 											return;
 										}
 									}
@@ -276,6 +250,38 @@ public class LD extends Module {
 
 	}
 
+	private BufferedInputStream getInputStream(String endpoint) throws IOException { // TODO: Fix mark
+		BufferedInputStream iStream = null;
+		for (int i = 0; i < MAX_RETRY; i++) {
+			URL url = new URL(endpoint);
+			HttpURLConnection urlConnection = (HttpURLConnection) url.openConnection();
+			if (urlConnection.getResponseCode() != 200) {
+				log.warn("Bad response code: " + urlConnection.getResponseCode());
+			}
+			int l = Integer.parseInt(Optional.ofNullable(urlConnection.getHeaderField("Content-length")).orElse("65535"));
+			if (l > 0 && urlConnection.getResponseCode() == 200) {
+				iStream = new BufferedInputStream(urlConnection.getInputStream()) {
+					@Override
+					public void close() throws IOException {
+						super.close();
+					}
+				};
+				iStream.mark(l + 1);
+				break;
+			}
+			log.warn("Received empty response from server. Retry in 1 sec");
+			try {
+				Thread.sleep(5000);
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+		}
+		if (iStream == null) {
+			throw new RuntimeException("Cannot load json from server");
+		}
+		return iStream;
+	}
+
 	private int getTournamentRoundEntries(InputStream stream) throws IOException {
 		int size = 0;
 
@@ -302,21 +308,15 @@ public class LD extends Module {
 	}
 
 	public static JSONObject readJsonFromInputStream(InputStream is) throws IOException, JSONException {
-		try {
-			BufferedReader rd = new BufferedReader(new InputStreamReader(is, Charset.forName("UTF-8")));
-			String jsonText = readAll(rd);
-			JSONObject json = new JSONObject(jsonText);
-			return json;
-		} finally {
-			is.close();
-		}
+		BufferedReader rd = new BufferedReader(new InputStreamReader(is, Charset.forName("UTF-8")));
+		String jsonText = readAll(rd);
+		JSONObject json = new JSONObject(jsonText.trim());
+		return json;
 	}
 
-	private void enterTournament(BufferedInputStream iStream, SQLHelper sql, Tournament t, SAXParserFactory factory, int tourn_id, int event_id) throws ParserConfigurationException,IOException, SAXException, XMLStreamException {
-		SAXParser saxParser = factory.newSAXParser();
+	private void enterTournament(BufferedInputStream iStream, SQLHelper sql, Tournament t, SAXParserFactory factory, int tourn_id, int event_id) throws IOException, JSONException {
+		// TODO: Remove iStream
 		JSONObject jsonObject = readJsonFromInputStream(iStream);
-		iStream.close();
-		iStream = null;
 
 		log.log(TABROOM, "Updating " + t.getName() + ". Tournament ID: " + tourn_id + " Event ID: " + event_id);
 
@@ -347,11 +347,15 @@ public class LD extends Module {
 		HashMap<Integer, Debater> competitors = new HashMap<Integer, Debater>();
 		JSONArray jsonEntry = jsonObject.getJSONArray("entry");
 		for(int i = 0;i<jsonEntry.length();i++) {
-			JSONObject jObject = jsonEntry.getJSONObject(i);
-			String fullname = jObject.getString("FULLNAME");
-			int id = jObject.getInt("ID");
-			String school = schools.get(jObject.getInt("SCHOOL"));
-			competitors.put(id, new Debater(fullname, school));
+			try {
+				JSONObject jObject = jsonEntry.getJSONObject(i);
+				String fullname = jObject.getString("FULLNAME");
+				int id = jObject.getInt("ID");
+				String school = schools.get(jObject.getInt("SCHOOL"));
+				competitors.put(id, new Debater(fullname, school));
+			} catch(JSONException e) {
+				continue;
+			}
 		}
 
 		// Getting entry students
@@ -372,7 +376,7 @@ public class LD extends Module {
 			int id = jObject.getInt("ID");
 			String first = jObject.getString("FIRST");
 			String last = jObject.getString("LAST");
-			String school = schools.get(jObject.getString("SCHOOL"));
+			String school = schools.get(jObject.getInt("SCHOOL"));
 			judges.put(id, new Judge(first + " " + last, school));
 
 		}
@@ -409,56 +413,66 @@ public class LD extends Module {
 		HashMap<Integer, Round> rounds = new HashMap<Integer, Round>(); // Key is panel
 		JSONArray jsonBallot = jsonObject.getJSONArray("ballot");
 		for(int i = 0;i<jsonBallot.length();i++) {
-			JSONObject jObject = jsonBallot.getJSONObject(i);
-			int id = jObject.getInt("ID");
-			int debater = jObject.getInt("ENTRY");
-			int panel = jObject.getInt("PANEL");
-			int judge = jObject.getInt("JUDGE");
-			int side = jObject.getInt("SIDE");
-			Boolean bye = null;
-			if(jObject.has("BYE"))
-				bye = jObject.getInt("BYE") == 1;
+			try {
+				JSONObject jObject = jsonBallot.getJSONObject(i);
+				int id = jObject.getInt("ID");
+				int debater = jObject.getInt("ENTRY");
+				int panel = jObject.getInt("PANEL");
+				int judge = 0;
+				try {
+					judge = jObject.getInt("JUDGE");
+				} catch (JSONException e) {
+					judge = -1;
+				}
+				int side = jObject.getInt("SIDE");
+				Boolean bye = null;
+				if (jObject.has("BYE"))
+					bye = jObject.getInt("BYE") == 1;
 
-			// TODO: Rewrite this
-			if(rounds.get(panel) == null) {
-				Round round = new Round();
-				round.judges = new ArrayList<JudgeBallot>();
-				rounds.put(panel, round);
-			}
-			Round round = rounds.get(panel);
-			if (side == 1 && round.aff == null)
-				round.aff = competitors.get(debater);
-			else if (side == 2 && round.neg == null)
-				round.neg = competitors.get(debater);
-			else if(side == -1) {
-				round.aff = competitors.get(debater);
-				round.neg = competitors.get(debater);
-			}
-			if(round.roundInfo == null)
-				round.roundInfo = panels.get(panel).roundInfo;
-			if(bye != null && round.bye == null)
-				round.bye = panels.get(panel).bye || bye;
-			else if(round.bye == null)
-				round.bye = panels.get(panel).bye;
-			boolean found = false;
-			for(JudgeBallot jBallot : round.judges) {
-				if (jBallot.judge == null) {
-					if (judges.containsValue(null))
+				// TODO: Rewrite this
+				if(rounds.get(panel) == null) {
+					Round round = new Round();
+					round.judges = new ArrayList<JudgeBallot>();
+					rounds.put(panel, round);
+				}
+				Round round = rounds.get(panel);
+				if (side == 1 && round.aff == null)
+					round.aff = competitors.get(debater);
+				else if (side == 2 && round.neg == null)
+					round.neg = competitors.get(debater);
+				else if(side == -1) {
+					round.aff = competitors.get(debater);
+					round.neg = competitors.get(debater);
+				}
+				if(round.roundInfo == null)
+					round.roundInfo = panels.get(panel).roundInfo;
+				if(bye != null && round.bye == null)
+					round.bye = panels.get(panel).bye || bye;
+				else if(round.bye == null)
+					round.bye = panels.get(panel).bye;
+				boolean found = false;
+				for(JudgeBallot jBallot : round.judges) {
+					if (jBallot.judge == null) {
+						if (judges.containsValue(null))
+							found = true;
+					}
+					else if(jBallot.judge.equals(judges.get(judge))) {
 						found = true;
+						jBallot.ballots.add(id);
+					}
 				}
-				else if(jBallot.judge.equals(judges.get(judge))) {
-					found = true;
+				if(!found && judges.get(judge) != null) {
+					JudgeBallot jBallot = new JudgeBallot();
+					jBallot.ballots = new ArrayList<Integer>();
 					jBallot.ballots.add(id);
+					jBallot.judge = judges.get(judge);
+					round.judges.add(jBallot);
 				}
+				rounds.put(panel, round); // May be redundant
+
+			} catch(JSONException e) {
+				continue;
 			}
-			if(!found && judges.get(judge) != null) {
-				JudgeBallot jBallot = new JudgeBallot();
-				jBallot.ballots = new ArrayList<Integer>();
-				jBallot.ballots.add(id);
-				jBallot.judge = judges.get(judge);
-				round.judges.add(jBallot);
-			}
-			rounds.put(panel, round); // May be redundant
 		}
 
 		// Round results
