@@ -35,7 +35,6 @@ import io.micheal.debaterank.modules.Module;
 import io.micheal.debaterank.modules.WorkerPool;
 import io.micheal.debaterank.util.SQLHelper;
 
-// XML Parsing sucks.
 public class PF extends Module {
 
 	private static final int MAX_RETRY = 5;
@@ -147,7 +146,7 @@ public class PF extends Module {
 										if (eventname.matches("^.*(PF|Public|P-F).*$") && tourn_id == tid) {
 
 											try {
-												ResultSet set = sql.executeQueryPreparedStatement("SELECT id FROM ld_rounds WHERE absUrl=? LIMIT 0,1", t.getLink() + "|" + event_id); // TODO: Temp
+												ResultSet set = sql.executeQueryPreparedStatement("SELECT id FROM pf_rounds WHERE absUrl=? LIMIT 0,1", t.getLink() + "|" + event_id); // TODO: Temp
 
 												if(!set.next()) {
 													log.log(TABROOM, "Queuing " + t.getName() + ". Tournament ID: " + tourn_id + " Event ID: " + event_id);

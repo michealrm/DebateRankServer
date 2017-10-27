@@ -94,7 +94,7 @@ public class Debater implements IDClass {
 		changeInfoIfMatchesPointer();
 	}
 
-	public Debater(String first, String middle, String last, String surname, String school) throws NullPointerException {
+	public Debater(String first, String middle, String last, String surname, String school) {
 		this.first = first;
 		this.middle = middle;
 		this.last = last;

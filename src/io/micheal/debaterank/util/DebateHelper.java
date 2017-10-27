@@ -47,7 +47,7 @@ public class DebateHelper {
 	 * @throws SQLException
 	 */
 	public static ArrayList<School> getSchools(SQLHelper sql) throws SQLException {
-		ResultSet schoolsSet = sql.executeQuery("SELECT * FROM schools"); // TODO: Change this back to school
+		ResultSet schoolsSet = sql.executeQuery("SELECT * FROM schools");
 		ArrayList<School> schools = new ArrayList<School>();
 		while(schoolsSet.next()) {
 			try {
@@ -107,8 +107,8 @@ public class DebateHelper {
 	 * @return All debaters within the database
 	 * @throws SQLException
 	 */
-	public static ArrayList<Debater> getDebaters(SQLHelper sql) throws SQLException { // QA tested
-		ResultSet debatersSet = sql.executeQuery("SELECT d.id, first, middle, last, surname, s.name, s.clean, s.nsda_link, s.address, s.state FROM debaters d JOIN schools AS s ON s.id=d.school"); // TODO: Change this back to school
+	public static ArrayList<Debater> getDebaters(SQLHelper sql) throws SQLException {
+		ResultSet debatersSet = sql.executeQuery("SELECT d.id, first, middle, last, surname, s.name, s.clean, s.nsda_link, s.address, s.state FROM debaters d JOIN schools AS s ON s.id=d.school");
 		ArrayList<Debater> debaters = new ArrayList<Debater>();
 		while(debatersSet.next()) {
 			try {
