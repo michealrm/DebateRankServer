@@ -90,7 +90,7 @@ public class DebateHelper {
 	}*/
 
 	public static ArrayList<Judge> getJudges(SQLHelper sql) throws SQLException {
-		ResultSet judgesSet = sql.executeQuery("SELECT id, first, middle, last, surname, school_old FROM judges"); // TODO: Change this back to school
+		ResultSet judgesSet = sql.executeQuery("SELECT id, first, middle, last, surname, school FROM judges"); // TODO: Change this back to school
 		ArrayList<Judge> judges = new ArrayList<Judge>();
 		while(judgesSet.next()) {
 			try {

@@ -36,7 +36,6 @@ public class Schools extends Module {
 			for(Debater debater : debaters)
 				if(debater.getSchool().name != null && !schoolNames.contains(debater.getSchool().name + " | " + debater.getSchool().name.replaceAll("[,'\".]", "")))
 					schoolNames.add(debater.getSchool().name + "|" + debater.getSchool().name.replaceAll("[,'\".]", ""));
-			System.out.println(schoolNames.contains("Friona HS | friona hs"));
 			for(String str : schoolNames) {
 				manager.newModule(new Runnable() {
 					public void run() {
@@ -49,6 +48,8 @@ public class Schools extends Module {
 								return;
 							String link = schoolPage.select("a").eq(1).get(0).absUrl("href");
 							String address = elements.first().textNodes().get(2).text().trim();
+							if(address.split(", ").length != 2)
+								return;
 							String state = address.split(", ")[1];
 							School school = new School();
 							school.name = string;

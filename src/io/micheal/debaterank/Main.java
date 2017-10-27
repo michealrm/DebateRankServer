@@ -384,8 +384,6 @@ public class Main {
 				}
 			} while (moduleManager.getActiveCount() != 0 || workerManager.getActiveCount() != 0);
 
-			System.exit(0); // TODO: TEMP
-
 			// Geocoding //
 
 			// Update debaters' schools //
