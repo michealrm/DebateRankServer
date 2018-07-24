@@ -88,10 +88,6 @@ public class Ballot {
 		this.decision = decision;
 	}
 
-	public Ballot() {
-
-	}
-
 	public Ballot(String decision) {
 		this.decision = decision;
 	}
