@@ -1,5 +1,5 @@
 /target/
 /bin/
 /.idea/
-log.log
+log*
 config.properties
