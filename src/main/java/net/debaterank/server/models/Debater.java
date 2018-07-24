@@ -14,12 +14,10 @@ import org.mongodb.morphia.annotations.Reference;
 
 import java.io.Serializable;
 
+import static net.debaterank.server.util.DRHelper.isSameName;
+
 @Entity("debaters")
 public class Debater implements Serializable {
-
-	public static String cleanString(String str) {
-		return str.toLowerCase();
-	}
 
 	public Debater() {}
 
@@ -148,8 +146,7 @@ public class Debater implements Serializable {
 		School school = debater.getSchool();
 		if(this.school != null && school != null && !this.school.equals(school)) {
 			return false;
-		} else if(((first == null && this.first == null) || (this.first != null && cleanString(this.first).equals(cleanString(first)))) &&
-				(((this.last == null || last == null) || (this.last != null && cleanString(this.last).equals(cleanString(last)))))) {
+		} else if(isSameName(this.first, first) && isSameName(this.last, last)) {
 			replaceNull(debater);
 			return true;
 		} else {

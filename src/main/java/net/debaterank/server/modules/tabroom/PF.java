@@ -2,7 +2,6 @@ package net.debaterank.server.modules.tabroom;
 
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
-import com.oracle.javafx.jmx.json.JSONException;
 import net.debaterank.server.models.*;
 import net.debaterank.server.modules.Module;
 import net.debaterank.server.modules.WorkerPool;
@@ -10,6 +9,7 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.apache.log4j.LogManager;
 import org.joda.time.DateTime;
 import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 import org.mongodb.morphia.Datastore;
 

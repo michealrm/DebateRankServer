@@ -1,7 +1,7 @@
 package net.debaterank.server.util;
 
-import com.oracle.javafx.jmx.json.JSONException;
 import org.apache.log4j.Logger;
+import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.*;

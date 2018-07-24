@@ -24,4 +24,12 @@ public class DRHelper {
 		return null;
 	}
 
+	public static boolean isSameName(String str1, String str2) {
+		return (str1 == null && str1 == null) || (str1 != null && cleanString(str1).equals(cleanString(str2)));
+	}
+
+	public static String cleanString(String str) {
+		return str.toLowerCase();
+	}
+
 }

@@ -12,6 +12,8 @@ import org.mongodb.morphia.annotations.Property;
 
 import java.io.Serializable;
 
+import static net.debaterank.server.util.DRHelper.isSameName;
+
 @Entity("schools")
 public class School implements Serializable {
 
@@ -109,9 +111,10 @@ public class School implements Serializable {
 	}
 
 	public boolean equals(School school) {
-		return (state != null && state.equals(school.getState())) || (nsda_link != null && nsda_link.equals(school.getNsda_link())) ||
-				(address != null && address.equals(school.getAddress())) || (name != null && name.equals(school.getName())) ||
-				(id != null && id.equals(school.getId()));
+		return (isSameName(state, school.getState()) &&
+				isSameName(address, school.getAddress()) &&
+				isSameName(nsda_link, school.getNsda_link())) ||
+				isSameName(name, school.getName());
 	}
 
 	/**
