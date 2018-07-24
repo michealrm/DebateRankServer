@@ -3,3 +3,4 @@
 /.idea/
 log*
 config.properties
+.DS_Store
