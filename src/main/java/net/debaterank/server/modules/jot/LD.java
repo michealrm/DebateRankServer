@@ -45,7 +45,7 @@ public class LD extends Module {
 					Elements eventRows = tInfo.getEventRows();
 					log.info("Updating " + t.getName() + " " + t.getLink());
 					for(Element eventRow : eventRows) {
-						ArrayList<LDRound> rowRounds = new ArrayList<>();
+						ArrayList<Round> rowRounds = new ArrayList<>();
 						// Prelims
 						Element prelim = eventRow.select("a[title]:contains(Prelims)").first();
 						if(prelim != null) {
@@ -63,7 +63,7 @@ public class LD extends Module {
 							}
 
 							// Parse rounds
-							ArrayList<LDRound> rounds = new ArrayList<>();
+							ArrayList<Round> rounds = new ArrayList<>();
 							for(int i = 0;i<rows.size();i++) {
 								String key = rows.get(i).select("td").first().select("td").get(2).text();
 								Debater debater = competitors.get(key);
@@ -79,7 +79,7 @@ public class LD extends Module {
 									Element win = cols.get(k).select("[colspan=2].rec").first();
 									Element against = cols.get(k).select("[colspan=2][align=right]").first();
 
-									LDRound round = new LDRound();
+									Round round = new Round();
 									Debater againstDebater = null;
 									if(win == null || win.text() == null || against == null) {
 										continue;
@@ -87,12 +87,12 @@ public class LD extends Module {
 									if(win.text().equals("B") || win.text().equals("F")) {
 										// bye
 										if(win.text().equals("B")) {
-											round.setAff(debater);
-											round.setNeg(debater);
+											round.setSingleAff(debater);
+											round.setSingleNeg(debater);
 										} else {
 											Ballot ballot = new Ballot();
 											if(side == null || side.text() == null || side.text().equals("Aff")) {
-												round.setAff(debater);
+												round.setSingleAff(debater);
 												ballot.setDecision("Neg");
 												try {
 													if(speaks.text() != null)
@@ -100,7 +100,7 @@ public class LD extends Module {
 												} catch(NumberFormatException nfe) {}
 											}
 											else {
-												round.setNeg(debater);
+												round.setSingleNeg(debater);
 												ballot.setDecision("Aff");
 												try {
 													if(speaks.text() != null)
@@ -115,16 +115,16 @@ public class LD extends Module {
 										rounds.add(round);
 									} else if(win.text() != null && side != null && side.text() != null && (side.text().equals("Aff") || side.text().equals("Neg"))) {
 										// check if other side (aff / neg) is competitors.get(against.text()) win.text().equals("F")
-										for(LDRound r : rounds) {
-											if(r.getAff() != null && r.getAff().getId().equals(debater.getId()) && r.getRound().equals(String.valueOf(k+1))) {
-												r.setAff(debater);
+										for(Round r : rounds) {
+											if(r.getSingleAff() != null && r.getSingleAff().getId().equals(debater.getId()) && r.getRound().equals(String.valueOf(k+1))) {
+												r.setSingleAff(debater);
 												try {
 													if(speaks.text() != null)
 														r.getBallot().get(0).setAff1_speaks(Double.parseDouble(speaks.text().replaceAll("\\\\*", "")));
 												} catch(NumberFormatException nfe) {}
 												continue round;
-											} else if(r.getNeg() != null && r.getNeg().getId().equals(debater.getId()) && r.getRound().equals(String.valueOf(k+1))) {
-												r.setNeg(debater);
+											} else if(r.getSingleNeg() != null && r.getSingleNeg().getId().equals(debater.getId()) && r.getRound().equals(String.valueOf(k+1))) {
+												r.setSingleNeg(debater);
 												try {
 													if(speaks.text() != null)
 														r.getBallot().get(0).setNeg1_speaks(Double.parseDouble(speaks.text()));
@@ -136,8 +136,8 @@ public class LD extends Module {
 										if ((win.text().equals("W") || win.text().equals("L")) && against.text() != null && (againstDebater = competitors.get(against.text())) != null) {
 											ArrayList<Ballot> ballots = new ArrayList<Ballot>();
 											if (side.text().equals("Aff")) {
-												round.setAff(debater);
-												round.setNeg(againstDebater);
+												round.setSingleAff(debater);
+												round.setSingleNeg(againstDebater);
 												Ballot ballot = new Ballot();
 												ballot.setDecision(win.text().equals("W") ? "Aff" : "Neg");
 												try {
@@ -148,8 +148,8 @@ public class LD extends Module {
 												ballots.add(ballot);
 												round.setBallot(ballots);
 											} else { // neg
-												round.setAff(againstDebater);
-												round.setNeg(debater);
+												round.setSingleAff(againstDebater);
+												round.setSingleNeg(debater);
 												Ballot ballot = new Ballot();
 												ballot.setDecision(win.text().equals("W") ? "Neg" : "Aff");
 												try {
@@ -180,9 +180,9 @@ public class LD extends Module {
 							Pattern pattern = Pattern.compile("[^\\s]+ (.+?)( \\((.+?)\\))? \\((Aff|Neg)\\) def. [^\\s]+ (.+?)( \\((.+?)\\))? \\((Aff|Neg)\\)");
 							doc.getElementsByTag("font").unwrap();
 							Matcher matcher = pattern.matcher(doc.toString().replaceAll("<br>", ""));
-							ArrayList<LDRound> rounds = new ArrayList<>();
+							ArrayList<Round> rounds = new ArrayList<>();
 							while(matcher.find()) {
-								LDRound round = new LDRound();
+								Round round = new Round();
 								round.setAbsUrl(doc.baseUri());
 								Debater winner = new Debater(matcher.group(1), matcher.group(3));
 								winner.updateToDocument(datastore, debaterCollection, schoolCollection);
@@ -190,11 +190,11 @@ public class LD extends Module {
 								loser.updateToDocument(datastore, debaterCollection, schoolCollection);
 
 								if(matcher.group(4).equals("Aff")) {
-									round.setAff(winner);
-									round.setNeg(loser);
+									round.setSingleAff(winner);
+									round.setSingleNeg(loser);
 								} else {
-									round.setAff(loser);
-									round.setNeg(winner);
+									round.setSingleAff(loser);
+									round.setSingleNeg(winner);
 								}
 								Ballot ballot = new Ballot();
 								ballot.setDecision(matcher.group(4));
@@ -210,7 +210,7 @@ public class LD extends Module {
 							Document doc = Jsoup.connect(bracket.absUrl("href")).timeout(10*1000).get();
 
 							// Parse rounds
-							ArrayList<LDRound> rounds = new ArrayList<>();
+							ArrayList<Round> rounds = new ArrayList<>();
 							String roundStr, last = null;
 							ArrayList<Pair<Debater, Debater>> matchup = new ArrayList<>();
 							for(int i = 0;(roundStr = DRHelper.getBracketRound(doc, i)) != null;i++) {
@@ -289,11 +289,11 @@ public class LD extends Module {
 										if(pair.getLeft() == null || pair.getRight() == null)
 											continue;
 
-										LDRound round = new LDRound();
+										Round round = new Round();
 										round.setAbsUrl(doc.baseUri());
 										round.setNoSide(true);
-										round.setAff(pair.getLeft());
-										round.setNeg(pair.getRight());
+										round.setSingleAff(pair.getLeft());
+										round.setSingleNeg(pair.getRight());
 										round.setRound(last);
 										Ballot ballot = new Ballot();
 										ballot.setDecision("Aff");

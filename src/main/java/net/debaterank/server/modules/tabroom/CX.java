@@ -133,14 +133,14 @@ public class CX extends Module {
 		}
 
 		// Getting panels
-		HashMap<Integer, CXRound> panels = new HashMap<>();
+		HashMap<Integer, Round> panels = new HashMap<>();
 		JSONArray jsonPanel = jsonObject.getJSONArray("panel");
 		for(int i = 0;i<jsonPanel.length();i++) {
 			JSONObject jObject = jsonPanel.getJSONObject(i);
 			int id = jObject.getInt("ID");
 			int round = jObject.getInt("ROUND");
 			boolean bye = jObject.getInt("BYE") == 1;
-			CXRound r = new CXRound();
+			Round r = new Round();
 			r.setBye(bye);
 			r.setRound(roundStrings.get(round));
 			r.setBallot(new ArrayList<>());
@@ -149,7 +149,7 @@ public class CX extends Module {
 		}
 
 		// Finally, ballot parsing
-		HashMap<Integer, Pair<CXRound, Ballot>> ballots = new HashMap<>();
+		HashMap<Integer, Pair<Round, Ballot>> ballots = new HashMap<>();
 		JSONArray jsonBallot = jsonObject.getJSONArray("ballot");
 		for(int i = 0;i<jsonBallot.length();i++) {
 			try {
@@ -168,18 +168,18 @@ public class CX extends Module {
 				if (jObject.has("BYE"))
 					bye = jObject.getInt("BYE") == 1;
 
-				CXRound round = panels.get(panel);
+				Round round = panels.get(panel);
 				if (round == null) {
 					log.warn("Panel " + panel + " in " + t.getLink() + " was null! Skipping this ballot");
 					continue;
 				}
-				if (side == 1 && round.getAff() == null)
-					round.setAff(competitors.get(team));
-				else if (side == 2 && round.getNeg() == null)
-					round.setNeg(competitors.get(team));
+				if (side == 1 && round.getTeamAff() == null)
+					round.setTeamAff(competitors.get(team));
+				else if (side == 2 && round.getTeamNeg() == null)
+					round.setTeamNeg(competitors.get(team));
 				else if (side == -1) {
-					round.setAff(competitors.get(team));
-					round.setNeg(competitors.get(team));
+					round.setTeamAff(competitors.get(team));
+					round.setTeamNeg(competitors.get(team));
 					round.setNoSide(true);
 				}
 				round.setBye(round.isBye() || bye);
@@ -202,14 +202,14 @@ public class CX extends Module {
 				double score = jObject.getDouble("SCORE");
 				int id = jObject.getInt("ID");
 
-				Pair<CXRound, Ballot> ballot = ballots.get(ballotID);
+				Pair<Round, Ballot> ballot = ballots.get(ballotID);
 				if(ballot == null) {
 					log.warn("Ballot " + ballotID + " in " + t.getLink() + " is null. Skipping ballot score");
 					continue;
 				}
 
-				Team aff = ballot.getLeft().getAff();
-				Team neg = ballot.getLeft().getNeg();
+				Team aff = ballot.getLeft().getTeamAff();
+				Team neg = ballot.getLeft().getTeamNeg();
 
 				if(score_id.equals("WIN")) { // WIN RECIPIENT is the team / entry ID
 					Team team = competitors.get(recipient);
@@ -254,9 +254,9 @@ public class CX extends Module {
 		}
 
 		// Collapse ballots to one judge per ballot
-		ArrayList<CXRound> collBallots = new ArrayList<>();
-		for(Pair<CXRound, Ballot> pair : ballots.values()) {
-			CXRound round = pair.getLeft();
+		ArrayList<Round> collBallots = new ArrayList<>();
+		for(Pair<Round, Ballot> pair : ballots.values()) {
+			Round round = pair.getLeft();
 			Ballot ballot = pair.getRight();
 			if(!collBallots.contains(round))
 				collBallots.add(round);

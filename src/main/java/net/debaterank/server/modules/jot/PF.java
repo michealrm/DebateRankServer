@@ -58,7 +58,7 @@ public class PF extends Module {
 					Elements eventRows = tInfo.getEventRows();
 					log.info("Updating " + t.getName() + " " + t.getLink());
 					for(Element eventRow : eventRows) {
-						ArrayList<PFRound> rowRounds = new ArrayList<>();
+						ArrayList<Round> rowRounds = new ArrayList<>();
 						// Prelims
 						Element prelim = eventRow.select("a[title]:contains(Prelims)").first();
 						if(prelim != null) {
@@ -81,7 +81,7 @@ public class PF extends Module {
 							}
 
 							// Parse rounds
-							ArrayList<PFRound> rounds = new ArrayList<>();
+							ArrayList<Round> rounds = new ArrayList<>();
 							for(int i = 0;i<rows.size();i++) {
 								String key = rows.get(i).select("td").first().select("tr:eq(1)").text().replaceAll("\u00a0|&nbsp", " ").split(" ")[0];
 								Team team = competitors.get(key);
@@ -110,7 +110,7 @@ public class PF extends Module {
 									catch(Exception e) {
 										continue;
 									}
-									PFRound round = new PFRound();
+									Round round = new Round();
 									Team againstTeam = null;
 									if(win == null || win.text() == null || against == null) {
 										continue;
@@ -119,12 +119,12 @@ public class PF extends Module {
 									if(win.text().equals("B") || win.text().equals("F")) {
 										// bye
 										if(win.text().equals("B")) {
-											round.setAff(team);
-											round.setNeg(team);
+											round.setTeamAff(team);
+											round.setTeamNeg(team);
 										} else {
 											Ballot ballot = new Ballot();
 											if(side == null || side.text() == null || side.text().equals("Pro") || side.text().equals("Aff")) {
-												round.setAff(team);
+												round.setTeamAff(team);
 												ballot.setDecision("Neg");
 												try {
 													if(speaks1.text() != null)
@@ -140,7 +140,7 @@ public class PF extends Module {
 												} catch(NumberFormatException nfe) {}
 											}
 											else {
-												round.setNeg(team);
+												round.setTeamNeg(team);
 												ballot.setDecision("Aff");
 												try {
 													if(speaks1.text() != null)
@@ -163,8 +163,8 @@ public class PF extends Module {
 										rounds.add(round);
 									} else if(win.text() != null && side != null && side.text() != null && (side.text().equals("Pro") || side.text().equals("Con") || side.text().equals("Aff") || side.text().equals("Neg"))) {
 										// check if other side (aff / neg) is competitors.get(against.text()) win.text().equals("F")
-										for(PFRound r : rounds) {
-											if(r.getAff() != null && r.getAff().equals(team) && r.getRound().equals(String.valueOf(k+1))) {
+										for(Round r : rounds) {
+											if(r.getTeamAff() != null && r.getTeamAff().equals(team) && r.getRound().equals(String.valueOf(k+1))) {
 												try {
 													if(speaks1.text() != null)
 														r.getBallot().get(0).setAff1_speaks(Double.parseDouble(speaks1.text().replaceAll("\\\\*", "")));
@@ -178,7 +178,7 @@ public class PF extends Module {
 														r.getBallot().get(0).setAff2_place(Integer.parseInt(place2.text()));
 												} catch(NumberFormatException nfe) {}
 												continue round;
-											} else if(r.getNeg() != null && r.getNeg().equals(team) && r.getRound().equals(String.valueOf(k+1))) {
+											} else if(r.getTeamNeg() != null && r.getTeamNeg().equals(team) && r.getRound().equals(String.valueOf(k+1))) {
 												try {
 													if(speaks1.text() != null)
 														r.getBallot().get(0).setNeg1_speaks(Double.parseDouble(speaks1.text().replaceAll("\\\\*", "")));
@@ -198,8 +198,8 @@ public class PF extends Module {
 										if ((win.text().equals("W") || win.text().equals("L")) && against.text() != null && (againstTeam = competitors.get(against.text())) != null) {
 											ArrayList<Ballot> ballots = new ArrayList<>();
 											if (side.text().equals("Pro") || side.text().equals("Aff")) {
-												round.setAff(team);
-												round.setNeg(againstTeam);
+												round.setTeamAff(team);
+												round.setTeamNeg(againstTeam);
 												Ballot ballot = new Ballot();
 												ballot.setDecision(win.text().equals("W") ? "Aff" : "Neg");
 												try {
@@ -216,8 +216,8 @@ public class PF extends Module {
 												} catch(NumberFormatException nfe) {}
 												ballots.add(ballot);
 											} else { // neg
-												round.setAff(againstTeam);
-												round.setNeg(team);
+												round.setTeamAff(againstTeam);
+												round.setTeamNeg(team);
 												Ballot ballot = new Ballot();
 												ballot.setDecision(win.text().equals("W") ? "Neg" : "Aff");
 												try {
@@ -255,7 +255,7 @@ public class PF extends Module {
 							Pattern pattern = Pattern.compile("[^\\s]+ ([A-Za-z]+?) - ([A-Za-z]+?)( \\((.+?)\\))? \\((Aff|Neg)\\) def. [^\\s]+ ([A-Za-z]+?) - ([A-Za-z]+?)( \\((.+?)\\))? \\((Aff|Neg)\\)");
 							doc.getElementsByTag("font").unwrap();
 							Matcher matcher = pattern.matcher(doc.toString().replaceAll("<br>", ""));
-							ArrayList<PFRound> rounds = new ArrayList<>();
+							ArrayList<Round> rounds = new ArrayList<>();
 							while(matcher.find()) {
 
 								String leftDebater = matcher.group(1);
@@ -288,14 +288,14 @@ public class PF extends Module {
 									continue;
 								}
 
-								PFRound round = new PFRound();
+								Round round = new Round();
 								round.setAbsUrl(doc.baseUri());
 								if(matcher.group(5).equals("Pro") || matcher.group(5).equals("Aff")) {
-									round.setAff(team);
-									round.setNeg(against);
+									round.setTeamAff(team);
+									round.setTeamNeg(against);
 								} else {
-									round.setAff(against);
-									round.setNeg(team);
+									round.setTeamAff(against);
+									round.setTeamNeg(team);
 								}
 								Ballot ballot = new Ballot();
 								ballot.setDecision(matcher.group(5));
@@ -311,7 +311,7 @@ public class PF extends Module {
 							Document doc = Jsoup.connect(bracket.absUrl("href")).timeout(10*1000).get();
 
 							// Parse rounds
-							ArrayList<PFRound> rounds = new ArrayList<>();
+							ArrayList<Round> rounds = new ArrayList<>();
 							String roundStr = null, last = null;
 							ArrayList<Pair<Team, Team>> matchup = new ArrayList<Pair<Team, Team>>();
 							for(int i = 0;(roundStr = getBracketRound(doc, i)) != null;i++) {
@@ -406,10 +406,10 @@ public class PF extends Module {
 										if(pair.getLeft() == null || pair.getRight() == null)
 											continue;
 
-										PFRound round = new PFRound();
+										Round round = new Round();
 										round.setAbsUrl(doc.baseUri());
-										round.setAff(pair.getLeft());
-										round.setNeg(pair.getRight());
+										round.setTeamAff(pair.getLeft());
+										round.setTeamNeg(pair.getRight());
 										round.setNoSide(true);
 										round.setBallot(Arrays.asList(new Ballot("Aff")));
 

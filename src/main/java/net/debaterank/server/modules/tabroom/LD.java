@@ -126,14 +126,14 @@ public class LD extends Module {
 		}
 
 		// Getting panels
-		HashMap<Integer, LDRound> panels = new HashMap<>();
+		HashMap<Integer, Round> panels = new HashMap<>();
 		JSONArray jsonPanel = jsonObject.getJSONArray("panel");
 		for(int i = 0;i<jsonPanel.length();i++) {
 			JSONObject jObject = jsonPanel.getJSONObject(i);
 			int id = jObject.getInt("ID");
 			int round = jObject.getInt("ROUND");
 			boolean bye = jObject.getInt("BYE") == 1;
-			LDRound r = new LDRound();
+			Round r = new Round();
 			r.setBye(bye);
 			r.setRound(roundStrings.get(round));
 			r.setBallot(new ArrayList<>());
@@ -142,7 +142,7 @@ public class LD extends Module {
 		}
 
 		// Finally, ballot parsing
-		HashMap<Integer, Pair<LDRound, Ballot>> ballots = new HashMap<>();
+		HashMap<Integer, Pair<Round, Ballot>> ballots = new HashMap<>();
 		JSONArray jsonBallot = jsonObject.getJSONArray("ballot");
 		for(int i = 0;i<jsonBallot.length();i++) {
 			try {
@@ -161,18 +161,18 @@ public class LD extends Module {
 				if (jObject.has("BYE"))
 					bye = jObject.getInt("BYE") == 1;
 
-				LDRound round = panels.get(panel);
+				Round round = panels.get(panel);
 				if(round == null) {
 					log.warn("Panel " + panel + " in " + t.getLink() + " was null! Skipping this ballot");
 					continue;
 				}
 				if (side == 1 && round.getAff() == null)
-					round.setAff(competitors.get(debater));
-				else if (side == 2 && round.getNeg() == null)
-					round.setNeg(competitors.get(debater));
+					round.setSingleAff(competitors.get(debater));
+				else if (side == 2 && round.getSingleNeg() == null)
+					round.setSingleNeg(competitors.get(debater));
 				else if(side == -1) {
-					round.setAff(competitors.get(debater));
-					round.setNeg(competitors.get(debater));
+					round.setSingleAff(competitors.get(debater));
+					round.setSingleNeg(competitors.get(debater));
 					round.setNoSide(true);
 				}
 				round.setBye(round.isBye() || bye);
@@ -195,14 +195,14 @@ public class LD extends Module {
 				double score = jObject.getDouble("SCORE");
 				int id = jObject.getInt("ID");
 
-				Pair<LDRound, Ballot> ballot = ballots.get(ballotID);
+				Pair<Round, Ballot> ballot = ballots.get(ballotID);
 				if(ballot == null) {
 					log.warn("Ballot " + ballotID + " in " + t.getLink() + " is null. Skipping ballot score");
 					continue;
 				}
 
 				Debater aff = ballot.getLeft().getAff();
-				Debater neg = ballot.getLeft().getNeg();
+				Debater neg = ballot.getLeft().getSingleNeg();
 
 				if(score_id.equals("WIN")) { // WIN RECIPIENT is the team / entry ID
 					Debater debater = competitors.get(recipient);
@@ -225,9 +225,9 @@ public class LD extends Module {
 		}
 
 		// Collapse ballots to one judge per ballot
-		ArrayList<LDRound> collBallots = new ArrayList<>();
-		for(Pair<LDRound, Ballot> pair : ballots.values()) {
-			LDRound round = pair.getLeft();
+		ArrayList<Round> collBallots = new ArrayList<>();
+		for(Pair<Round, Ballot> pair : ballots.values()) {
+			Round round = pair.getLeft();
 			Ballot ballot = pair.getRight();
 			if(!collBallots.contains(round))
 				collBallots.add(round);

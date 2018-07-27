@@ -1,12 +1,38 @@
 package net.debaterank.server.models;
 
 import org.mongodb.morphia.annotations.Embedded;
+import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Property;
 import org.mongodb.morphia.annotations.Reference;
 
+@Entity("ballots")
 public class Ballot {
 	@Reference
+	private Round round;
+	@Reference
 	private Judge judge;
+	@Property("aff1_speaks")
+	private Double aff1_speaks;
+	@Property("aff2_speaks")
+	private Double aff2_speaks;
+	@Property("neg1_speaks")
+	private Double neg1_speaks;
+	@Property("neg2_speaks")
+	private Double neg2_speaks;
+	@Property("aff1_place")
+	private Integer aff1_place;
+	@Property("aff2_place")
+	private Integer aff2_place;
+	@Property("neg1_place")
+	private Integer neg1_place;
+	@Property("neg2_place")
+	private Integer neg2_place;
+	@Property("decision")
+	private String decision;
+
+	public Ballot(String decision) {
+		this.decision = decision;
+	}
 
 	public Judge getJudge() {
 		return judge;
@@ -88,18 +114,17 @@ public class Ballot {
 		this.decision = decision;
 	}
 
-	public Ballot(String decision) {
-		this.decision = decision;
+	public Round getRound() {
+		return round;
 	}
 
-	public Ballot(Double aff1_speaks, Double neg1_speaks, String decision) {
-
-		this.aff1_speaks = aff1_speaks;
-		this.neg1_speaks = neg1_speaks;
-		this.decision = decision;
+	public void setRound(Round round) {
+		this.round = round;
 	}
 
 	public void replaceNull(Ballot ballot) {
+		if(round == null)
+			round = ballot.getRound();
 		if(aff1_speaks == null)
 			aff1_speaks = ballot.getAff1_speaks();
 		if(aff2_speaks == null)
@@ -119,23 +144,4 @@ public class Ballot {
 		if(decision == null)
 			decision = ballot.getDecision();
 	}
-	
-	@Property("aff1_speaks")
-	private Double aff1_speaks;
-	@Property("aff2_speaks")
-	private Double aff2_speaks;
-	@Property("neg1_speaks")
-	private Double neg1_speaks;
-	@Property("neg2_speaks")
-	private Double neg2_speaks;
-	@Property("aff1_place")
-	private Integer aff1_place;
-	@Property("aff2_place")
-	private Integer aff2_place;
-	@Property("neg1_place")
-	private Integer neg1_place;
-	@Property("neg2_place")
-	private Integer neg2_place;
-	@Property("decision")
-	private String decision;
 }

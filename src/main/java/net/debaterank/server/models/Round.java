@@ -97,4 +97,43 @@ public class Round {
         this.noSide = noSide;
     }
 
+    public Type getType() {
+        return type;
+    }
+
+    public void setType(Type type) {
+        this.type = type;
+    }
+
+    public Debater getSingleAff() {
+        return singleAff;
+    }
+
+    public void setSingleAff(Debater singleAff) {
+        this.singleAff = singleAff;
+    }
+
+    public Debater getSingleNeg() {
+        return singleNeg;
+    }
+
+    public void setSingleNeg(Debater singleNeg) {
+        this.singleNeg = singleNeg;
+    }
+
+    public Team getTeamAff() {
+        return teamAff;
+    }
+
+    public void setTeamAff(Team teamAff) {
+        this.teamAff = teamAff;
+    }
+
+    public Team getTeamNeg() {
+        return teamNeg;
+    }
+
+    public void setTeamNeg(Team teamNeg) {
+        this.teamNeg = teamNeg;
+    }
 }
