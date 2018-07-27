@@ -30,10 +30,6 @@ public class Ballot {
 	@Property("decision")
 	private String decision;
 
-	public Ballot(String decision) {
-		this.decision = decision;
-	}
-
 	public Judge getJudge() {
 		return judge;
 	}
