@@ -2,5 +2,5 @@
 /bin/
 /.idea/
 log*
-config.properties
+mongo.properties
 .DS_Store
