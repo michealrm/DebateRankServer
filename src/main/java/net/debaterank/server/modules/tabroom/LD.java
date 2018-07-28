@@ -133,11 +133,9 @@ public class LD extends Module {
 			int id = jObject.getInt("ID");
 			int round = jObject.getInt("ROUND");
 			boolean bye = jObject.getInt("BYE") == 1;
-			Round r = new Round();
+			Round r = new Round(t);
 			r.setBye(bye);
 			r.setRound(roundStrings.get(round));
-			r.setBallot(new ArrayList<>());
-
 			panels.put(id, r);
 		}
 
@@ -166,7 +164,7 @@ public class LD extends Module {
 					log.warn("Panel " + panel + " in " + t.getLink() + " was null! Skipping this ballot");
 					continue;
 				}
-				if (side == 1 && round.getAff() == null)
+				if (side == 1 && round.getSingleAff() == null)
 					round.setSingleAff(competitors.get(debater));
 				else if (side == 2 && round.getSingleNeg() == null)
 					round.setSingleNeg(competitors.get(debater));
@@ -177,7 +175,7 @@ public class LD extends Module {
 				}
 				round.setBye(round.isBye() || bye);
 
-				Ballot ballot = new Ballot();
+				Ballot ballot = new Ballot(round);
 				ballot.setJudge(judges.get(judge)); // This can be null
 
 				ballots.put(id, Pair.of(round, ballot));
@@ -201,7 +199,7 @@ public class LD extends Module {
 					continue;
 				}
 
-				Debater aff = ballot.getLeft().getAff();
+				Debater aff = ballot.getLeft().getSingleAff();
 				Debater neg = ballot.getLeft().getSingleNeg();
 
 				if(score_id.equals("WIN")) { // WIN RECIPIENT is the team / entry ID
@@ -225,32 +223,20 @@ public class LD extends Module {
 		}
 
 		// Collapse ballots to one judge per ballot
-		ArrayList<Round> collBallots = new ArrayList<>();
+		ArrayList<Ballot> collBallots = new ArrayList<>();
 		for(Pair<Round, Ballot> pair : ballots.values()) {
-			Round round = pair.getLeft();
 			Ballot ballot = pair.getRight();
-			if(!collBallots.contains(round))
-				collBallots.add(round);
-			boolean containsBallot = false;
-			for(Ballot b : round.getBallot()) {
-				if(b.getJudge() == ballot.getJudge()) {
-					containsBallot = true;
+			if(!collBallots.contains(ballot))
+				collBallots.add(ballot);
+			for(Ballot b : collBallots) {
+				if(b.getJudge() == ballot.getJudge())
 					b.replaceNull(ballot);
-				}
 			}
-			if(!containsBallot && ballot != null && ballot.getJudge() != null)
-				round.getBallot().add(ballot);
 		}
 
 		// Update database
-		if(collBallots.size() == 0) {
-			log.info(t.getName() + " had no LD entries. " + t.getLink());
-			t.getRounds_contains().put("ld", false);
-		} else {
-			t.getRounds_contains().put("ld", true);
-			t.setLd_rounds(collBallots);
-		}
-		datastore.save(t);
+		datastore.save(panels.values());
+		datastore.save(collBallots);
 		log.info("Updated " + t.getName());
 	}
 

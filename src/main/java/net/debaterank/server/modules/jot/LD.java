@@ -42,10 +42,11 @@ public class LD extends Module {
 			Tournament t = tInfo.getTournament();
 			manager.newModule(() -> {
 				try {
+					ArrayList<Ballot> ballots = new ArrayList<>();
+					ArrayList<Round> tournRounds = new ArrayList<>();
 					Elements eventRows = tInfo.getEventRows();
 					log.info("Updating " + t.getName() + " " + t.getLink());
 					for(Element eventRow : eventRows) {
-						ArrayList<Round> rowRounds = new ArrayList<>();
 						// Prelims
 						Element prelim = eventRow.select("a[title]:contains(Prelims)").first();
 						if(prelim != null) {
@@ -79,7 +80,7 @@ public class LD extends Module {
 									Element win = cols.get(k).select("[colspan=2].rec").first();
 									Element against = cols.get(k).select("[colspan=2][align=right]").first();
 
-									Round round = new Round();
+									Round round = new Round(t);
 									Debater againstDebater = null;
 									if(win == null || win.text() == null || against == null) {
 										continue;
@@ -90,7 +91,7 @@ public class LD extends Module {
 											round.setSingleAff(debater);
 											round.setSingleNeg(debater);
 										} else {
-											Ballot ballot = new Ballot();
+											Ballot ballot = new Ballot(round);
 											if(side == null || side.text() == null || side.text().equals("Aff")) {
 												round.setSingleAff(debater);
 												ballot.setDecision("Neg");
@@ -107,60 +108,54 @@ public class LD extends Module {
 														ballot.setNeg1_speaks(Double.parseDouble(speaks.text().replaceAll("\\\\*", "")));
 												} catch(NumberFormatException nfe) {}
 											}
-											round.setBallot(Arrays.asList(ballot));
-										}
+                                            ballots.add(ballot);
+                                        }
 										round.setBye(true);
 										round.setRound(String.valueOf(k+1));
 										round.setAbsUrl(p.baseUri());
 										rounds.add(round);
 									} else if(win.text() != null && side != null && side.text() != null && (side.text().equals("Aff") || side.text().equals("Neg"))) {
 										// check if other side (aff / neg) is competitors.get(against.text()) win.text().equals("F")
-										for(Round r : rounds) {
+										for(Ballot ballot : ballots) {
+										    Round r = ballot.getRound();
 											if(r.getSingleAff() != null && r.getSingleAff().getId().equals(debater.getId()) && r.getRound().equals(String.valueOf(k+1))) {
 												r.setSingleAff(debater);
 												try {
 													if(speaks.text() != null)
-														r.getBallot().get(0).setAff1_speaks(Double.parseDouble(speaks.text().replaceAll("\\\\*", "")));
+														ballot.setAff1_speaks(Double.parseDouble(speaks.text().replaceAll("\\\\*", "")));
 												} catch(NumberFormatException nfe) {}
 												continue round;
 											} else if(r.getSingleNeg() != null && r.getSingleNeg().getId().equals(debater.getId()) && r.getRound().equals(String.valueOf(k+1))) {
 												r.setSingleNeg(debater);
 												try {
 													if(speaks.text() != null)
-														r.getBallot().get(0).setNeg1_speaks(Double.parseDouble(speaks.text()));
+														ballot.setNeg1_speaks(Double.parseDouble(speaks.text()));
 												} catch(NumberFormatException nfe) {}
 												continue round;
 											}
 										}
 										// no existing document found. we need to make a new one
 										if ((win.text().equals("W") || win.text().equals("L")) && against.text() != null && (againstDebater = competitors.get(against.text())) != null) {
-											ArrayList<Ballot> ballots = new ArrayList<Ballot>();
-											if (side.text().equals("Aff")) {
+                                            Ballot ballot = new Ballot(round);
+										    if (side.text().equals("Aff")) {
 												round.setSingleAff(debater);
 												round.setSingleNeg(againstDebater);
-												Ballot ballot = new Ballot();
 												ballot.setDecision(win.text().equals("W") ? "Aff" : "Neg");
 												try {
 													if (speaks.text() != null)
 														ballot.setAff1_speaks(Double.parseDouble(speaks.text()));
-												} catch (NumberFormatException nfe) {
-												}
-												ballots.add(ballot);
-												round.setBallot(ballots);
+												} catch (NumberFormatException nfe) {}
 											} else { // neg
 												round.setSingleAff(againstDebater);
 												round.setSingleNeg(debater);
-												Ballot ballot = new Ballot();
 												ballot.setDecision(win.text().equals("W") ? "Neg" : "Aff");
 												try {
 													if (speaks.text() != null)
 														ballot.setNeg1_speaks(Double.parseDouble(speaks.text()));
-												} catch (NumberFormatException nfe) {
-												}
-												ballots.add(ballot);
+												} catch (NumberFormatException nfe) {}
 											}
-											round.setBallot(ballots);
-											round.setRound(String.valueOf(k + 1));
+                                            ballots.add(ballot);
+                                            round.setRound(String.valueOf(k + 1));
 											round.setAbsUrl(p.baseUri());
 											rounds.add(round);
 										}
@@ -169,7 +164,7 @@ public class LD extends Module {
 									}
 								}
 							}
-							rowRounds.addAll(rounds); // add results
+							tournRounds.addAll(rounds); // add results
 						}
 
 						// Double Octos
@@ -182,7 +177,7 @@ public class LD extends Module {
 							Matcher matcher = pattern.matcher(doc.toString().replaceAll("<br>", ""));
 							ArrayList<Round> rounds = new ArrayList<>();
 							while(matcher.find()) {
-								Round round = new Round();
+								Round round = new Round(t);
 								round.setAbsUrl(doc.baseUri());
 								Debater winner = new Debater(matcher.group(1), matcher.group(3));
 								winner.updateToDocument(datastore, debaterCollection, schoolCollection);
@@ -196,12 +191,12 @@ public class LD extends Module {
 									round.setSingleAff(loser);
 									round.setSingleNeg(winner);
 								}
-								Ballot ballot = new Ballot();
+								Ballot ballot = new Ballot(round);
 								ballot.setDecision(matcher.group(4));
 								round.setRound("DO");
 								rounds.add(round);
 							}
-							rowRounds.addAll(rounds); // add results
+							tournRounds.addAll(rounds); // add results
 						}
 
 						//Bracket
@@ -289,13 +284,13 @@ public class LD extends Module {
 										if(pair.getLeft() == null || pair.getRight() == null)
 											continue;
 
-										Round round = new Round();
+										Round round = new Round(t);
 										round.setAbsUrl(doc.baseUri());
 										round.setNoSide(true);
 										round.setSingleAff(pair.getLeft());
 										round.setSingleNeg(pair.getRight());
 										round.setRound(last);
-										Ballot ballot = new Ballot();
+										Ballot ballot = new Ballot(round);
 										ballot.setDecision("Aff");
 
 										rounds.add(round);
@@ -305,17 +300,11 @@ public class LD extends Module {
 								last = roundStr;
 								matchup = currentMatchup;
 							}
-							rowRounds.addAll(rounds); // add results
+							tournRounds.addAll(rounds); // add results
 						}
-						t.setLd_rounds(rowRounds);
 					}
-					if(t.getLd_rounds().size() == 0) {
-						log.info(t.getName() + " had no LD entries. " + t.getLink());
-						t.getRounds_contains().put("ld", false);
-					} else {
-						t.getRounds_contains().put("ld", true);
-					}
-					datastore.save(t); // save
+                    datastore.save(tournRounds);
+                    datastore.save(ballots);
 					log.info("Updated " + t.getName());
 
 				} catch(Exception e) {

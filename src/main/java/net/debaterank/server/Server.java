@@ -98,69 +98,13 @@ public class Server {
 		ModuleManager moduleManager = new ModuleManager();
 		WorkerPoolManager workerManager = new WorkerPoolManager();
 
-//				// TEMP CALCULATIONS
-//
-//				try {
-//					int aff = 0, neg = 0;
-//					ResultSet set = sql.executeQuery("SELECT side, decision FROM ld_rounds JOIN tournaments as t ON t.id=ld_rounds.tournament WHERE t.date>'2016-07-01 00:00:00.000' AND absUrl like '%tabroom%'");
-//					while(set.next()) {
-//						if(set.getString(1) != null && set.getString(2) != null) {
-//							if(set.getString(1).equals("A") && set.getString(2).equals("1-0"))
-//								aff++;
-//							else if(set.getString(1).equals("A") && set.getString(2).equals("0-1"))
-//								neg++;
-//							System.out.println("Aff: " + aff);
-//							System.out.println("Neg: " + neg);
-//						}
-//
-//
-//
-//					}
-//
-//					System.out.println("\nFinal");
-//					System.out.println("Aff: " + aff);
-//					System.out.println("Neg: " + neg);
-//
-//				} catch(SQLException e) {}
-
 		/////////
 		// JOT //
 		/////////
 
 		ArrayList<Tournament> jotTournaments = new ArrayList<>();
-		ArrayList<Tournament> tournamentsInDB = new ArrayList<>();
+		ArrayList<Tournament> tournamentsInDB = new ArrayList<>(datastore.createQuery(Tournament.class).asList());
 		int jotScraped = 0;
-		MongoCollection<org.bson.Document> tournamentCollection = db.getCollection("tournaments");
-		for(org.bson.Document doc : tournamentCollection.aggregate(Arrays.asList(Aggregates.project(Projections.include(Arrays.asList("link", "rounds_contains", "rounds_exists")))))) {
-			Tournament tournament = new Tournament();
-			tournament.setId(doc.getObjectId("_id"));
-			tournament.setLink(doc.getString("link"));
-			Object roundsContains = null;
-			if((roundsContains = doc.get("rounds_contains")) instanceof org.bson.Document) {
-				HashMap<String, Boolean> hm = new HashMap<>();
-				org.bson.Document rcDoc = (org.bson.Document)roundsContains;
-				hm.put("ld", rcDoc.getBoolean("ld"));
-				hm.put("pf", rcDoc.getBoolean("pf"));
-				hm.put("cx", rcDoc.getBoolean("cx"));
-				
-				tournament.setRounds_contains(hm);
-			}
-			else
-				log.warn("rounds_contains was not the correct type!");
-			Object roundsExists = null;
-			if((roundsExists = doc.get("rounds_exists")) instanceof org.bson.Document) {
-				HashMap<String, Boolean> hm = new HashMap<>();
-				org.bson.Document rcDoc = (org.bson.Document)roundsExists;
-				hm.put("ld", rcDoc.getBoolean("ld"));
-				hm.put("pf", rcDoc.getBoolean("pf"));
-				hm.put("cx", rcDoc.getBoolean("cx"));
-
-				tournament.setRounds_exists(hm);
-			}
-			else
-				log.warn("rounds_exists was not the correct type!");
-			tournamentsInDB.add(tournament);
-		}
 		
 		try {
 			// Get seasons so we can iterate through all the jotTournaments

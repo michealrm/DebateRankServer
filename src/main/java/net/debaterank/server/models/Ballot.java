@@ -1,12 +1,12 @@
 package net.debaterank.server.models;
 
-import org.mongodb.morphia.annotations.Embedded;
-import org.mongodb.morphia.annotations.Entity;
-import org.mongodb.morphia.annotations.Property;
-import org.mongodb.morphia.annotations.Reference;
+import org.bson.types.ObjectId;
+import org.mongodb.morphia.annotations.*;
 
 @Entity("ballots")
 public class Ballot {
+    @Id
+    private ObjectId id = new ObjectId();
 	@Reference
 	private Round round;
 	@Reference
@@ -29,6 +29,10 @@ public class Ballot {
 	private Integer neg2_place;
 	@Property("decision")
 	private String decision;
+
+	public Ballot(Round round) {
+		this.round = round;
+	}
 
 	public Judge getJudge() {
 		return judge;
@@ -114,9 +118,9 @@ public class Ballot {
 		return round;
 	}
 
-	public void setRound(Round round) {
+	/*public void setRound(Round round) {
 		this.round = round;
-	}
+	}*/
 
 	public void replaceNull(Ballot ballot) {
 		if(round == null)

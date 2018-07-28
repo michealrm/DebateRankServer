@@ -34,6 +34,7 @@ public class JOTEntry extends Module {
 	public void run() {
 		// Scrape events per tournament
 		for(Tournament t : tournaments) {
+			if(!(t.isScraped("LD") && t.isScraped("PF") && t.isScraped("CX")))
 			manager.newModule(() -> {
 				try {
 					Document tPage = Jsoup.connect(t.getLink()).timeout(10 * 1000).get();
@@ -41,26 +42,26 @@ public class JOTEntry extends Module {
 					Elements pfEventRows = tPage.select("tr:has(td:matches(PF|Public|Forum|P-F)), tr:has(td:has(nobr:matches(PF|Public|Forum|P-F)))");
 					Elements cxEventRows = tPage.select("tr:has(td:matches(CX|Cross|Examination|C-X|Policy)), tr:has(td:has(nobr:matches(CX|Cross|Examination|C-X|Policy)))");
 
-					if (ldEventRows.size() != 0 && t.getRounds_exists().get("ld") && !t.getRounds_contains().get("ld")) {
+					if (ldEventRows.size() != 0) {
 						JOTEntryInfo info = new JOTEntryInfo(t, ldEventRows);
 						ld.add(info);
 						log.info("Queuing JOT LD " + t.getName());
 					} else {
-						t.getRounds_exists().put("ld", false);
+						t.putScraped("LD", true);
 					}
-					if (pfEventRows.size() != 0 && t.getRounds_exists().get("pf") && !t.getRounds_contains().get("pf")) {
+					if (pfEventRows.size() != 0) {
 						JOTEntryInfo info = new JOTEntryInfo(t, pfEventRows);
 						pf.add(info);
 						log.info("Queuing JOT PF " + t.getName());
 					} else {
-						t.getRounds_exists().put("pf", false);
+						t.putScraped("PF", true);
 					}
-					if (cxEventRows.size() != 0 && t.getRounds_exists().get("cx") && !t.getRounds_contains().get("cx")) {
+					if (cxEventRows.size() != 0) {
 						JOTEntryInfo info = new JOTEntryInfo(t, cxEventRows);
 						cx.add(info);
 						log.info("Queuing JOT CX " + t.getName());
 					} else {
-						t.getRounds_exists().put("cx", false);
+						t.putScraped("CX", true);
 					}
 				} catch(Exception e) {
 					log.error(e);

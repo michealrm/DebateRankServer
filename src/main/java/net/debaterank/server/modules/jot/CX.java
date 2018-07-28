@@ -56,9 +56,10 @@ public class CX extends Module {
 			manager.newModule(() -> {
 				try {
 					Elements eventRows = tInfo.getEventRows();
+					ArrayList<Round> tournRounds = new ArrayList<>();
+					ArrayList<Ballot> ballots = new ArrayList<>();
 					log.info("Updating " + t.getName() + " " + t.getLink());
 					for(Element eventRow : eventRows) {
-						ArrayList<Round> rowRounds = new ArrayList<>();
 						// Prelims
 						Element prelim = eventRow.select("a[title]:contains(Prelims)").first();
 						if(prelim != null) {
@@ -110,7 +111,7 @@ public class CX extends Module {
 									catch(Exception e) {
 										continue;
 									}
-									Round round = new Round();
+									Round round = new Round(t);
 									Team againstTeam = null;
 									if(win == null || win.text() == null || against == null) {
 										continue;
@@ -122,7 +123,7 @@ public class CX extends Module {
 											round.setTeamAff(team);
 											round.setTeamNeg(team);
 										} else {
-											Ballot ballot = new Ballot();
+											Ballot ballot = new Ballot(round);
 											if(side == null || side.text() == null || side.text().equals("Pro") || side.text().equals("Aff")) {
 												round.setTeamAff(team);
 												ballot.setDecision("Neg");
@@ -155,7 +156,7 @@ public class CX extends Module {
 														ballot.setNeg2_place(Integer.parseInt(place2.text()));
 												} catch(NumberFormatException nfe) {}
 											}
-											round.setBallot(Arrays.asList(ballot));
+											ballots.add(ballot);
 										}
 										round.setBye(true);
 										round.setRound(String.valueOf(k+1));
@@ -163,44 +164,44 @@ public class CX extends Module {
 										rounds.add(round);
 									} else if(win.text() != null && side != null && side.text() != null && (side.text().equals("Pro") || side.text().equals("Con") || side.text().equals("Aff") || side.text().equals("Neg"))) {
 										// check if other side (aff / neg) is competitors.get(against.text()) win.text().equals("F")
-										for(Round r : rounds) {
+										for(Ballot ballot : ballots) {
+										    Round r = ballot.getRound();
 											if(r.getTeamAff() != null && r.getTeamAff().equals(team) && r.getRound().equals(String.valueOf(k+1))) {
 												try {
 													if(speaks1.text() != null)
-														r.getBallot().get(0).setAff1_speaks(Double.parseDouble(speaks1.text().replaceAll("\\\\*", "")));
+														ballot.setAff1_speaks(Double.parseDouble(speaks1.text().replaceAll("\\\\*", "")));
 													if(speaks2.text() != null)
-														r.getBallot().get(0).setAff2_speaks(Double.parseDouble(speaks2.text().replaceAll("\\\\*", "")));
+                                                        ballot.setAff2_speaks(Double.parseDouble(speaks2.text().replaceAll("\\\\*", "")));
 												} catch(NumberFormatException nfe) {}
 												try {
 													if(place1.text() != null)
-														r.getBallot().get(0).setAff1_place(Integer.parseInt(place1.text()));
+                                                        ballot.setAff1_place(Integer.parseInt(place1.text()));
 													if(place2.text() != null)
-														r.getBallot().get(0).setAff2_place(Integer.parseInt(place2.text()));
+                                                        ballot.setAff2_place(Integer.parseInt(place2.text()));
 												} catch(NumberFormatException nfe) {}
 												continue round;
 											} else if(r.getTeamNeg() != null && r.getTeamNeg().equals(team) && r.getRound().equals(String.valueOf(k+1))) {
 												try {
 													if(speaks1.text() != null)
-														r.getBallot().get(0).setNeg1_speaks(Double.parseDouble(speaks1.text().replaceAll("\\\\*", "")));
+                                                        ballot.setNeg1_speaks(Double.parseDouble(speaks1.text().replaceAll("\\\\*", "")));
 													if(speaks2.text() != null)
-														r.getBallot().get(0).setNeg2_speaks(Double.parseDouble(speaks2.text().replaceAll("\\\\*", "")));
+                                                        ballot.setNeg2_speaks(Double.parseDouble(speaks2.text().replaceAll("\\\\*", "")));
 												} catch(NumberFormatException nfe) {}
 												try {
 													if(place1.text() != null)
-														r.getBallot().get(0).setNeg1_place(Integer.parseInt(place1.text()));
+                                                        ballot.setNeg1_place(Integer.parseInt(place1.text()));
 													if(place2.text() != null)
-														r.getBallot().get(0).setNeg2_place(Integer.parseInt(place2.text()));
+                                                        ballot.setNeg2_place(Integer.parseInt(place2.text()));
 												} catch(NumberFormatException nfe) {}
 												continue round;
 											}
 										}
 										// no existing document found. we need to make a new one
 										if ((win.text().equals("W") || win.text().equals("L")) && against.text() != null && (againstTeam = competitors.get(against.text())) != null) {
-											ArrayList<Ballot> ballots = new ArrayList<>();
+                                            Ballot ballot = new Ballot(round);
 											if (side.text().equals("Pro") || side.text().equals("Aff")) {
 												round.setTeamAff(team);
 												round.setTeamNeg(againstTeam);
-												Ballot ballot = new Ballot();
 												ballot.setDecision(win.text().equals("W") ? "Aff" : "Neg");
 												try {
 													if(speaks1.text() != null)
@@ -214,11 +215,9 @@ public class CX extends Module {
 													if(place2.text() != null)
 														ballot.setAff2_place(Integer.parseInt(place2.text()));
 												} catch(NumberFormatException nfe) {}
-												ballots.add(ballot);
 											} else { // neg
 												round.setTeamAff(againstTeam);
 												round.setTeamNeg(team);
-												Ballot ballot = new Ballot();
 												ballot.setDecision(win.text().equals("W") ? "Neg" : "Aff");
 												try {
 													if(speaks1.text() != null)
@@ -232,10 +231,9 @@ public class CX extends Module {
 													if(place2.text() != null)
 														ballot.setNeg2_place(Integer.parseInt(place2.text()));
 												} catch(NumberFormatException nfe) {}
-												ballots.add(ballot);
 											}
-											round.setBallot(ballots);
-											round.setRound(String.valueOf(k + 1));
+                                            ballots.add(ballot);
+                                            round.setRound(String.valueOf(k + 1));
 											round.setAbsUrl(p.baseUri());
 											rounds.add(round);
 										}
@@ -244,7 +242,7 @@ public class CX extends Module {
 									}
 								}
 							}
-							rowRounds.addAll(rounds); // add results
+							tournRounds.addAll(rounds); // add results
 						}
 
 						// Double Octos
@@ -288,7 +286,7 @@ public class CX extends Module {
 									continue;
 								}
 
-								Round round = new Round();
+								Round round = new Round(t);
 								round.setAbsUrl(doc.baseUri());
 								if(matcher.group(5).equals("Pro") || matcher.group(5).equals("Aff")) {
 									round.setTeamAff(team);
@@ -297,12 +295,12 @@ public class CX extends Module {
 									round.setTeamAff(against);
 									round.setTeamNeg(team);
 								}
-								Ballot ballot = new Ballot();
+								Ballot ballot = new Ballot(round);
 								ballot.setDecision(matcher.group(5));
 								round.setRound("DO");
 								rounds.add(round);
 							}
-							rowRounds.addAll(rounds); // add results
+							tournRounds.addAll(rounds); // add results
 						}
 
 						//Bracket
@@ -406,12 +404,15 @@ public class CX extends Module {
 										if(pair.getLeft() == null || pair.getRight() == null)
 											continue;
 
-										Round round = new Round();
+										Round round = new Round(t);
 										round.setAbsUrl(doc.baseUri());
 										round.setTeamAff(pair.getLeft());
 										round.setTeamNeg(pair.getRight());
 										round.setNoSide(true);
-										round.setBallot(Arrays.asList(new Ballot("Aff")));
+
+										Ballot ballot = new Ballot(round);
+										ballot.setDecision("Aff");
+										ballots.add(ballot);
 
 										rounds.add(round);
 									}
@@ -420,18 +421,12 @@ public class CX extends Module {
 								last = roundStr;
 								matchup = currentMatchup;
 							}
-							rowRounds.addAll(rounds); // add results
+							tournRounds.addAll(rounds); // add results
 						}
-						t.setCx_rounds(rowRounds);
 					}
-					if(t.getCx_rounds().size() == 0) {
-						log.info(t.getName() + " had no CX entries. " + t.getLink());
-						t.getRounds_exists().put("cx", false);
-					} else {
-						t.getRounds_contains().put("cx", true);
-					}
-					datastore.save(t); // save
-					log.info("Updated " + t.getName());
+                    datastore.save(tournRounds);
+                    datastore.save(ballots);
+                    log.info("Updated " + t.getName());
 				} catch(Exception e) {
 					log.error(e);
 					e.printStackTrace();

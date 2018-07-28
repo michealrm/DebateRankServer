@@ -24,7 +24,6 @@ public class JOTEntryInfo {
 	}
 
 	public JOTEntryInfo(Tournament tournament, Elements eventRows) {
-
 		this.tournament = tournament;
 		this.eventRows = eventRows;
 	}

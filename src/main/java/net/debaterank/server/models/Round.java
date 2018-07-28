@@ -16,15 +16,17 @@ public class Round {
 
     @Id
     private ObjectId id = new ObjectId();
+    @Reference
+    private Tournament tournament;
     @Property
     private Type type;
-    @Reference("aff")
+    @Reference("s_aff")
     private Debater singleAff;
-    @Reference("neg")
+    @Reference("s_neg")
     private Debater singleNeg;
-    @Reference("aff")
+    @Reference("t_aff")
     private Team teamAff;
-    @Reference("neg")
+    @Reference("t_neg")
     private Team teamNeg;
     @Property
     private boolean bye;
@@ -75,8 +77,20 @@ public class Round {
         this.round = round;
     }
 
-    public Round(Team aff, Team neg, Type type, boolean bye, String absUrl, String round, boolean noSide) {
+    public Tournament getTournament() {
+        return tournament;
+    }
 
+    public void setTournament(Tournament tournament) {
+        this.tournament = tournament;
+    }
+
+    public Round(Tournament tournament) {
+        this.tournament = tournament;
+    }
+
+    public Round(Tournament tournament, Team aff, Team neg, Type type, boolean bye, String absUrl, String round, boolean noSide) {
+        this.tournament = tournament;
         this.type = type;
         teamAff = aff;
         teamNeg = neg;
@@ -86,8 +100,8 @@ public class Round {
         this.noSide = noSide;
     }
 
-    public Round(Debater aff, Debater neg, boolean bye, String absUrl, String round, boolean noSide) {
-
+    public Round(Tournament tournament, Debater aff, Debater neg, boolean bye, String absUrl, String round, boolean noSide) {
+        this.tournament = tournament;
         type = Type.LD;
         singleAff = aff;
         singleNeg = neg;

@@ -140,10 +140,9 @@ public class CX extends Module {
 			int id = jObject.getInt("ID");
 			int round = jObject.getInt("ROUND");
 			boolean bye = jObject.getInt("BYE") == 1;
-			Round r = new Round();
+			Round r = new Round(t);
 			r.setBye(bye);
 			r.setRound(roundStrings.get(round));
-			r.setBallot(new ArrayList<>());
 
 			panels.put(id, r);
 		}
@@ -184,7 +183,7 @@ public class CX extends Module {
 				}
 				round.setBye(round.isBye() || bye);
 
-				Ballot ballot = new Ballot();
+				Ballot ballot = new Ballot(round);
 				ballot.setJudge(judges.get(judge)); // This can be null
 
 				ballots.put(id, Pair.of(round, ballot));
@@ -254,31 +253,19 @@ public class CX extends Module {
 		}
 
 		// Collapse ballots to one judge per ballot
-		ArrayList<Round> collBallots = new ArrayList<>();
+		ArrayList<Ballot> collBallots = new ArrayList<>();
 		for(Pair<Round, Ballot> pair : ballots.values()) {
-			Round round = pair.getLeft();
 			Ballot ballot = pair.getRight();
-			if(!collBallots.contains(round))
-				collBallots.add(round);
-			boolean containsBallot = false;
-			for(Ballot b : round.getBallot()) {
-				if(b.getJudge() == ballot.getJudge()) {
-					containsBallot = true;
+			if(!collBallots.contains(ballot))
+				collBallots.add(ballot);
+			for(Ballot b : collBallots)
+				if(b.getJudge() == ballot.getJudge())
 					b.replaceNull(ballot);
-				}
-			}
-			if(!containsBallot)
-				round.getBallot().add(ballot);
 		}
 
 		// Update database
-		if(collBallots.size() == 0) {
-			log.info(t.getName() + " had no CX entries. " + t.getLink());
-			t.getRounds_contains().put("cx", false);
-		} else {
-			t.setCx_rounds(collBallots);
-			t.getRounds_contains().put("cx", true);
-		}
+		datastore.save(panels.values());
+		datastore.save(collBallots);
 		datastore.save(t);
 		log.info("Updated " + t.getName());
 

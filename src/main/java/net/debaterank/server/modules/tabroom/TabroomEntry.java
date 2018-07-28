@@ -72,38 +72,44 @@ public class TabroomEntry extends Module {
 						return;
 					}
 					JSONArray eventsArr = jsonObject.getJSONArray("EVENT");
-					boolean ldExists = false, pfExists = false, cxExists = false;
+					boolean ldExists = false;
+					boolean pfExists = false;
+					boolean cxExists = false;
 					for(int i = 0; i < eventsArr.length(); i++) {
 						try {
 							JSONObject jObject = eventsArr.getJSONObject(i);
 							int tourn = jObject.getInt("TOURN");
 							int event = jObject.getInt("ID");
 							String eventName = jObject.getString("EVENTNAME");
-							if (tourn == tourn_id && eventName.matches("^.*(LD|Lincoln|L-D).*$") && t.getRounds_exists().get("ld") && !t.getRounds_contains().get("ld")) {
-								String endpoint = "https://www.tabroom.com/api/tourn_published.mhtml?tourn_id=" + tourn + "&event_id=" + event + "&output=json";
-								t.getRounds_exists().put("ld", true);
-								log.info("Queuing tabroom LD " + t.getName() + ". Tournament ID: " + tourn_id + " Event ID: " + event);
-								ld.add(new TabroomEntryInfo(t, tourn_id, event, endpoint));
-								ldExists = true;
-							}
-							if (tourn == tourn_id && eventName.matches("^.*(PF|Public|Forum|P-F).*$") && t.getRounds_exists().get("pf") && !t.getRounds_contains().get("pf")) {
-								String endpoint = "https://www.tabroom.com/api/tourn_published.mhtml?tourn_id=" + tourn + "&event_id=" + event + "&output=json";
-								log.info("Queuing tabroom PF " + t.getName() + ". Tournament ID: " + tourn_id + " Event ID: " + event);
-								pf.add(new TabroomEntryInfo(t, tourn_id, event, endpoint));
-								pfExists = true;
-							}
-							if (tourn == tourn_id && eventName.matches("^.*(CX|Cross|Examination|C-X|Policy).*$") && t.getRounds_exists().get("cx") && !t.getRounds_contains().get("cx")) {
-								String endpoint = "https://www.tabroom.com/api/tourn_published.mhtml?tourn_id=" + tourn + "&event_id=" + event + "&output=json";
-								log.info("Queuing tabroom CX " + t.getName() + ". Tournament ID: " + tourn_id + " Event ID: " + event);
-								cx.add(new TabroomEntryInfo(t, tourn_id, event, endpoint));
-								cxExists = true;
+							if(tourn == tourn_id) {
+								if (eventName.matches("^.*(LD|Lincoln|L-D).*$")) {
+									String endpoint = "https://www.tabroom.com/api/tourn_published.mhtml?tourn_id=" + tourn + "&event_id=" + event + "&output=json";
+									log.info("Queuing tabroom LD " + t.getName() + ". Tournament ID: " + tourn_id + " Event ID: " + event);
+									ld.add(new TabroomEntryInfo(t, tourn_id, event, endpoint));
+									ldExists = true;
+								}
+								if (eventName.matches("^.*(PF|Public|Forum|P-F).*$")) {
+									String endpoint = "https://www.tabroom.com/api/tourn_published.mhtml?tourn_id=" + tourn + "&event_id=" + event + "&output=json";
+									log.info("Queuing tabroom PF " + t.getName() + ". Tournament ID: " + tourn_id + " Event ID: " + event);
+									pf.add(new TabroomEntryInfo(t, tourn_id, event, endpoint));
+									pfExists = true;
+								}
+								if (eventName.matches("^.*(CX|Cross|Examination|C-X|Policy).*$")) {
+									String endpoint = "https://www.tabroom.com/api/tourn_published.mhtml?tourn_id=" + tourn + "&event_id=" + event + "&output=json";
+									log.info("Queuing tabroom CX " + t.getName() + ". Tournament ID: " + tourn_id + " Event ID: " + event);
+									cx.add(new TabroomEntryInfo(t, tourn_id, event, endpoint));
+									cxExists = true;
+								}
 							}
 						} catch(Exception e1) {}
 					}
+					if(!ldExists)
+						t.putScraped("LD", true);
+					if(!pfExists)
+						t.putScraped("PF", true);
+					if(!cxExists)
+						t.putScraped("CX", true);
 					iStream.close();
-					t.getRounds_exists().put("ld", ldExists);
-					t.getRounds_exists().put("pf", pfExists);
-					t.getRounds_exists().put("cx", cxExists);
 
 
 				} catch(Exception e) {
