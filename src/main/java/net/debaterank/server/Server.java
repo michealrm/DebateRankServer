@@ -101,59 +101,63 @@ public class Server {
 
 		ArrayList<Tournament> jotTournaments = new ArrayList<>();
 		ArrayList<Tournament> tournamentsInDB = new ArrayList<>(datastore.createQuery(Tournament.class).asList());
+		ArrayList<Tournament> possibleJOT = new ArrayList<>();
+
+		for(Tournament t : tournamentsInDB)
+		    if(t.getLink().startsWith("https://www.joyoftournaments.com/"))
+		        possibleJOT.add(t);
 		int jotScraped = 0;
 		
 		try {
 			// Get seasons so we can iterate through all the jotTournaments
-			Document tlist = Jsoup.connect("http://www.joyoftournaments.com/results.asp").get();
-			ArrayList<String> years = new ArrayList<String>();
+			Document tlist = Jsoup.connect("https://www.joyoftournaments.com/results.asp").get();
+			ArrayList<String> years = new ArrayList<>();
 			for (Element select : tlist.select("select"))
 				if (select.attr("name").equals("season"))
 					for (Element option : select.select("option"))
 						years.add(option.attr("value"));
-
 			// Get all the tournaments
 //			jotTournaments = new ArrayList<Tournament>();
 			SimpleDateFormat formatter = new SimpleDateFormat("dd/MM/yyyy");
 			for (String year : years) {
-				Document tournamentDoc = Jsoup.connect("http://www.joyoftournaments.com/results.asp").timeout(10 * 1000)
+				Document tournamentDoc = Jsoup.connect("https://www.joyoftournaments.com/results.asp").timeout(10 * 1000)
 						.data("state", "")
 						.data("month", "0")
 						.data("season", year)
 						.post();
-
-				Element table = tournamentDoc.select("table.bc").first();
+				Element table = tournamentDoc.select("table.bc#rlist").first();
 				Elements rows = table.select("tr");
 				long lastTime = 0;
 				for (int i = 1; i < rows.size(); i++) {
 					Elements cols = rows.get(i).select("td");
 					try {
 						Tournament tournament = new Tournament(cols.select("a").first().text(), cols.select("a").first().absUrl("href"), cols.select("[align=center]").first().text(), formatter.parse(cols.select("[align=right]").first().text()));
-						boolean inDB = false;
-						for(Tournament t : tournamentsInDB) {
+						boolean scraped = false;
+						for(Tournament t : possibleJOT) {
 							if(tournament.getLink().equals(t.getLink())) {
 								tournament.replaceNull(t);
-								inDB = true;
+								scraped = tournament.isScraped("LD") && tournament.isScraped("PF") && tournament.isScraped("CX");
 								break;
 							}
 						}
-						if(!inDB) {
-							datastore.save(tournament);
-						}
-						jotTournaments.add(tournament);
+						if(!scraped)
+                            jotTournaments.add(tournament);
 						jotScraped++;
 						if(System.currentTimeMillis() - lastTime > 5000) {
 							lastTime = System.currentTimeMillis();
 							log.info("JOT Scraped: " + jotScraped);
 						}
-					} catch(ParseException pe) {
+					} catch(Exception pe) {
 						log.error("Couldn't insert JOT tournament because we couldn't format the date", pe);
 					}
 				}
 			}
 
 			// Update DB / Remove cached jotTournaments from the queue
-			log.info(jotScraped + " tournaments scraped from JOT.");
+            log.info(jotScraped + " tournaments scraped from JOT.");
+            log.info("Saving " + jotTournaments.size() + " JOT tournaments in the DB");
+            datastore.save(jotTournaments);
+            log.info("Saved tournaments");
 		} catch (IOException e) {
 			e.printStackTrace();
 		}

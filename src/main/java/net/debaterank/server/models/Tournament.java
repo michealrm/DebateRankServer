@@ -20,6 +20,7 @@ public class Tournament {
 	private String link;
 	private String state;
 	private Date date;
+	@Embedded
     private HashMap<String, Boolean> scraped;
 
 	public ObjectId getId() {
@@ -93,6 +94,8 @@ public class Tournament {
 			date = tournament.getDate();
 		if(scraped == null)
             scraped = tournament.getScraped();
+		else if(scraped.size() == 0 && tournament.getScraped() != null)
+			scraped = tournament.getScraped();
 	}
 
 	public Tournament(ObjectId id, String name, String link, String state, Date date) {
@@ -101,6 +104,7 @@ public class Tournament {
 		this.link = link;
 		this.state = state;
 		this.date = date;
+		scraped = new HashMap<>();
 	}
 
 	public Tournament(String name, String link, String state, Date date) {
@@ -108,6 +112,7 @@ public class Tournament {
 		this.link = link;
 		this.state = state;
 		this.date = date;
+		scraped = new HashMap<>();
 	}
 
 	public Tournament() {}
