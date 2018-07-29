@@ -2,5 +2,5 @@
 /bin/
 /.idea/
 log*
-mongo.properties
+src/main/resources/
 .DS_Store
