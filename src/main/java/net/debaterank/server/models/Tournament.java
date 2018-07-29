@@ -78,6 +78,8 @@ public class Tournament {
     }
 
     public void putScraped(String event, boolean val) {
+	    if(scraped == null)
+	        scraped = new HashMap<>();
 	    scraped.put(event, val);
     }
 
@@ -104,7 +106,6 @@ public class Tournament {
 		this.link = link;
 		this.state = state;
 		this.date = date;
-		scraped = new HashMap<>();
 	}
 
 	public Tournament(String name, String link, String state, Date date) {
@@ -112,7 +113,6 @@ public class Tournament {
 		this.link = link;
 		this.state = state;
 		this.date = date;
-		scraped = new HashMap<>();
 	}
 
 	public Tournament() {}

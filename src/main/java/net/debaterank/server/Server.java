@@ -95,19 +95,26 @@ public class Server {
 		ModuleManager moduleManager = new ModuleManager();
 		WorkerPoolManager workerManager = new WorkerPoolManager();
 
-		/////////
+        ArrayList<Tournament> jotTournaments = new ArrayList<>();
+        ArrayList<Tournament> tournamentsInDB = new ArrayList<>(datastore.createQuery(Tournament.class).asList());
+        ArrayList<Tournament> possibleJOT = new ArrayList<>();
+        ArrayList<Tournament> notInDB = new ArrayList<>();
+        ArrayList<Tournament> possibleTabroom = new ArrayList<>();
+        ArrayList<Tournament> tabroomTournaments = new ArrayList<>();
+
+        int tabroomScraped = 0;
+        int jotScraped = 0;
+
+        for(Tournament t : tournamentsInDB)
+            if (t.getLink().contains("joyoftournaments"))
+                possibleJOT.add(t);
+            else if(t.getLink().contains("tabroom"))
+                possibleTabroom.add(t);
+
+        /////////
 		// JOT //
 		/////////
 
-		ArrayList<Tournament> jotTournaments = new ArrayList<>();
-		ArrayList<Tournament> tournamentsInDB = new ArrayList<>(datastore.createQuery(Tournament.class).asList());
-		ArrayList<Tournament> possibleJOT = new ArrayList<>();
-
-		for(Tournament t : tournamentsInDB)
-		    if(t.getLink().startsWith("https://www.joyoftournaments.com/"))
-		        possibleJOT.add(t);
-		int jotScraped = 0;
-		
 		try {
 			// Get seasons so we can iterate through all the jotTournaments
 			Document tlist = Jsoup.connect("https://www.joyoftournaments.com/results.asp").get();
@@ -133,15 +140,19 @@ public class Server {
 					try {
 						Tournament tournament = new Tournament(cols.select("a").first().text(), cols.select("a").first().absUrl("href"), cols.select("[align=center]").first().text(), formatter.parse(cols.select("[align=right]").first().text()));
 						boolean scraped = false;
+						boolean inDB = false;
 						for(Tournament t : possibleJOT) {
 							if(tournament.getLink().equals(t.getLink())) {
 								tournament.replaceNull(t);
 								scraped = tournament.isScraped("LD") && tournament.isScraped("PF") && tournament.isScraped("CX");
+								inDB = true;
 								break;
 							}
 						}
 						if(!scraped)
                             jotTournaments.add(tournament);
+						if(!inDB)
+						    notInDB.add(tournament);
 						jotScraped++;
 						if(System.currentTimeMillis() - lastTime > 5000) {
 							lastTime = System.currentTimeMillis();
@@ -154,10 +165,7 @@ public class Server {
 			}
 
 			// Update DB / Remove cached jotTournaments from the queue
-            log.info(jotScraped + " tournaments scraped from JOT.");
-            log.info("Saving " + jotTournaments.size() + " JOT tournaments in the DB");
-            datastore.save(jotTournaments);
-            log.info("Saved tournaments");
+            log.info(jotScraped + " tournaments retreived from JOT. Need to scrape " + jotTournaments.size() + "tournaments from JOT.");
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -177,8 +185,6 @@ public class Server {
 		/////////////
 
 		SimpleDateFormat tabroomFormatter = new SimpleDateFormat("MM/dd/yyyy");
-		ArrayList<Tournament> tabroomTournaments = null;
-		int tabroomScraped = 0;
 		try {
 			// Get seasons so we can iterate through all the tournaments
 			Document tlist = Jsoup.connect("https://www.tabroom.com/index/results/").get();
@@ -187,7 +193,6 @@ public class Server {
 				years.add(select.attr("value"));
 			Collections.reverse(years);
 			// Get all the tournaments
-			tabroomTournaments = new ArrayList<>();
 				for(String year : years) {
 //					Document tournamentDoc = Jsoup.connect("https://www.tabroom.com/index/results/")
 //						.data("year", year)
@@ -225,23 +230,25 @@ public class Server {
 								Elements cols = rows.get(i).select("td");
 								if (cols.size() > 0) {
 									Tournament tournament = new Tournament(cols.get(0).text(), cols.get(0).select("a").first().absUrl("href"), null, tabroomFormatter.parse(cols.get(1).text()));
-									boolean inDB = false;
-									for(Tournament t : tournamentsInDB) {
-										if(tournament.getLink().equals(t.getLink())) {
-											tournament.replaceNull(t);
-											inDB = true;
-											break;
-										}
-									}
-									if(!inDB) {
-										datastore.save(tournament);
-									}
-									tabroomTournaments.add(tournament);
-									tabroomScraped++;
-									if(System.currentTimeMillis() - lastTime > 5000) {
-										lastTime = System.currentTimeMillis();
-										log.info("Tabroom Scraped: " + tabroomScraped);
-									}
+                                    boolean scraped = false;
+                                    boolean inDB = false;
+                                    for(Tournament t : possibleTabroom) {
+                                        if(tournament.getLink().equals(t.getLink())) {
+                                            tournament.replaceNull(t);
+                                            scraped = tournament.isScraped("LD") && tournament.isScraped("PF") && tournament.isScraped("CX");
+                                            inDB = true;
+                                            break;
+                                        }
+                                    }
+                                    if(!scraped)
+                                        tabroomTournaments.add(tournament);
+                                    if(!inDB)
+                                        notInDB.add(tournament);
+                                    tabroomScraped++;
+                                    if(System.currentTimeMillis() - lastTime > 5000) {
+                                        lastTime = System.currentTimeMillis();
+                                        log.info("Tabroom Scraped: " + tabroomScraped);
+                                    }
 								}
 							} catch(ParseException pe) {
 								log.warn("Couldn't parse the date. Skipping this row.");
@@ -257,6 +264,10 @@ public class Server {
 			log.error(e);
 			log.fatal("Tabroom could not be updated");
 		}
+
+        log.info("Saving " + notInDB.size() + " tournaments in the DB");
+        datastore.save(notInDB);
+        log.info("Saved tournaments");
 
 		// Modules //
 
@@ -284,14 +295,6 @@ public class Server {
 				System.exit(1);
 			}
 		} while (moduleManager.getActiveCount() != 0 || workerManager.getActiveCount() != 0);
-
-		// Update / save tournaments //
-		log.info("Saving JOT tournaments");
-		for(Tournament t : jotTournaments)
-			datastore.save(t);
-		log.info("Saving Tabroom tournaments");
-		for(Tournament t : tabroomTournaments)
-			datastore.save(t);
 
 		////////////////////////
 		// Tournament parsing //
