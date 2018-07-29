@@ -6,17 +6,14 @@ import net.debaterank.server.models.*;
 import net.debaterank.server.modules.Module;
 import net.debaterank.server.modules.WorkerPool;
 import org.apache.commons.lang3.tuple.Pair;
-import org.apache.log4j.LogManager;
-import org.joda.time.DateTime;
+import org.apache.logging.log4j.LogManager;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.mongodb.morphia.Datastore;
 
-import java.io.*;
-import java.net.HttpURLConnection;
-import java.net.URL;
-import java.nio.charset.Charset;
+import java.io.BufferedInputStream;
+import java.io.IOException;
 import java.util.*;
 
 import static net.debaterank.server.util.NetIOHelper.getInputStream;

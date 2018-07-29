@@ -7,7 +7,7 @@ import net.debaterank.server.modules.Module;
 import net.debaterank.server.modules.WorkerPool;
 import net.debaterank.server.util.DRHelper;
 import org.apache.commons.lang3.tuple.Pair;
-import org.apache.log4j.LogManager;
+import org.apache.logging.log4j.LogManager;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;

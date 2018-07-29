@@ -4,21 +4,16 @@ import com.mongodb.client.MongoDatabase;
 import net.debaterank.server.models.Tournament;
 import net.debaterank.server.modules.Module;
 import net.debaterank.server.modules.WorkerPool;
-import org.apache.commons.lang3.tuple.Pair;
-import org.apache.log4j.LogManager;
+import org.apache.logging.log4j.LogManager;
 import org.joda.time.DateTime;
 import org.json.JSONArray;
 import org.json.JSONObject;
-import org.jsoup.Jsoup;
-import org.jsoup.nodes.Document;
-import org.jsoup.select.Elements;
 import org.mongodb.morphia.Datastore;
 
 import java.io.InputStream;
 import java.net.URL;
 import java.util.ArrayList;
 
-import static net.debaterank.server.util.NetIOHelper.getInputStream;
 import static net.debaterank.server.util.NetIOHelper.readJsonFromInputStream;
 
 // <Tournament, <Tournament ID, Event ID>>

@@ -1,16 +1,12 @@
 package net.debaterank.server.modules.jot;
 
-import com.mongodb.Mongo;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 import net.debaterank.server.models.*;
 import net.debaterank.server.modules.Module;
 import net.debaterank.server.modules.WorkerPool;
-import org.apache.commons.configuration2.Configuration;
-import org.apache.commons.configuration2.builder.fluent.Configurations;
-import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.commons.lang3.tuple.Pair;
-import org.apache.log4j.LogManager;
+import org.apache.logging.log4j.LogManager;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -18,14 +14,9 @@ import org.jsoup.nodes.TextNode;
 import org.jsoup.select.Elements;
 import org.mongodb.morphia.Datastore;
 
-import java.io.File;
-import java.io.IOException;
-import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 

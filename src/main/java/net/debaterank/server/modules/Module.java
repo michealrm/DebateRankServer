@@ -1,7 +1,7 @@
 package net.debaterank.server.modules;
 
 import com.mongodb.client.MongoDatabase;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
 import org.mongodb.morphia.Datastore;
 
 public abstract class Module implements Runnable {
