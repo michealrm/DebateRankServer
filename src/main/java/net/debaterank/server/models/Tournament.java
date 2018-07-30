@@ -15,7 +15,7 @@ import java.util.Map;
 public class Tournament {
 
 	@Id
-	private ObjectId id;
+    private ObjectId id = new ObjectId();
 	private String name;
 	private String link;
 	private String state;
@@ -74,7 +74,8 @@ public class Tournament {
     public boolean isScraped(String event) {
 	    if(scraped == null)
 	        return false;
-	    return scraped.get(event);
+	    Boolean b = scraped.get(event);
+	    return b != null && b.booleanValue(); // can return null
     }
 
     public void putScraped(String event, boolean val) {

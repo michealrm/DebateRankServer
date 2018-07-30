@@ -115,6 +115,7 @@ public class Server {
 		// JOT //
 		/////////
 
+        long lastTime = System.currentTimeMillis();
 		try {
 			// Get seasons so we can iterate through all the jotTournaments
 			Document tlist = Jsoup.connect("https://www.joyoftournaments.com/results.asp").get();
@@ -124,7 +125,6 @@ public class Server {
 					for (Element option : select.select("option"))
 						years.add(option.attr("value"));
 			// Get all the tournaments
-//			jotTournaments = new ArrayList<Tournament>();
 			SimpleDateFormat formatter = new SimpleDateFormat("dd/MM/yyyy");
 			for (String year : years) {
 				Document tournamentDoc = Jsoup.connect("https://www.joyoftournaments.com/results.asp").timeout(10 * 1000)
@@ -134,7 +134,6 @@ public class Server {
 						.post();
 				Element table = tournamentDoc.select("table.bc#rlist").first();
 				Elements rows = table.select("tr");
-				long lastTime = 0;
 				for (int i = 1; i < rows.size(); i++) {
 					Elements cols = rows.get(i).select("td");
 					try {
@@ -154,7 +153,7 @@ public class Server {
 						if(!inDB)
 						    notInDB.add(tournament);
 						jotScraped++;
-						if(System.currentTimeMillis() - lastTime > 5000) {
+						if(System.currentTimeMillis() - lastTime > 1000) {
 							lastTime = System.currentTimeMillis();
 							log.info("JOT Scraped: " + jotScraped);
 						}
@@ -165,7 +164,7 @@ public class Server {
 			}
 
 			// Update DB / Remove cached jotTournaments from the queue
-            log.info(jotScraped + " tournaments retreived from JOT. Need to scrape " + jotTournaments.size() + " tournaments from JOT.");
+            log.info(jotScraped + " tournaments retrieved from JOT. Need to scrape " + jotTournaments.size() + " tournaments from JOT.");
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -185,6 +184,7 @@ public class Server {
 		/////////////
 
 		SimpleDateFormat tabroomFormatter = new SimpleDateFormat("MM/dd/yyyy");
+        lastTime = System.currentTimeMillis();
 		try {
 			// Get seasons so we can iterate through all the tournaments
 			Document tlist = Jsoup.connect("https://www.tabroom.com/index/results/").get();
@@ -207,7 +207,6 @@ public class Server {
 					circuits.add("6"); // National Circuit (US HS)
 
 					for(String circuit : circuits) {
-						long lastTime = System.currentTimeMillis();
 						Document doc = null;
 						int k = 0;
 						while(k < 3) {
@@ -245,7 +244,7 @@ public class Server {
                                     if(!inDB)
                                         notInDB.add(tournament);
                                     tabroomScraped++;
-                                    if(System.currentTimeMillis() - lastTime > 5000) {
+                                    if(System.currentTimeMillis() - lastTime > 1000) {
                                         lastTime = System.currentTimeMillis();
                                         log.info("Tabroom Scraped: " + tabroomScraped);
                                     }
@@ -257,7 +256,7 @@ public class Server {
 					}
 				}
 
-			log.info(tabroomScraped + " tournaments scraped from tabroom.");
+			log.info(tabroomScraped + "  tournaments retrieved from Tabroom. Need to scrape " + tabroomTournaments.size() + " tournaments from Tabroom.");
 
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -296,7 +295,13 @@ public class Server {
 			}
 		} while (moduleManager.getActiveCount() != 0 || workerManager.getActiveCount() != 0);
 
-		////////////////////////
+		// Update DB
+        log.info("Finished queuing - saving tournaments.");
+        datastore.save(jotTournaments);
+        datastore.save(tabroomTournaments);
+        log.info("Saved tournaments");
+
+        ////////////////////////
 		// Tournament parsing //
 		////////////////////////
 

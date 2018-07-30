@@ -416,6 +416,8 @@ public class PF extends Module {
 					}
 					datastore.save(tournRounds);
 					datastore.save(ballots);
+                    t.putScraped("PF", true);
+                    datastore.save(t);
 					log.info("Updated " + t.getName());
 				} catch(Exception e) {
 					log.error(e);

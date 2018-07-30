@@ -8,7 +8,7 @@ import org.mongodb.morphia.annotations.Reference;
 @Entity("judge_pointers")
 public class JudgePointer {
 	@Id
-	private ObjectId id;
+	private ObjectId id = new ObjectId();
 	private String first, middle, last, surname, school;
 	@Reference
 	private Judge judge;

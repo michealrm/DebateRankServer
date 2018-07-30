@@ -14,7 +14,7 @@ import org.mongodb.morphia.annotations.Reference;
 public class Team {
 
 	@Id
-	private ObjectId id;
+	private ObjectId id = new ObjectId();
 
 	public ObjectId getId() {
 		return id;

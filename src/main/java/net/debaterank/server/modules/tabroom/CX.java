@@ -263,6 +263,7 @@ public class CX extends Module {
 		// Update database
 		datastore.save(panels.values());
 		datastore.save(collBallots);
+		t.putScraped("CX", true);
 		datastore.save(t);
 		log.info("Updated " + t.getName());
 

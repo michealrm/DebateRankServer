@@ -417,6 +417,8 @@ public class CX extends Module {
 					}
                     datastore.save(tournRounds);
                     datastore.save(ballots);
+					t.putScraped("CX", true);
+					datastore.save(t);
                     log.info("Updated " + t.getName());
 				} catch(Exception e) {
 					log.error(e);

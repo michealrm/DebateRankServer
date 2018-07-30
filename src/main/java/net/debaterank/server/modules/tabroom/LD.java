@@ -234,6 +234,8 @@ public class LD extends Module {
 		// Update database
 		datastore.save(panels.values());
 		datastore.save(collBallots);
+		t.putScraped("LD", true);
+		datastore.save(t);
 		log.info("Updated " + t.getName());
 	}
 
