@@ -11,10 +11,12 @@ public class WorkerPool {
 	private ArrayList<Runnable> queue;
 	
 	public WorkerPool() {
-		queue = new ArrayList<Runnable>();
+		queue = new ArrayList<>();
 	}
 	
 	public int getActiveCount() {
+	    if(executor == null)
+	        return 0;
 		return ((ThreadPoolExecutor)executor).getActiveCount();
 	}
 	
@@ -28,9 +30,9 @@ public class WorkerPool {
 	
 	public void start(int pool_length) {
 		executor = Executors.newFixedThreadPool(pool_length);
-		for(Runnable r : queue)
+		for (Runnable r : queue)
 			newModule(r);
-		queue = new ArrayList<Runnable>();
+		queue.clear();
 	}
 
 	public void shutdown() {

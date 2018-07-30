@@ -25,7 +25,7 @@ public class WorkerPoolManager {
 	}
 	
 	public WorkerPoolManager() {
-		managers = new ArrayList<WorkerPool>();
+		managers = new ArrayList<>();
 	}
 	
 	public void add(WorkerPool manager) {

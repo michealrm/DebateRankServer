@@ -165,7 +165,7 @@ public class Server {
 			}
 
 			// Update DB / Remove cached jotTournaments from the queue
-            log.info(jotScraped + " tournaments retreived from JOT. Need to scrape " + jotTournaments.size() + "tournaments from JOT.");
+            log.info(jotScraped + " tournaments retreived from JOT. Need to scrape " + jotTournaments.size() + " tournaments from JOT.");
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -329,8 +329,8 @@ public class Server {
 		// Execute //
 
 		log.info("Executing tournament parsing.");
-		log.info("Scraping " + (jotTournamentInfosLD.size() + jotTournamentInfosCX.size() + jotTournamentInfosPF.size()) + " (" + jotTournamentInfosLD.size() + "LD " + jotTournamentInfosPF.size() + "PF " + jotTournamentInfosCX.size() + "CX)");
-		log.info("Scraping " + (tabroomTournamentInfosLD.size() + tabroomTournamentInfosCX.size() + tabroomTournamentInfosPF.size()) + " (" + tabroomTournamentInfosLD.size() + "LD " + tabroomTournamentInfosPF.size() + "PF " + tabroomTournamentInfosCX.size() + "CX)");
+		log.info("JOT Scraping " + (jotTournamentInfosLD.size() + jotTournamentInfosCX.size() + jotTournamentInfosPF.size()) + " (" + jotTournamentInfosLD.size() + "LD " + jotTournamentInfosPF.size() + "PF " + jotTournamentInfosCX.size() + "CX)");
+		log.info("Tabroom Scraping " + (tabroomTournamentInfosLD.size() + tabroomTournamentInfosCX.size() + tabroomTournamentInfosPF.size()) + " (" + tabroomTournamentInfosLD.size() + "LD " + tabroomTournamentInfosPF.size() + "PF " + tabroomTournamentInfosCX.size() + "CX)");
 
 		try {
 			workerManager.start();
