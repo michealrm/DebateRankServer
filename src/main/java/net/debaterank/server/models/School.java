@@ -111,10 +111,10 @@ public class School implements Serializable {
 	}
 
 	public boolean equals(School school) {
-		return (isSameName(state, school.getState()) &&
-				isSameName(address, school.getAddress()) &&
-				isSameName(nsda_link, school.getNsda_link())) ||
-				isSameName(name, school.getName());
+		return isSameName(state, school.getState()) &&
+				(isSameName(address, school.getAddress()) ||
+				isSameName(nsda_link, school.getNsda_link()) ||
+				isSameName(name, school.getName()));
 	}
 
 	/**
