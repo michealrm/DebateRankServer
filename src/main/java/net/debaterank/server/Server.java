@@ -12,7 +12,9 @@ import net.debaterank.server.modules.ModuleManager;
 import net.debaterank.server.modules.PoolSizeException;
 import net.debaterank.server.modules.WorkerPool;
 import net.debaterank.server.modules.WorkerPoolManager;
+import net.debaterank.server.modules.jot.JOTEntry;
 import net.debaterank.server.modules.jot.JOTEntryInfo;
+import net.debaterank.server.modules.tabroom.TabroomEntry;
 import net.debaterank.server.modules.tabroom.TabroomEntryInfo;
 import org.apache.commons.configuration2.Configuration;
 import org.apache.commons.configuration2.builder.fluent.Configurations;
@@ -177,7 +179,7 @@ public class Server {
 
 		WorkerPool jotEntry = new WorkerPool();
 		workerManager.add(jotEntry);
-		moduleManager.newModule(new net.debaterank.server.modules.jot.JOTEntry(jotTournaments, jotTournamentInfosLD, jotTournamentInfosPF, jotTournamentInfosCX, jotEntry, datastore, db));
+		moduleManager.newModule(new JOTEntry(jotTournaments, jotTournamentInfosLD, jotTournamentInfosPF, jotTournamentInfosCX, jotEntry, datastore, db));
 
 		/////////////
 		// Tabroom //
@@ -276,7 +278,7 @@ public class Server {
 
 		WorkerPool tabroomEntry = new WorkerPool();
 		workerManager.add(tabroomEntry);
-		moduleManager.newModule(new net.debaterank.server.modules.tabroom.TabroomEntry(tabroomTournaments, tabroomTournamentInfosLD, tabroomTournamentInfosPF, tabroomTournamentInfosCX, tabroomEntry, datastore, db));
+		moduleManager.newModule(new TabroomEntry(tabroomTournaments, tabroomTournamentInfosLD, tabroomTournamentInfosPF, tabroomTournamentInfosCX, tabroomEntry, datastore, db));
 
 		/////////////
 		// Execute //
