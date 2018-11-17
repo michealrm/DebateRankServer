@@ -1,6 +1,6 @@
 package net.debaterank.server.modules.jot;
 
-import net.debaterank.server.models.Tournament;
+import net.debaterank.server.entities.Tournament;
 import org.jsoup.select.Elements;
 
 public class JOTEntryInfo {

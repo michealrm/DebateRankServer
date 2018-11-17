@@ -2,7 +2,7 @@ package net.debaterank.server.modules.jot;
 
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
-import net.debaterank.server.models.*;
+import net.debaterank.server.entities.*;
 import net.debaterank.server.modules.Module;
 import net.debaterank.server.modules.WorkerPool;
 import net.debaterank.server.util.DRHelper;
@@ -16,7 +16,6 @@ import org.jsoup.select.Elements;
 import org.mongodb.morphia.Datastore;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -43,7 +42,7 @@ public class LD extends Module {
 			manager.newModule(() -> {
 				try {
 					ArrayList<Ballot> ballots = new ArrayList<>();
-					ArrayList<Round> tournRounds = new ArrayList<>();
+					ArrayList<CXRound> tournRounds = new ArrayList<>();
 					Elements eventRows = tInfo.getEventRows();
 					log.info("Updating " + t.getName() + " " + t.getLink());
 					for(Element eventRow : eventRows) {
@@ -64,7 +63,7 @@ public class LD extends Module {
 							}
 
 							// Parse rounds
-							ArrayList<Round> rounds = new ArrayList<>();
+							ArrayList<CXRound> rounds = new ArrayList<>();
 							for(int i = 0;i<rows.size();i++) {
 								String key = rows.get(i).select("td").first().select("td").get(2).text();
 								Debater debater = competitors.get(key);
@@ -80,7 +79,7 @@ public class LD extends Module {
 									Element win = cols.get(k).select("[colspan=2].rec").first();
 									Element against = cols.get(k).select("[colspan=2][align=right]").first();
 
-									Round round = new Round(t);
+									CXRound round = new CXRound(t);
 									Debater againstDebater = null;
 									if(win == null || win.text() == null || against == null) {
 										continue;
@@ -117,7 +116,7 @@ public class LD extends Module {
 									} else if(win.text() != null && side != null && side.text() != null && (side.text().equals("Aff") || side.text().equals("Neg"))) {
 										// check if other side (aff / neg) is competitors.get(against.text()) win.text().equals("F")
 										for(Ballot ballot : ballots) {
-										    Round r = ballot.getRound();
+										    CXRound r = ballot.getRound();
 											if(r.getSingleAff() != null && r.getSingleAff().getId().equals(debater.getId()) && r.getRound().equals(String.valueOf(k+1))) {
 												r.setSingleAff(debater);
 												try {
@@ -175,9 +174,9 @@ public class LD extends Module {
 							Pattern pattern = Pattern.compile("[^\\s]+ (.+?)( \\((.+?)\\))? \\((Aff|Neg)\\) def. [^\\s]+ (.+?)( \\((.+?)\\))? \\((Aff|Neg)\\)");
 							doc.getElementsByTag("font").unwrap();
 							Matcher matcher = pattern.matcher(doc.toString().replaceAll("<br>", ""));
-							ArrayList<Round> rounds = new ArrayList<>();
+							ArrayList<CXRound> rounds = new ArrayList<>();
 							while(matcher.find()) {
-								Round round = new Round(t);
+								CXRound round = new CXRound(t);
 								round.setAbsUrl(doc.baseUri());
 								Debater winner = new Debater(matcher.group(1), matcher.group(3));
 								winner.updateToDocument(datastore, debaterCollection, schoolCollection);
@@ -205,7 +204,7 @@ public class LD extends Module {
 							Document doc = Jsoup.connect(bracket.absUrl("href")).timeout(10*1000).get();
 
 							// Parse rounds
-							ArrayList<Round> rounds = new ArrayList<>();
+							ArrayList<CXRound> rounds = new ArrayList<>();
 							String roundStr, last = null;
 							ArrayList<Pair<Debater, Debater>> matchup = new ArrayList<>();
 							for(int i = 0;(roundStr = DRHelper.getBracketRound(doc, i)) != null;i++) {
@@ -284,7 +283,7 @@ public class LD extends Module {
 										if(pair.getLeft() == null || pair.getRight() == null)
 											continue;
 
-										Round round = new Round(t);
+										CXRound round = new CXRound(t);
 										round.setAbsUrl(doc.baseUri());
 										round.setNoSide(true);
 										round.setSingleAff(pair.getLeft());

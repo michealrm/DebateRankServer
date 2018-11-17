@@ -2,7 +2,7 @@ package net.debaterank.server.modules.tabroom;
 
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
-import net.debaterank.server.models.*;
+import net.debaterank.server.entities.*;
 import net.debaterank.server.modules.Module;
 import net.debaterank.server.modules.WorkerPool;
 import org.apache.commons.lang3.tuple.Pair;
@@ -123,21 +123,21 @@ public class LD extends Module {
 		}
 
 		// Getting panels
-		HashMap<Integer, Round> panels = new HashMap<>();
+		HashMap<Integer, CXRound> panels = new HashMap<>();
 		JSONArray jsonPanel = jsonObject.getJSONArray("panel");
 		for(int i = 0;i<jsonPanel.length();i++) {
 			JSONObject jObject = jsonPanel.getJSONObject(i);
 			int id = jObject.getInt("ID");
 			int round = jObject.getInt("ROUND");
 			boolean bye = jObject.getInt("BYE") == 1;
-			Round r = new Round(t);
+			CXRound r = new CXRound(t);
 			r.setBye(bye);
 			r.setRound(roundStrings.get(round));
 			panels.put(id, r);
 		}
 
 		// Finally, ballot parsing
-		HashMap<Integer, Pair<Round, Ballot>> ballots = new HashMap<>();
+		HashMap<Integer, Pair<CXRound, Ballot>> ballots = new HashMap<>();
 		JSONArray jsonBallot = jsonObject.getJSONArray("ballot");
 		for(int i = 0;i<jsonBallot.length();i++) {
 			try {
@@ -156,7 +156,7 @@ public class LD extends Module {
 				if (jObject.has("BYE"))
 					bye = jObject.getInt("BYE") == 1;
 
-				Round round = panels.get(panel);
+				CXRound round = panels.get(panel);
 				if(round == null) {
 					log.warn("Panel " + panel + " in " + t.getLink() + " was null! Skipping this ballot");
 					continue;
@@ -190,7 +190,7 @@ public class LD extends Module {
 				double score = jObject.getDouble("SCORE");
 				int id = jObject.getInt("ID");
 
-				Pair<Round, Ballot> ballot = ballots.get(ballotID);
+				Pair<CXRound, Ballot> ballot = ballots.get(ballotID);
 				if(ballot == null) {
 					log.warn("Ballot " + ballotID + " in " + t.getLink() + " is null. Skipping ballot score");
 					continue;
@@ -221,7 +221,7 @@ public class LD extends Module {
 
 		// Collapse ballots to one judge per ballot
 		ArrayList<Ballot> collBallots = new ArrayList<>();
-		for(Pair<Round, Ballot> pair : ballots.values()) {
+		for(Pair<CXRound, Ballot> pair : ballots.values()) {
 			Ballot ballot = pair.getRight();
 			if(!collBallots.contains(ballot))
 				collBallots.add(ballot);

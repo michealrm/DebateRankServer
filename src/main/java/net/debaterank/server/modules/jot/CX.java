@@ -2,7 +2,7 @@ package net.debaterank.server.modules.jot;
 
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
-import net.debaterank.server.models.*;
+import net.debaterank.server.entities.*;
 import net.debaterank.server.modules.Module;
 import net.debaterank.server.modules.WorkerPool;
 import org.apache.commons.lang3.tuple.Pair;
@@ -47,7 +47,7 @@ public class CX extends Module {
 			manager.newModule(() -> {
 				try {
 					Elements eventRows = tInfo.getEventRows();
-					ArrayList<Round> tournRounds = new ArrayList<>();
+					ArrayList<CXRound> tournRounds = new ArrayList<>();
 					ArrayList<Ballot> ballots = new ArrayList<>();
 					log.info("Updating " + t.getName() + " " + t.getLink());
 					for(Element eventRow : eventRows) {
@@ -73,7 +73,7 @@ public class CX extends Module {
 							}
 
 							// Parse rounds
-							ArrayList<Round> rounds = new ArrayList<>();
+							ArrayList<CXRound> rounds = new ArrayList<>();
 							for(int i = 0;i<rows.size();i++) {
 								String key = rows.get(i).select("td").first().select("tr:eq(1)").text().replaceAll("\u00a0|&nbsp", " ").split(" ")[0];
 								Team team = competitors.get(key);
@@ -102,7 +102,7 @@ public class CX extends Module {
 									catch(Exception e) {
 										continue;
 									}
-									Round round = new Round(t);
+									CXRound round = new CXRound(t);
 									Team againstTeam = null;
 									if(win == null || win.text() == null || against == null) {
 										continue;
@@ -156,7 +156,7 @@ public class CX extends Module {
 									} else if(win.text() != null && side != null && side.text() != null && (side.text().equals("Pro") || side.text().equals("Con") || side.text().equals("Aff") || side.text().equals("Neg"))) {
 										// check if other side (aff / neg) is competitors.get(against.text()) win.text().equals("F")
 										for(Ballot ballot : ballots) {
-										    Round r = ballot.getRound();
+										    CXRound r = ballot.getRound();
 											if(r.getTeamAff() != null && r.getTeamAff().equals(team) && r.getRound().equals(String.valueOf(k+1))) {
 												try {
 													if(speaks1.text() != null)
@@ -244,7 +244,7 @@ public class CX extends Module {
 							Pattern pattern = Pattern.compile("[^\\s]+ ([A-Za-z]+?) - ([A-Za-z]+?)( \\((.+?)\\))? \\((Aff|Neg)\\) def. [^\\s]+ ([A-Za-z]+?) - ([A-Za-z]+?)( \\((.+?)\\))? \\((Aff|Neg)\\)");
 							doc.getElementsByTag("font").unwrap();
 							Matcher matcher = pattern.matcher(doc.toString().replaceAll("<br>", ""));
-							ArrayList<Round> rounds = new ArrayList<>();
+							ArrayList<CXRound> rounds = new ArrayList<>();
 							while(matcher.find()) {
 
 								String leftDebater = matcher.group(1);
@@ -277,7 +277,7 @@ public class CX extends Module {
 									continue;
 								}
 
-								Round round = new Round(t);
+								CXRound round = new CXRound(t);
 								round.setAbsUrl(doc.baseUri());
 								if(matcher.group(5).equals("Pro") || matcher.group(5).equals("Aff")) {
 									round.setTeamAff(team);
@@ -300,7 +300,7 @@ public class CX extends Module {
 							Document doc = Jsoup.connect(bracket.absUrl("href")).timeout(10*1000).get();
 
 							// Parse rounds
-							ArrayList<Round> rounds = new ArrayList<>();
+							ArrayList<CXRound> rounds = new ArrayList<>();
 							String roundStr = null, last = null;
 							ArrayList<Pair<Team, Team>> matchup = new ArrayList<Pair<Team, Team>>();
 							for(int i = 0;(roundStr = getBracketRound(doc, i)) != null;i++) {
@@ -395,7 +395,7 @@ public class CX extends Module {
 										if(pair.getLeft() == null || pair.getRight() == null)
 											continue;
 
-										Round round = new Round(t);
+										CXRound round = new CXRound(t);
 										round.setAbsUrl(doc.baseUri());
 										round.setTeamAff(pair.getLeft());
 										round.setTeamNeg(pair.getRight());

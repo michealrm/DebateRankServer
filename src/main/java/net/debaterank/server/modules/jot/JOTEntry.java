@@ -1,7 +1,7 @@
 package net.debaterank.server.modules.jot;
 
 import com.mongodb.client.MongoDatabase;
-import net.debaterank.server.models.Tournament;
+import net.debaterank.server.entities.Tournament;
 import net.debaterank.server.modules.Module;
 import net.debaterank.server.modules.WorkerPool;
 import org.apache.logging.log4j.LogManager;

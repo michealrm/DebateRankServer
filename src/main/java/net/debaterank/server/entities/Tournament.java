@@ -1,4 +1,4 @@
-package net.debaterank.server.models;
+package net.debaterank.server.entities;
 
 import org.bson.types.ObjectId;
 import org.mongodb.morphia.annotations.Embedded;
@@ -8,8 +8,6 @@ import org.mongodb.morphia.annotations.Property;
 
 import java.util.Date;
 import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
 @Entity("tournaments")
 public class Tournament {

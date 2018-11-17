@@ -1,4 +1,4 @@
-package net.debaterank.server.models;
+package net.debaterank.server.entities;
 
 import org.bson.types.ObjectId;
 import org.mongodb.morphia.annotations.Entity;

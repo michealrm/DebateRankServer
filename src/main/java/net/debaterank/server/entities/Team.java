@@ -1,4 +1,4 @@
-package net.debaterank.server.models;
+package net.debaterank.server.entities;
 
 import com.mongodb.DBRef;
 import com.mongodb.client.FindIterable;

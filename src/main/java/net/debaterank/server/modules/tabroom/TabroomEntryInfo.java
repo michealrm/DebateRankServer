@@ -1,6 +1,6 @@
 package net.debaterank.server.modules.tabroom;
 
-import net.debaterank.server.models.Tournament;
+import net.debaterank.server.entities.Tournament;
 
 public class TabroomEntryInfo {
 

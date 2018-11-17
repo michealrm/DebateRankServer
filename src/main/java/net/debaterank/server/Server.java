@@ -4,10 +4,10 @@ import com.mongodb.MongoClient;
 import com.mongodb.MongoClientOptions;
 import com.mongodb.MongoClientURI;
 import com.mongodb.client.MongoDatabase;
-import net.debaterank.server.models.DebaterPointer;
-import net.debaterank.server.models.JudgePointer;
-import net.debaterank.server.models.School;
-import net.debaterank.server.models.Tournament;
+import net.debaterank.server.entities.DebaterPointer;
+import net.debaterank.server.entities.JudgePointer;
+import net.debaterank.server.entities.School;
+import net.debaterank.server.entities.Tournament;
 import net.debaterank.server.modules.ModuleManager;
 import net.debaterank.server.modules.PoolSizeException;
 import net.debaterank.server.modules.WorkerPool;
@@ -16,8 +16,6 @@ import net.debaterank.server.modules.jot.JOTEntry;
 import net.debaterank.server.modules.jot.JOTEntryInfo;
 import net.debaterank.server.modules.tabroom.TabroomEntry;
 import net.debaterank.server.modules.tabroom.TabroomEntryInfo;
-import org.apache.commons.configuration2.Configuration;
-import org.apache.commons.configuration2.builder.fluent.Configurations;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.bson.codecs.configuration.CodecRegistry;
@@ -30,7 +28,9 @@ import org.mongodb.morphia.Datastore;
 import org.mongodb.morphia.Morphia;
 import org.mongodb.morphia.query.Query;
 
-import java.io.File;
+import javax.persistence.EntityManager;
+import javax.persistence.EntityManagerFactory;
+import javax.persistence.Persistence;
 import java.io.IOException;
 import java.net.SocketTimeoutException;
 import java.text.ParseException;
@@ -46,45 +46,21 @@ import static org.bson.codecs.configuration.CodecRegistries.fromRegistries;
 public class Server {
 
 	private Logger log;
-	private MongoClient mongoClient;
-	private MongoDatabase db;
 	public static List<DebaterPointer> debaterPointers;
 	public static List<JudgePointer> judgePointers;
-	private final Morphia morphia = new Morphia();
-	private final Datastore datastore;
-	private CodecRegistry pojoCodecRegistry;
 	public static HashMap<String, School> schoolStore = new HashMap<>();
+	private EntityManagerFactory emf;
+	private EntityManager em;
 
 	public Server() {
 		log = LogManager.getLogger(Server.class);
-		log.info("Instantiated logger");
+		log.info("Initialized logger");
 
-		morphia.mapPackage("net.debaterank.server.models");
-
-		Configurations configs = new Configurations();
-		try
-		{
-			Configuration config = configs.properties(new File("mongo.properties"));
-			String connectionString = config.getString("connectionString");
-			pojoCodecRegistry = fromRegistries(MongoClient.getDefaultCodecRegistry(), fromProviders(PojoCodecProvider.builder().automatic(true).build()));
-			MongoClientOptions.Builder optsWithCodecs = MongoClientOptions.builder(new MongoClientURI(connectionString).getOptions()).codecRegistry(pojoCodecRegistry);
-			MongoClientURI uri = new MongoClientURI(connectionString, optsWithCodecs);
-			mongoClient = new MongoClient(uri);
-			db = mongoClient.getDatabase("debaterank");
-		} catch (Exception e) {
-			log.error(e);
-			System.exit(1);
-		}
-
-		// pointers
-		datastore = morphia.createDatastore(mongoClient, "debaterank");
-		datastore.ensureIndexes();
-
-		final Query<DebaterPointer> query = datastore.createQuery(DebaterPointer.class);
-		debaterPointers = query.asList();
-
-		final Query<JudgePointer> query2 = datastore.createQuery(JudgePointer.class);
-		judgePointers = query2.asList();
+		log.info("Creating entity manager");
+		emf = Persistence.createEntityManagerFactory("my-persistence-unit");
+		em = emf.createEntityManager();
+		em.getTransaction().begin();
+		log.info("Created entity manager");
 
 	}
 

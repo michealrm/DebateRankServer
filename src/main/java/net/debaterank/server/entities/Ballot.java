@@ -1,36 +1,25 @@
-package net.debaterank.server.models;
+package net.debaterank.server.entities;
 
-import org.bson.types.ObjectId;
-import org.mongodb.morphia.annotations.*;
+import javax.persistence.Entity;
+import javax.persistence.Id;
 
-@Entity("ballots")
+@Entity
 public class Ballot {
     @Id
-    private ObjectId id = new ObjectId();
-	@Reference
-	private Round round;
-	@Reference
+    private Long id;
+	private CXRound round;
 	private Judge judge;
-	@Property("aff1_speaks")
 	private Double aff1_speaks;
-	@Property("aff2_speaks")
 	private Double aff2_speaks;
-	@Property("neg1_speaks")
 	private Double neg1_speaks;
-	@Property("neg2_speaks")
 	private Double neg2_speaks;
-	@Property("aff1_place")
 	private Integer aff1_place;
-	@Property("aff2_place")
 	private Integer aff2_place;
-	@Property("neg1_place")
 	private Integer neg1_place;
-	@Property("neg2_place")
 	private Integer neg2_place;
-	@Property("decision")
 	private String decision;
 
-	public Ballot(Round round) {
+	public Ballot(CXRound round) {
 		this.round = round;
 	}
 
@@ -114,7 +103,7 @@ public class Ballot {
 		this.decision = decision;
 	}
 
-	public Round getRound() {
+	public CXRound getRound() {
 		return round;
 	}
 
