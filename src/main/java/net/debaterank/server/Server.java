@@ -16,10 +16,18 @@ import net.debaterank.server.modules.jot.JOTEntry;
 import net.debaterank.server.modules.jot.JOTEntryInfo;
 import net.debaterank.server.modules.tabroom.TabroomEntry;
 import net.debaterank.server.modules.tabroom.TabroomEntryInfo;
+import net.debaterank.server.util.HibernateUtil;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.bson.codecs.configuration.CodecRegistry;
 import org.bson.codecs.pojo.PojoCodecProvider;
+import org.hibernate.Session;
+import org.hibernate.SessionFactory;
+import org.hibernate.Transaction;
+import org.hibernate.boot.Metadata;
+import org.hibernate.boot.MetadataSources;
+import org.hibernate.boot.registry.StandardServiceRegistry;
+import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -45,26 +53,28 @@ import static org.bson.codecs.configuration.CodecRegistries.fromRegistries;
 
 public class Server {
 
-	private Logger log;
-	public static List<DebaterPointer> debaterPointers;
-	public static List<JudgePointer> judgePointers;
-	public static HashMap<String, School> schoolStore = new HashMap<>();
-	private EntityManagerFactory emf;
-	private EntityManager em;
+	private static Logger log;
+	private static Session session;
+	private static SessionFactory factory;
+	private static Transaction transaction;
 
-	public Server() {
+	private static void setupHibernate() {
+		log.info("Setting up hibernate");
+		StandardServiceRegistry ssr = new StandardServiceRegistryBuilder().configure("hibernate.cfg.xml").build();
+		Metadata md = new MetadataSources(ssr).getMetadataBuilder().build();
+
+		factory = md.getSessionFactoryBuilder().build();
+		session = factory.openSession();
+		transaction = session.beginTransaction();
+		log.info("Set up hibernate");
+	}
+
+	public static void main(String[] args) {
+
 		log = LogManager.getLogger(Server.class);
 		log.info("Initialized logger");
 
-		log.info("Creating entity manager");
-		emf = Persistence.createEntityManagerFactory("my-persistence-unit");
-		em = emf.createEntityManager();
-		em.getTransaction().begin();
-		log.info("Created entity manager");
-
-	}
-
-	public void run() {
+		setupHibernate();
 
 		///////////////
 		// Variables //
@@ -327,10 +337,6 @@ public class Server {
 				System.exit(1);
 			}
 		} while (moduleManager.getActiveCount() != 0 || workerManager.getActiveCount() != 0);
-	}
-
-	public static void main(String[] args) {
-		new Server().run();
 	}
 
 }

@@ -1,25 +1,44 @@
 package net.debaterank.server.entities;
 
-import javax.persistence.Entity;
-import javax.persistence.Id;
+import javax.persistence.*;
 
 @Entity
+@Table(name = "ballots")
 public class Ballot {
+
     @Id
+	@GeneratedValue(strategy = GenerationType.SEQUENCE)
     private Long id;
+    @Column(nullable = false)
 	private CXRound round;
 	private Judge judge;
-	private Double aff1_speaks;
-	private Double aff2_speaks;
-	private Double neg1_speaks;
-	private Double neg2_speaks;
-	private Integer aff1_place;
-	private Integer aff2_place;
-	private Integer neg1_place;
-	private Integer neg2_place;
+	private Double a1_s;
+	private Double a2_s;
+	private Double n1_s;
+	private Double n2_s;
+	private Integer a1_p;
+	private Integer a2_p;
+	private Integer n1_p;
+	private Integer n2_p;
 	private String decision;
 
 	public Ballot(CXRound round) {
+		this.round = round;
+	}
+
+	public Long getId() {
+		return id;
+	}
+
+	public void setId(Long id) {
+		this.id = id;
+	}
+
+	public CXRound getRound() {
+		return round;
+	}
+
+	public void setRound(CXRound round) {
 		this.round = round;
 	}
 
@@ -31,68 +50,68 @@ public class Ballot {
 		this.judge = judge;
 	}
 
-	public Double getAff1_speaks() {
-		return aff1_speaks;
+	public Double getA1_s() {
+		return a1_s;
 	}
 
-	public void setAff1_speaks(Double aff1_speaks) {
-		this.aff1_speaks = aff1_speaks;
+	public void setA1_s(Double a1_s) {
+		this.a1_s = a1_s;
 	}
 
-	public Double getAff2_speaks() {
-		return aff2_speaks;
+	public Double getA2_s() {
+		return a2_s;
 	}
 
-	public void setAff2_speaks(Double aff2_speaks) {
-		this.aff2_speaks = aff2_speaks;
+	public void setA2_s(Double a2_s) {
+		this.a2_s = a2_s;
 	}
 
-	public Double getNeg1_speaks() {
-		return neg1_speaks;
+	public Double getN1_s() {
+		return n1_s;
 	}
 
-	public void setNeg1_speaks(Double neg1_speaks) {
-		this.neg1_speaks = neg1_speaks;
+	public void setN1_s(Double n1_s) {
+		this.n1_s = n1_s;
 	}
 
-	public Double getNeg2_speaks() {
-		return neg2_speaks;
+	public Double getN2_s() {
+		return n2_s;
 	}
 
-	public void setNeg2_speaks(Double neg2_speaks) {
-		this.neg2_speaks = neg2_speaks;
+	public void setN2_s(Double n2_s) {
+		this.n2_s = n2_s;
 	}
 
-	public Integer getAff1_place() {
-		return aff1_place;
+	public Integer getA1_p() {
+		return a1_p;
 	}
 
-	public void setAff1_place(Integer aff1_place) {
-		this.aff1_place = aff1_place;
+	public void setA1_p(Integer a1_p) {
+		this.a1_p = a1_p;
 	}
 
-	public Integer getAff2_place() {
-		return aff2_place;
+	public Integer getA2_p() {
+		return a2_p;
 	}
 
-	public void setAff2_place(Integer aff2_place) {
-		this.aff2_place = aff2_place;
+	public void setA2_p(Integer a2_p) {
+		this.a2_p = a2_p;
 	}
 
-	public Integer getNeg1_place() {
-		return neg1_place;
+	public Integer getN1_p() {
+		return n1_p;
 	}
 
-	public void setNeg1_place(Integer neg1_place) {
-		this.neg1_place = neg1_place;
+	public void setN1_p(Integer n1_p) {
+		this.n1_p = n1_p;
 	}
 
-	public Integer getNeg2_place() {
-		return neg2_place;
+	public Integer getN2_p() {
+		return n2_p;
 	}
 
-	public void setNeg2_place(Integer neg2_place) {
-		this.neg2_place = neg2_place;
+	public void setN2_p(Integer n2_p) {
+		this.n2_p = n2_p;
 	}
 
 	public String getDecision() {
@@ -101,36 +120,5 @@ public class Ballot {
 
 	public void setDecision(String decision) {
 		this.decision = decision;
-	}
-
-	public CXRound getRound() {
-		return round;
-	}
-
-	/*public void setRound(Round round) {
-		this.round = round;
-	}*/
-
-	public void replaceNull(Ballot ballot) {
-		if(round == null)
-			round = ballot.getRound();
-		if(aff1_speaks == null)
-			aff1_speaks = ballot.getAff1_speaks();
-		if(aff2_speaks == null)
-			aff2_speaks = ballot.getAff2_speaks();
-		if(neg1_speaks == null)
-			neg1_speaks = ballot.getNeg1_speaks();
-		if(neg2_speaks == null)
-			neg2_speaks = ballot.getNeg2_speaks();
-		if(aff1_place == null)
-			aff1_place = ballot.getAff1_place();
-		if(aff2_place == null)
-			aff2_place = ballot.getAff2_place();
-		if(neg1_place == null)
-			neg1_place = ballot.getNeg1_place();
-		if(neg2_place == null)
-			neg2_place = ballot.getNeg2_place();
-		if(decision == null)
-			decision = ballot.getDecision();
 	}
 }
