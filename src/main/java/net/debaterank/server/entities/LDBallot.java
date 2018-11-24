@@ -1,4 +1,4 @@
-package net.debaterank.server;
+package net.debaterank.server.entities;
 
 import net.debaterank.server.entities.Debater;
 import net.debaterank.server.entities.LDRound;

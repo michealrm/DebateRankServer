@@ -3,12 +3,7 @@ package net.debaterank.server;
 import net.debaterank.server.entities.Tournament;
 import net.debaterank.server.modules.ModuleManager;
 import net.debaterank.server.modules.PoolSizeException;
-import net.debaterank.server.modules.WorkerPool;
 import net.debaterank.server.modules.WorkerPoolManager;
-import net.debaterank.server.modules.jot.JOTEntry;
-import net.debaterank.server.modules.jot.JOTEntryInfo;
-import net.debaterank.server.modules.tabroom.TabroomEntry;
-import net.debaterank.server.modules.tabroom.TabroomEntryInfo;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.hibernate.Session;
@@ -116,15 +111,8 @@ public class Server {
 			e.printStackTrace();
 		}
 
-		// Modules //
+		// JOT Modules //
 
-		ArrayList<JOTEntryInfo> jotTournamentInfosLD = new ArrayList<>();
-		ArrayList<JOTEntryInfo> jotTournamentInfosPF = new ArrayList<>();
-		ArrayList<JOTEntryInfo> jotTournamentInfosCX = new ArrayList<>();
-
-		WorkerPool jotEntry = new WorkerPool();
-		workerManager.add(jotEntry);
-		moduleManager.newModule(new JOTEntry(jotTournaments, jotTournamentInfosLD, jotTournamentInfosPF, jotTournamentInfosCX, jotEntry, datastore, db));
 
 		/////////////
 		// Tabroom //
@@ -204,15 +192,7 @@ public class Server {
         transaction.commit();
         log.info("Saved tournaments");
 
-		// Modules //
-
-		ArrayList<TabroomEntryInfo> tabroomTournamentInfosLD = new ArrayList<>();
-		ArrayList<TabroomEntryInfo> tabroomTournamentInfosPF = new ArrayList<>();
-		ArrayList<TabroomEntryInfo> tabroomTournamentInfosCX = new ArrayList<>();
-
-		WorkerPool tabroomEntry = new WorkerPool();
-		workerManager.add(tabroomEntry);
-		moduleManager.newModule(new TabroomEntry(tabroomTournaments, tabroomTournamentInfosLD, tabroomTournamentInfosPF, tabroomTournamentInfosCX, tabroomEntry, datastore, db));
+		// Tabroom Modules //
 
 		/////////////
 		// Execute //
@@ -233,8 +213,7 @@ public class Server {
 
 		// Update DB
         log.info("Finished queuing - saving tournaments.");
-        datastore.save(jotTournaments);
-        datastore.save(tabroomTournaments);
+        transaction.commit();
         log.info("Saved tournaments");
 
         ////////////////////////
@@ -242,37 +221,12 @@ public class Server {
 		////////////////////////
 
 		// JOT
-		WorkerPool jotLD = new WorkerPool();
-		workerManager.add(jotLD);
-		moduleManager.newModule(new net.debaterank.server.modules.jot.LD(jotTournamentInfosLD, jotLD, datastore, db));
-
-		WorkerPool jotPF = new WorkerPool();
-		workerManager.add(jotPF);
-		moduleManager.newModule(new net.debaterank.server.modules.jot.PF(jotTournamentInfosPF, jotPF, datastore, db));
-
-		WorkerPool jotCX = new WorkerPool();
-		workerManager.add(jotCX);
-		moduleManager.newModule(new net.debaterank.server.modules.jot.CX(jotTournamentInfosCX, jotCX, datastore, db));
 
 		// Tabroom
-		WorkerPool tabroomLD = new WorkerPool();
-		workerManager.add(tabroomLD);
-		moduleManager.newModule(new net.debaterank.server.modules.tabroom.LD(tabroomTournamentInfosLD, tabroomLD, datastore, db));
-
-		WorkerPool tabroomPF = new WorkerPool();
-		workerManager.add(tabroomPF);
-		moduleManager.newModule(new net.debaterank.server.modules.tabroom.PF(tabroomTournamentInfosPF, tabroomPF, datastore, db));
-
-		WorkerPool tabroomCX = new WorkerPool();
-		workerManager.add(tabroomCX);
-		moduleManager.newModule(new net.debaterank.server.modules.tabroom.CX(tabroomTournamentInfosCX, tabroomCX, datastore, db));
 
 		// Execute //
 
 		log.info("Executing tournament parsing.");
-		log.info("JOT Scraping " + (jotTournamentInfosLD.size() + jotTournamentInfosCX.size() + jotTournamentInfosPF.size()) + " (" + jotTournamentInfosLD.size() + "LD " + jotTournamentInfosPF.size() + "PF " + jotTournamentInfosCX.size() + "CX)");
-		log.info("Tabroom Scraping " + (tabroomTournamentInfosLD.size() + tabroomTournamentInfosCX.size() + tabroomTournamentInfosPF.size()) + " (" + tabroomTournamentInfosLD.size() + "LD " + tabroomTournamentInfosPF.size() + "PF " + tabroomTournamentInfosCX.size() + "CX)");
-
 		try {
 			workerManager.start();
 		} catch (PoolSizeException e) {}
