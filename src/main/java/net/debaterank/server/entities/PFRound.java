@@ -3,24 +3,19 @@ package net.debaterank.server.entities;
 import javax.persistence.*;
 
 @Entity
-@Table()
-public class CXRound {
+@Table
+public class PFRound {
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.SEQUENCE)
-    private Long id;
-	@OneToOne
-    private Tournament tournament;
-    @OneToOne
-    private Debater a1;
-    @OneToOne
-    private Debater a2;
-    @OneToOne
-    private Debater n1;
-    @OneToOne
-    private Debater n2;
+	private Long id;
+	private Tournament tournament;
+	private Debater a1;
+	private Debater a2;
+	private Debater n1;
+	private Debater n2;
 
-	public CXRound(Tournament tournament, Debater a1, Debater a2, Debater n1, Debater n2) {
+	public PFRound(Tournament tournament, Debater a1, Debater a2, Debater n1, Debater n2) {
 		this.tournament = tournament;
 		this.a1 = a1;
 		this.a2 = a2;

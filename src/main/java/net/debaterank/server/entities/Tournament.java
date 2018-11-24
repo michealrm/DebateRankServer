@@ -1,31 +1,27 @@
 package net.debaterank.server.entities;
 
-import org.bson.types.ObjectId;
-import org.mongodb.morphia.annotations.Embedded;
-import org.mongodb.morphia.annotations.Entity;
-import org.mongodb.morphia.annotations.Id;
-import org.mongodb.morphia.annotations.Property;
-
+import javax.persistence.*;
 import java.util.Date;
-import java.util.HashMap;
 
-@Entity("tournaments")
+@Entity
+@Table
 public class Tournament {
 
 	@Id
-    private ObjectId id = new ObjectId();
+	@GeneratedValue(strategy = GenerationType.SEQUENCE)
+    private Long id;
 	private String name;
 	private String link;
 	private String state;
+	@Temporal(TemporalType.DATE)
 	private Date date;
-	@Embedded
-    private HashMap<String, Boolean> scraped;
+	private boolean scraped;
 
-	public ObjectId getId() {
+	public Long getId() {
 		return id;
 	}
 
-	public void setId(ObjectId id) {
+	public void setId(Long id) {
 		this.id = id;
 	}
 
@@ -61,45 +57,18 @@ public class Tournament {
 		this.date = date;
 	}
 
-    public HashMap<String, Boolean> getScraped() {
-        return scraped;
-    }
-
-    public void setScraped(HashMap<String, Boolean> scraped) {
-        this.scraped = scraped;
-    }
-
-    public boolean isScraped(String event) {
-	    if(scraped == null)
-	        return false;
-	    Boolean b = scraped.get(event);
-	    return b != null && b.booleanValue(); // can return null
-    }
-
-    public void putScraped(String event, boolean val) {
-	    if(scraped == null)
-	        scraped = new HashMap<>();
-	    scraped.put(event, val);
-    }
-
-    public void replaceNull(Tournament tournament) {
-		if(id == null)
-			id = tournament.getId();
-		if(name == null)
-			name = tournament.getName();
-		if(link == null)
-			link = tournament.getLink();
-		if(state == null)
-			state = tournament.getState();
-		if(date == null)
-			date = tournament.getDate();
-		if(scraped == null)
-            scraped = tournament.getScraped();
-		else if(scraped.size() == 0 && tournament.getScraped() != null)
-			scraped = tournament.getScraped();
+	public boolean isScraped() {
+		return scraped;
 	}
 
-	public Tournament(ObjectId id, String name, String link, String state, Date date) {
+	public void setScraped(boolean scraped) {
+		this.scraped = scraped;
+	}
+
+	public Tournament() {
+	}
+
+	public Tournament(long id, String name, String link, String state, Date date) {
 		this.id = id;
 		this.name = name;
 		this.link = link;
@@ -113,7 +82,5 @@ public class Tournament {
 		this.state = state;
 		this.date = date;
 	}
-
-	public Tournament() {}
 
 }

@@ -41,7 +41,7 @@ public class LD extends Module {
 			Tournament t = tInfo.getTournament();
 			manager.newModule(() -> {
 				try {
-					ArrayList<Ballot> ballots = new ArrayList<>();
+					ArrayList<CXBallot> ballots = new ArrayList<>();
 					ArrayList<CXRound> tournRounds = new ArrayList<>();
 					Elements eventRows = tInfo.getEventRows();
 					log.info("Updating " + t.getName() + " " + t.getLink());
@@ -90,7 +90,7 @@ public class LD extends Module {
 											round.setSingleAff(debater);
 											round.setSingleNeg(debater);
 										} else {
-											Ballot ballot = new Ballot(round);
+											CXBallot ballot = new CXBallot(round);
 											if(side == null || side.text() == null || side.text().equals("Aff")) {
 												round.setSingleAff(debater);
 												ballot.setDecision("Neg");
@@ -115,7 +115,7 @@ public class LD extends Module {
 										rounds.add(round);
 									} else if(win.text() != null && side != null && side.text() != null && (side.text().equals("Aff") || side.text().equals("Neg"))) {
 										// check if other side (aff / neg) is competitors.get(against.text()) win.text().equals("F")
-										for(Ballot ballot : ballots) {
+										for(CXBallot ballot : ballots) {
 										    CXRound r = ballot.getRound();
 											if(r.getSingleAff() != null && r.getSingleAff().getId().equals(debater.getId()) && r.getRound().equals(String.valueOf(k+1))) {
 												r.setSingleAff(debater);
@@ -135,7 +135,7 @@ public class LD extends Module {
 										}
 										// no existing document found. we need to make a new one
 										if ((win.text().equals("W") || win.text().equals("L")) && against.text() != null && (againstDebater = competitors.get(against.text())) != null) {
-                                            Ballot ballot = new Ballot(round);
+                                            CXBallot ballot = new CXBallot(round);
 										    if (side.text().equals("Aff")) {
 												round.setSingleAff(debater);
 												round.setSingleNeg(againstDebater);
@@ -190,7 +190,7 @@ public class LD extends Module {
 									round.setSingleAff(loser);
 									round.setSingleNeg(winner);
 								}
-								Ballot ballot = new Ballot(round);
+								CXBallot ballot = new CXBallot(round);
 								ballot.setDecision(matcher.group(4));
 								round.setRound("DO");
 								rounds.add(round);
@@ -289,7 +289,7 @@ public class LD extends Module {
 										round.setSingleAff(pair.getLeft());
 										round.setSingleNeg(pair.getRight());
 										round.setRound(last);
-										Ballot ballot = new Ballot(round);
+										CXBallot ballot = new CXBallot(round);
 										ballot.setDecision("Aff");
 
 										rounds.add(round);

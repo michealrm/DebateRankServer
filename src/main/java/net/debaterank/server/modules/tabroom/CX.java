@@ -145,7 +145,7 @@ public class CX extends Module {
 		}
 
 		// Finally, ballot parsing
-		HashMap<Integer, Pair<CXRound, Ballot>> ballots = new HashMap<>();
+		HashMap<Integer, Pair<CXRound, CXBallot>> ballots = new HashMap<>();
 		JSONArray jsonBallot = jsonObject.getJSONArray("ballot");
 		for(int i = 0;i<jsonBallot.length();i++) {
 			try {
@@ -180,7 +180,7 @@ public class CX extends Module {
 				}
 				round.setBye(round.isBye() || bye);
 
-				Ballot ballot = new Ballot(round);
+				CXBallot ballot = new CXBallot(round);
 				ballot.setJudge(judges.get(judge)); // This can be null
 
 				ballots.put(id, Pair.of(round, ballot));
@@ -198,7 +198,7 @@ public class CX extends Module {
 				double score = jObject.getDouble("SCORE");
 				int id = jObject.getInt("ID");
 
-				Pair<CXRound, Ballot> ballot = ballots.get(ballotID);
+				Pair<CXRound, CXBallot> ballot = ballots.get(ballotID);
 				if(ballot == null) {
 					log.warn("Ballot " + ballotID + " in " + t.getLink() + " is null. Skipping ballot score");
 					continue;
@@ -250,12 +250,12 @@ public class CX extends Module {
 		}
 
 		// Collapse ballots to one judge per ballot
-		ArrayList<Ballot> collBallots = new ArrayList<>();
-		for(Pair<CXRound, Ballot> pair : ballots.values()) {
-			Ballot ballot = pair.getRight();
+		ArrayList<CXBallot> collBallots = new ArrayList<>();
+		for(Pair<CXRound, CXBallot> pair : ballots.values()) {
+			CXBallot ballot = pair.getRight();
 			if(!collBallots.contains(ballot))
 				collBallots.add(ballot);
-			for(Ballot b : collBallots)
+			for(CXBallot b : collBallots)
 				if(b.getJudge() == ballot.getJudge())
 					b.replaceNull(ballot);
 		}

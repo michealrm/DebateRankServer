@@ -48,7 +48,7 @@ public class PF extends Module {
 				try {
 					Elements eventRows = tInfo.getEventRows();
 					log.info("Updating " + t.getName() + " " + t.getLink());
-					ArrayList<Ballot> ballots = new ArrayList<>();
+					ArrayList<CXBallot> ballots = new ArrayList<>();
 					ArrayList<CXRound> tournRounds = new ArrayList<>();
 					for(Element eventRow : eventRows) {
 						// Prelims
@@ -109,7 +109,7 @@ public class PF extends Module {
 									}
 
 									if(win.text().equals("B") || win.text().equals("F")) {
-										Ballot ballot = new Ballot(round);
+										CXBallot ballot = new CXBallot(round);
 										// bye
 										if(win.text().equals("B")) {
 											round.setTeamAff(team);
@@ -155,7 +155,7 @@ public class PF extends Module {
 										rounds.add(round);
 									} else if(win.text() != null && side != null && side.text() != null && (side.text().equals("Pro") || side.text().equals("Con") || side.text().equals("Aff") || side.text().equals("Neg"))) {
 										// check if other side (aff / neg) is competitors.get(against.text()) win.text().equals("F")
-										for(Ballot ballot : ballots) {
+										for(CXBallot ballot : ballots) {
 											CXRound r = ballot.getRound();
 											if(r.getTeamAff() != null && r.getTeamAff().equals(team) && r.getRound().equals(String.valueOf(k+1))) {
 												try {
@@ -189,7 +189,7 @@ public class PF extends Module {
 										}
 										// no existing document found. we need to make a new one
 										if ((win.text().equals("W") || win.text().equals("L")) && against.text() != null && (againstTeam = competitors.get(against.text())) != null) {
-											Ballot ballot = new Ballot(round);
+											CXBallot ballot = new CXBallot(round);
 											if (side.text().equals("Pro") || side.text().equals("Aff")) {
 												round.setTeamAff(team);
 												round.setTeamNeg(againstTeam);
@@ -286,7 +286,7 @@ public class PF extends Module {
 									round.setTeamAff(against);
 									round.setTeamNeg(team);
 								}
-								Ballot ballot = new Ballot(round);
+								CXBallot ballot = new CXBallot(round);
 								ballot.setDecision(matcher.group(5));
 								round.setRound("DO");
 								rounds.add(round);
@@ -400,7 +400,7 @@ public class PF extends Module {
 										round.setTeamAff(pair.getLeft());
 										round.setTeamNeg(pair.getRight());
 										round.setNoSide(true);
-										Ballot ballot = new Ballot(round);
+										CXBallot ballot = new CXBallot(round);
 										ballot.setDecision("Aff");
 										ballots.add(ballot);
 

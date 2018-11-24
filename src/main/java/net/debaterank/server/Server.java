@@ -1,12 +1,5 @@
 package net.debaterank.server;
 
-import com.mongodb.MongoClient;
-import com.mongodb.MongoClientOptions;
-import com.mongodb.MongoClientURI;
-import com.mongodb.client.MongoDatabase;
-import net.debaterank.server.entities.DebaterPointer;
-import net.debaterank.server.entities.JudgePointer;
-import net.debaterank.server.entities.School;
 import net.debaterank.server.entities.Tournament;
 import net.debaterank.server.modules.ModuleManager;
 import net.debaterank.server.modules.PoolSizeException;
@@ -16,11 +9,8 @@ import net.debaterank.server.modules.jot.JOTEntry;
 import net.debaterank.server.modules.jot.JOTEntryInfo;
 import net.debaterank.server.modules.tabroom.TabroomEntry;
 import net.debaterank.server.modules.tabroom.TabroomEntryInfo;
-import net.debaterank.server.util.HibernateUtil;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.bson.codecs.configuration.CodecRegistry;
-import org.bson.codecs.pojo.PojoCodecProvider;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.Transaction;
@@ -32,24 +22,14 @@ import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
-import org.mongodb.morphia.Datastore;
-import org.mongodb.morphia.Morphia;
-import org.mongodb.morphia.query.Query;
 
-import javax.persistence.EntityManager;
-import javax.persistence.EntityManagerFactory;
-import javax.persistence.Persistence;
 import java.io.IOException;
 import java.net.SocketTimeoutException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
-
-import static org.bson.codecs.configuration.CodecRegistries.fromProviders;
-import static org.bson.codecs.configuration.CodecRegistries.fromRegistries;
 
 public class Server {
 
@@ -83,21 +63,12 @@ public class Server {
 		ModuleManager moduleManager = new ModuleManager();
 		WorkerPoolManager workerManager = new WorkerPoolManager();
 
-        ArrayList<Tournament> jotTournaments = new ArrayList<>();
-        ArrayList<Tournament> tournamentsInDB = new ArrayList<>(datastore.createQuery(Tournament.class).asList());
-        ArrayList<Tournament> possibleJOT = new ArrayList<>();
-        ArrayList<Tournament> notInDB = new ArrayList<>();
-        ArrayList<Tournament> possibleTabroom = new ArrayList<>();
-        ArrayList<Tournament> tabroomTournaments = new ArrayList<>();
+		List<String> scrapedLinks = session.createQuery("select link from Tournaments where scraped = true").list();
+		ArrayList<Tournament> jotTournaments = new ArrayList<>();
+		ArrayList<Tournament> tabroomTournaments = new ArrayList<>();
 
         int tabroomScraped = 0;
         int jotScraped = 0;
-
-        for(Tournament t : tournamentsInDB)
-            if (t.getLink().contains("joyoftournaments"))
-                possibleJOT.add(t);
-            else if(t.getLink().contains("tabroom"))
-                possibleTabroom.add(t);
 
         /////////
 		// JOT //
@@ -126,20 +97,8 @@ public class Server {
 					Elements cols = rows.get(i).select("td");
 					try {
 						Tournament tournament = new Tournament(cols.select("a").first().text(), cols.select("a").first().absUrl("href"), cols.select("[align=center]").first().text(), formatter.parse(cols.select("[align=right]").first().text()));
-						boolean scraped = false;
-						boolean inDB = false;
-						for(Tournament t : possibleJOT) {
-							if(tournament.getLink().equals(t.getLink())) {
-								tournament.replaceNull(t);
-								scraped = tournament.isScraped("LD") && tournament.isScraped("PF") && tournament.isScraped("CX");
-								inDB = true;
-								break;
-							}
-						}
-						if(!scraped)
-                            jotTournaments.add(tournament);
-						if(!inDB)
-						    notInDB.add(tournament);
+						if(!scrapedLinks.contains(tournament.getLink()))
+							jotTournaments.add(tournament);
 						jotScraped++;
 						if(System.currentTimeMillis() - lastTime > 1000) {
 							lastTime = System.currentTimeMillis();
@@ -217,20 +176,9 @@ public class Server {
 								Elements cols = rows.get(i).select("td");
 								if (cols.size() > 0) {
 									Tournament tournament = new Tournament(cols.get(0).text(), cols.get(0).select("a").first().absUrl("href"), null, tabroomFormatter.parse(cols.get(1).text()));
-                                    boolean scraped = false;
-                                    boolean inDB = false;
-                                    for(Tournament t : possibleTabroom) {
-                                        if(tournament.getLink().equals(t.getLink())) {
-                                            tournament.replaceNull(t);
-                                            scraped = tournament.isScraped("LD") && tournament.isScraped("PF") && tournament.isScraped("CX");
-                                            inDB = true;
-                                            break;
-                                        }
-                                    }
-                                    if(!scraped)
-                                        tabroomTournaments.add(tournament);
-                                    if(!inDB)
-                                        notInDB.add(tournament);
+                                    if(!scrapedLinks.contains(tournament))
+                                    	tabroomTournaments.add(tournament);
+                                    // TODO: Add DB check here because tabroom tournament scraping is costly
                                     tabroomScraped++;
                                     if(System.currentTimeMillis() - lastTime > 1000) {
                                         lastTime = System.currentTimeMillis();
@@ -252,8 +200,8 @@ public class Server {
 			log.fatal("Tabroom could not be updated");
 		}
 
-        log.info("Saving " + notInDB.size() + " tournaments in the DB");
-        datastore.save(notInDB);
+        log.info("Saving new tournaments into the DB");
+        transaction.commit();
         log.info("Saved tournaments");
 
 		// Modules //

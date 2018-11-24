@@ -1,38 +1,36 @@
 package net.debaterank.server.entities;
 
-import com.mongodb.client.FindIterable;
-import com.mongodb.client.MongoCollection;
-import com.mongodb.client.model.Filters;
 import net.debaterank.server.Server;
-import org.bson.types.ObjectId;
-import org.mongodb.morphia.Datastore;
-import org.mongodb.morphia.annotations.Entity;
-import org.mongodb.morphia.annotations.Id;
-import org.mongodb.morphia.annotations.Property;
 
+import javax.persistence.*;
 import java.io.Serializable;
 
 import static net.debaterank.server.util.DRHelper.isSameName;
 
-@Entity("schools")
+@Entity
+@Table
 public class School implements Serializable {
 
 	@Id
-	private ObjectId id = new ObjectId();
-	@Property("name")
+	@GeneratedValue(strategy = GenerationType.SEQUENCE)
+	private Long id;
 	private String name;
-	@Property("address")
 	private String address;
-	@Property("state")
 	private String state;
-	@Property("nsda_link")
 	private String nsda_link;
 
-	public ObjectId getId() {
+	public boolean equals(School school) {
+		return isSameName(state, school.getState()) &&
+				(isSameName(address, school.getAddress()) ||
+						isSameName(nsda_link, school.getNsda_link()) ||
+						isSameName(name, school.getName()));
+	}
+
+	public Long getId() {
 		return id;
 	}
 
-	public void setId(ObjectId id) {
+	public void setId(Long id) {
 		this.id = id;
 	}
 
@@ -48,8 +46,8 @@ public class School implements Serializable {
 		return address;
 	}
 
-	public void setAddress(String link) {
-		this.address = link;
+	public void setAddress(String address) {
+		this.address = address;
 	}
 
 	public String getState() {
@@ -68,8 +66,7 @@ public class School implements Serializable {
 		this.nsda_link = nsda_link;
 	}
 
-	public School(String name) {
-		this.name = name;
+	public School() {
 	}
 
 	public School(String name, String address, String state, String nsda_link) {
@@ -79,66 +76,7 @@ public class School implements Serializable {
 		this.nsda_link = nsda_link;
 	}
 
-	public School(ObjectId id, String name, String address, String state, String nsda_link) {
-		this.id = id;
+	public School(String name) {
 		this.name = name;
-		this.address = address;
-		this.state = state;
-		this.nsda_link = nsda_link;
 	}
-
-	public School() {}
-
-	public void replaceNull(School school) {
-		if(id == null)
-			id = school.getId();
-		if(name == null)
-			name = school.getName();
-		if(nsda_link == null)
-			nsda_link = school.getNsda_link();
-		if(address == null)
-			address = school.getAddress();
-		if(state == null)
-			state = school.getState();
-	}
-
-	public void replaceWith(School school) {
-		id = school.getId();
-		name = school.getName();
-		nsda_link = school.getNsda_link();
-		address = school.getAddress();
-		state = school.getState();
-	}
-
-	public boolean equals(School school) {
-		return isSameName(state, school.getState()) &&
-				(isSameName(address, school.getAddress()) ||
-				isSameName(nsda_link, school.getNsda_link()) ||
-				isSameName(name, school.getName()));
-	}
-
-	/**
-	 * This object shall be replaced with an existing object in the collection. If no object is found, this object will be saved into the collection
-	 * @return Found an object in the collection
-	 */
-	public boolean updateToDocument(Datastore datastore, MongoCollection<School> schoolCollection) {
-		School store = null;
-		if((store = Server.schoolStore.get(name)) != null) {
-			replaceWith(store);
-			return true;
-		}
-		FindIterable<School> schoolsFound = schoolCollection.find(Filters.or(Filters.eq("name", name), Filters.eq("address", address), Filters.eq("nsda_link", nsda_link)));
-		for(School s: schoolsFound) {
-			if(equals(s)) {
-				s.replaceNull(this); // Get possible missing information
-				replaceWith(s);
-				Server.schoolStore.put(name, this);
-				return true;
-			}
-		}
-		// not found
-		datastore.save(this);
-		return false;
-	}
-
 }

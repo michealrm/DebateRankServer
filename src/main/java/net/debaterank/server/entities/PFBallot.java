@@ -3,14 +3,15 @@ package net.debaterank.server.entities;
 import javax.persistence.*;
 
 @Entity
-@Table(name = "ballots")
-public class Ballot {
+@Table
+public class PFBallot {
 
-    @Id
+	@Id
 	@GeneratedValue(strategy = GenerationType.SEQUENCE)
-    private Long id;
-    @Column(nullable = false)
-	private CXRound round;
+	private Long id;
+	@Column(nullable = false)
+	@OneToOne
+	private PFRound round;
 	private Judge judge;
 	private Double a1_s;
 	private Double a2_s;
@@ -22,7 +23,7 @@ public class Ballot {
 	private Integer n2_p;
 	private String decision;
 
-	public Ballot(CXRound round) {
+	public PFBallot(PFRound round) {
 		this.round = round;
 	}
 
@@ -34,11 +35,11 @@ public class Ballot {
 		this.id = id;
 	}
 
-	public CXRound getRound() {
+	public PFRound getRound() {
 		return round;
 	}
 
-	public void setRound(CXRound round) {
+	public void setRound(PFRound round) {
 		this.round = round;
 	}
 
