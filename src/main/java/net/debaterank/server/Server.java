@@ -13,6 +13,7 @@ import org.hibernate.boot.Metadata;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
+import org.hibernate.resource.transaction.spi.TransactionStatus;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -41,7 +42,7 @@ public class Server {
 		factory = md.getSessionFactoryBuilder().build();
 		session = factory.openSession();
 		transaction = session.beginTransaction();
-		log.info("Set up hibernate");
+		log.info("Hibernate setup completed");
 	}
 
 	public static void main(String[] args) {
@@ -58,7 +59,7 @@ public class Server {
 		ModuleManager moduleManager = new ModuleManager();
 		WorkerPoolManager workerManager = new WorkerPoolManager();
 
-		List<String> scrapedLinks = session.createQuery("select link from Tournaments where scraped = true").list();
+		List<String> scrapedLinks = session.createQuery("select link from Tournament where scraped = true").list();
 		ArrayList<Tournament> jotTournaments = new ArrayList<>();
 		ArrayList<Tournament> tabroomTournaments = new ArrayList<>();
 
@@ -213,7 +214,9 @@ public class Server {
 
 		// Update DB
         log.info("Finished queuing - saving tournaments.");
-        transaction.commit();
+		if (transaction.getStatus().equals(TransactionStatus.ACTIVE)) {
+			transaction.commit();
+		}
         log.info("Saved tournaments");
 
         ////////////////////////
