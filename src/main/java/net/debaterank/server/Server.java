@@ -13,7 +13,6 @@ import org.hibernate.boot.Metadata;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
-import org.hibernate.resource.transaction.spi.TransactionStatus;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -35,14 +34,12 @@ public class Server {
 	private static Transaction transaction;
 
 	private static void setupHibernate() {
-		log.info("Setting up hibernate");
 		StandardServiceRegistry ssr = new StandardServiceRegistryBuilder().configure("hibernate.cfg.xml").build();
 		Metadata md = new MetadataSources(ssr).getMetadataBuilder().build();
 
 		factory = md.getSessionFactoryBuilder().build();
 		session = factory.openSession();
 		transaction = session.beginTransaction();
-		log.info("Hibernate setup completed");
 	}
 
 	public static void main(String[] args) {
@@ -50,7 +47,9 @@ public class Server {
 		log = LogManager.getLogger(Server.class);
 		log.info("Initialized logger");
 
+		log.info("Setting up hibernate");
 		setupHibernate();
+		log.info("Hibernate setup completed");
 
 		///////////////
 		// Variables //
@@ -80,7 +79,7 @@ public class Server {
 					for (Element option : select.select("option"))
 						years.add(option.attr("value"));
 			// Get all the tournaments
-			SimpleDateFormat formatter = new SimpleDateFormat("dd/MM/yyyy");
+			SimpleDateFormat formatter = new SimpleDateFormat("MM/dd/yyyy");
 			for (String year : years) {
 				Document tournamentDoc = Jsoup.connect("https://www.joyoftournaments.com/results.asp").timeout(10 * 1000)
 						.data("state", "")
@@ -92,7 +91,11 @@ public class Server {
 				for (int i = 1; i < rows.size(); i++) {
 					Elements cols = rows.get(i).select("td");
 					try {
-						Tournament tournament = new Tournament(cols.select("a").first().text(), cols.select("a").first().absUrl("href"), cols.select("[align=center]").first().text(), formatter.parse(cols.select("[align=right]").first().text()));
+						Tournament tournament = new Tournament(
+								cols.select("a").first().text(),
+								cols.select("a").first().absUrl("href"),
+								cols.select("[align=center]").first().text(),
+								formatter.parse(cols.select("[align=right]").first().text()));
 						if(!scrapedLinks.contains(tournament.getLink()))
 							jotTournaments.add(tournament);
 						jotScraped++;
@@ -118,6 +121,7 @@ public class Server {
 		/////////////
 		// Tabroom //
 		/////////////
+		// TODO: Tabroom isn't just picking up results. It's picking up future tournaments. For we need a check to see if we're scraping the tournament
 
 		SimpleDateFormat tabroomFormatter = new SimpleDateFormat("MM/dd/yyyy");
         lastTime = System.currentTimeMillis();
@@ -189,8 +193,14 @@ public class Server {
 			log.fatal("Tabroom could not be updated");
 		}
 
-        log.info("Saving new tournaments into the DB");
-        transaction.commit();
+        log.info("Saving tournaments into the DB");
+		for(Tournament t : jotTournaments) {
+			System.out.println(t.getDate());
+			session.saveOrUpdate(t);
+		}
+		for(Tournament t : tabroomTournaments)
+			session.saveOrUpdate(t);
+		transaction.commit();
         log.info("Saved tournaments");
 
 		// Tabroom Modules //
@@ -211,13 +221,6 @@ public class Server {
 				System.exit(1);
 			}
 		} while (moduleManager.getActiveCount() != 0 || workerManager.getActiveCount() != 0);
-
-		// Update DB
-        log.info("Finished queuing - saving tournaments.");
-		if (transaction.getStatus().equals(TransactionStatus.ACTIVE)) {
-			transaction.commit();
-		}
-        log.info("Saved tournaments");
 
         ////////////////////////
 		// Tournament parsing //
@@ -242,6 +245,9 @@ public class Server {
 				System.exit(1);
 			}
 		} while (moduleManager.getActiveCount() != 0 || workerManager.getActiveCount() != 0);
+
+		session.close();
+		factory.close();
 	}
 
 }
