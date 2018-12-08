@@ -13,6 +13,7 @@ import org.hibernate.boot.Metadata;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
+import org.hibernate.exception.ConstraintViolationException;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -58,14 +59,14 @@ public class Server {
 		ModuleManager moduleManager = new ModuleManager();
 		WorkerPoolManager workerManager = new WorkerPoolManager();
 
-		List<String> scrapedLinks = session.createQuery("select link from Tournament where scraped = true").list();
+		List<String> existingLinks = session.createQuery("select link from Tournament").list();
 		ArrayList<Tournament> jotTournaments = new ArrayList<>();
 		ArrayList<Tournament> tabroomTournaments = new ArrayList<>();
 
         int tabroomScraped = 0;
         int jotScraped = 0;
 
-        /////////
+                /////////
 		// JOT //
 		/////////
 
@@ -96,7 +97,7 @@ public class Server {
 								cols.select("a").first().absUrl("href"),
 								cols.select("[align=center]").first().text(),
 								formatter.parse(cols.select("[align=right]").first().text()));
-						if(!scrapedLinks.contains(tournament.getLink()))
+						if(!existingLinks.contains(tournament.getLink()))
 							jotTournaments.add(tournament);
 						jotScraped++;
 						if(System.currentTimeMillis() - lastTime > 1000) {
@@ -169,7 +170,7 @@ public class Server {
 								Elements cols = rows.get(i).select("td");
 								if (cols.size() > 0) {
 									Tournament tournament = new Tournament(cols.get(0).text(), cols.get(0).select("a").first().absUrl("href"), null, tabroomFormatter.parse(cols.get(1).text()));
-                                    if(!scrapedLinks.contains(tournament))
+                                    if(!existingLinks.contains(tournament))
                                     	tabroomTournaments.add(tournament);
                                     // TODO: Add DB check here because tabroom tournament scraping is costly
                                     tabroomScraped++;
@@ -195,7 +196,6 @@ public class Server {
 
         log.info("Saving tournaments into the DB");
 		for(Tournament t : jotTournaments) {
-			System.out.println(t.getDate());
 			session.saveOrUpdate(t);
 		}
 		for(Tournament t : tabroomTournaments)
@@ -222,7 +222,7 @@ public class Server {
 			}
 		} while (moduleManager.getActiveCount() != 0 || workerManager.getActiveCount() != 0);
 
-        ////////////////////////
+                ////////////////////////
 		// Tournament parsing //
 		////////////////////////
 

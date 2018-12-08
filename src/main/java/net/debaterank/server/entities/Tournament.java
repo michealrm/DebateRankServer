@@ -11,6 +11,7 @@ public class Tournament {
 	@GeneratedValue(strategy = GenerationType.SEQUENCE)
     private Long id;
 	private String name;
+	@Column(unique = true)
 	private String link;
 	private String state;
 	@Temporal(TemporalType.DATE)
