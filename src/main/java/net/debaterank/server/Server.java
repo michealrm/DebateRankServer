@@ -14,6 +14,7 @@ import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.exception.ConstraintViolationException;
+import org.joda.time.DateTime;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -23,9 +24,7 @@ import java.io.IOException;
 import java.net.SocketTimeoutException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 
 public class Server {
 
@@ -59,14 +58,14 @@ public class Server {
 		ModuleManager moduleManager = new ModuleManager();
 		WorkerPoolManager workerManager = new WorkerPoolManager();
 
-		List<String> existingLinks = session.createQuery("select link from Tournament").list();
+		HashSet<String> existingLinks = new HashSet<>(session.createQuery("select link from Tournament").list());
 		ArrayList<Tournament> jotTournaments = new ArrayList<>();
 		ArrayList<Tournament> tabroomTournaments = new ArrayList<>();
 
         int tabroomScraped = 0;
         int jotScraped = 0;
 
-                /////////
+        /////////
 		// JOT //
 		/////////
 
@@ -92,13 +91,15 @@ public class Server {
 				for (int i = 1; i < rows.size(); i++) {
 					Elements cols = rows.get(i).select("td");
 					try {
-						Tournament tournament = new Tournament(
-								cols.select("a").first().text(),
-								cols.select("a").first().absUrl("href"),
-								cols.select("[align=center]").first().text(),
-								formatter.parse(cols.select("[align=right]").first().text()));
-						if(!existingLinks.contains(tournament.getLink()))
+						String name = cols.select("a").first().text();
+						String link = cols.select("a").first().absUrl("href");
+						String state = cols.select("[align=center]").first().text();
+						Date date = formatter.parse(cols.select("[align=right]").first().text());
+						Tournament tournament = new Tournament(name, link, state, date);
+						if(!existingLinks.contains(link)) {
 							jotTournaments.add(tournament);
+							existingLinks.add(link);
+						}
 						jotScraped++;
 						if(System.currentTimeMillis() - lastTime > 1000) {
 							lastTime = System.currentTimeMillis();
@@ -122,7 +123,6 @@ public class Server {
 		/////////////
 		// Tabroom //
 		/////////////
-		// TODO: Tabroom isn't just picking up results. It's picking up future tournaments. For we need a check to see if we're scraping the tournament
 
 		SimpleDateFormat tabroomFormatter = new SimpleDateFormat("MM/dd/yyyy");
         lastTime = System.currentTimeMillis();
@@ -170,7 +170,7 @@ public class Server {
 								Elements cols = rows.get(i).select("td");
 								if (cols.size() > 0) {
 									Tournament tournament = new Tournament(cols.get(0).text(), cols.get(0).select("a").first().absUrl("href"), null, tabroomFormatter.parse(cols.get(1).text()));
-                                    if(!existingLinks.contains(tournament))
+                                    if(!existingLinks.contains(tournament) && tournament.getDate().before(new Date())) // Will make sure we don't scrape tournaments happening in the future
                                     	tabroomTournaments.add(tournament);
                                     // TODO: Add DB check here because tabroom tournament scraping is costly
                                     tabroomScraped++;
@@ -222,7 +222,7 @@ public class Server {
 			}
 		} while (moduleManager.getActiveCount() != 0 || workerManager.getActiveCount() != 0);
 
-                ////////////////////////
+        ////////////////////////
 		// Tournament parsing //
 		////////////////////////
 
