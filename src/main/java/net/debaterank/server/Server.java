@@ -3,7 +3,11 @@ package net.debaterank.server;
 import net.debaterank.server.entities.Tournament;
 import net.debaterank.server.modules.ModuleManager;
 import net.debaterank.server.modules.PoolSizeException;
+import net.debaterank.server.modules.WorkerPool;
 import net.debaterank.server.modules.WorkerPoolManager;
+import net.debaterank.server.modules.jot.EntryInfo;
+import net.debaterank.server.modules.jot.EntryScraper;
+import net.debaterank.server.util.HibernateUtil;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.hibernate.Session;
@@ -29,27 +33,14 @@ import java.util.*;
 public class Server {
 
 	private static Logger log;
-	private static Session session;
-	private static SessionFactory factory;
-	private static Transaction transaction;
-
-	private static void setupHibernate() {
-		StandardServiceRegistry ssr = new StandardServiceRegistryBuilder().configure("hibernate.cfg.xml").build();
-		Metadata md = new MetadataSources(ssr).getMetadataBuilder().build();
-
-		factory = md.getSessionFactoryBuilder().build();
-		session = factory.openSession();
-		transaction = session.beginTransaction();
-	}
 
 	public static void main(String[] args) {
 
 		log = LogManager.getLogger(Server.class);
 		log.info("Initialized logger");
 
-		log.info("Setting up hibernate");
-		setupHibernate();
-		log.info("Hibernate setup completed");
+		Session session = HibernateUtil.getSession();
+		Transaction transaction = session.beginTransaction();
 
 		///////////////
 		// Variables //
@@ -117,9 +108,6 @@ public class Server {
 			e.printStackTrace();
 		}
 
-		// JOT Modules //
-
-
 		/////////////
 		// Tabroom //
 		/////////////
@@ -170,9 +158,8 @@ public class Server {
 								Elements cols = rows.get(i).select("td");
 								if (cols.size() > 0) {
 									Tournament tournament = new Tournament(cols.get(0).text(), cols.get(0).select("a").first().absUrl("href"), null, tabroomFormatter.parse(cols.get(1).text()));
-                                    if(!existingLinks.contains(tournament) && tournament.getDate().before(new Date())) // Will make sure we don't scrape tournaments happening in the future
+                                    if(!existingLinks.contains(tournament.getLink()) && tournament.getDate().before(new Date())) // Will make sure we don't scrape tournaments happening in the future
                                     	tabroomTournaments.add(tournament);
-                                    // TODO: Add DB check here because tabroom tournament scraping is costly
                                     tabroomScraped++;
                                     if(System.currentTimeMillis() - lastTime > 1000) {
                                         lastTime = System.currentTimeMillis();
@@ -186,7 +173,7 @@ public class Server {
 					}
 				}
 
-			log.info(tabroomScraped + "  tournaments retrieved from Tabroom. Need to scrape " + tabroomTournaments.size() + " tournaments from Tabroom.");
+			log.info(tabroomScraped + " tournaments retrieved from Tabroom. Need to scrape " + tabroomTournaments.size() + " tournaments from Tabroom.");
 
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -202,37 +189,44 @@ public class Server {
 			session.saveOrUpdate(t);
 		transaction.commit();
         log.info("Saved tournaments");
+        log.info("Getting tournaments where scraped = false");
+        // TODO
 
-		// Tabroom Modules //
+        log.info("Closing tournament session");
+        session.close();
 
-		/////////////
-		// Execute //
-		/////////////
+		////////////////
+		// Entry info //
+		////////////////
 
-		try {
-			workerManager.start();
-		} catch (PoolSizeException e) {}
+		// JOT
+		ArrayList<EntryInfo> jotEntries = new ArrayList<>();
+		WorkerPool entryWP = new WorkerPool();
+		workerManager.add(entryWP);
+		moduleManager.newModule(new EntryScraper(jotTournaments, jotEntries, entryWP));
 
-		do {
-			try {
-				Thread.sleep(5000);
-			} catch (InterruptedException e) {
-				log.error(e);
-				System.exit(1);
-			}
-		} while (moduleManager.getActiveCount() != 0 || workerManager.getActiveCount() != 0);
+		// Execute
+		execute("entry info", workerManager, moduleManager);
+		System.exit(0); // TEMP
 
         ////////////////////////
 		// Tournament parsing //
 		////////////////////////
 
 		// JOT
+		WorkerPool jotLDWP = new WorkerPool();
+		workerManager.add(jotLDWP);
+		moduleManager.newModule(new net.debaterank.server.modules.jot.LD(jotEntries, jotLDWP));
 
 		// Tabroom
 
 		// Execute //
+		execute("tournament parsing", workerManager, moduleManager);
+	}
 
-		log.info("Executing tournament parsing.");
+	private static void execute(String taskName, WorkerPoolManager workerManager, ModuleManager moduleManager) {
+		log.info("Executing " + taskName);
+		long startTime = System.currentTimeMillis();
 		try {
 			workerManager.start();
 		} catch (PoolSizeException e) {}
@@ -245,9 +239,7 @@ public class Server {
 				System.exit(1);
 			}
 		} while (moduleManager.getActiveCount() != 0 || workerManager.getActiveCount() != 0);
-
-		session.close();
-		factory.close();
+		log.info("Finished executing " + taskName + " in " + (startTime % 1000) + " seconds");
 	}
 
 }

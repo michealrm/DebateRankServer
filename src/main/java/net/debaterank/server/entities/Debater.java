@@ -3,9 +3,12 @@ package net.debaterank.server.entities;
 import net.debaterank.server.util.HibernateUtil;
 import net.debaterank.server.util.NameTokenizer;
 import org.hibernate.Session;
+import org.hibernate.Transaction;
 
 import javax.persistence.*;
 import java.io.Serializable;
+import java.util.List;
+import java.util.Objects;
 
 import static net.debaterank.server.util.DRHelper.isSameName;
 
@@ -21,8 +24,10 @@ public class Debater implements Serializable {
 	private String last;
 	private String suffix;
 	@OneToOne
+	@JoinColumn
 	private School school;
 	@OneToOne
+	@JoinColumn
 	private Debater pointsTo;
 
 	public Debater() {}
@@ -75,6 +80,34 @@ public class Debater implements Serializable {
 				.setParameter("n", last)
 				.setParameter("s", school)
 				.getSingleResult();
+	}
+
+	public static Debater getDebater(Debater debater) {
+		Session session = HibernateUtil.getSession();
+		try {
+			List<Debater> results = (List<Debater>) session.createQuery("from Debater where first = :f and last = :l")
+					.setParameter("f", debater.getFirst())
+					.setParameter("l", debater.getLast())
+					.getResultList();
+			for (Debater d : results) {
+				if (debater.equals(d)) {
+					return d;
+				}
+			}
+			return null;
+		} finally {
+			session.close();
+		}
+	}
+
+	public static Debater getDebaterOrInsert(Debater debater) {
+		Debater d = getDebater(debater);
+		if(d != null) return d;
+		Session session = HibernateUtil.getSession();
+		Transaction t = session.beginTransaction();
+		session.save(debater);
+		t.commit();
+		return debater;
 	}
 
 	public Long getId() {

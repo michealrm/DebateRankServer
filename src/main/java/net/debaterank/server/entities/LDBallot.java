@@ -12,12 +12,14 @@ public class LDBallot {
 	@Id
 	@GeneratedValue(strategy = GenerationType.SEQUENCE)
 	private Long id;
-	@Column(nullable = false)
 	@OneToOne
+	@JoinColumn(nullable = false)
 	private LDRound round;
 	@OneToOne
+	@JoinColumn
 	private Debater a;
 	@OneToOne
+	@JoinColumn
 	private Debater n;
 	private Double a_s;
 	private Double n_s;
@@ -89,6 +91,10 @@ public class LDBallot {
 	}
 
 	public LDBallot() {
+	}
+
+	public LDBallot(LDRound round) {
+		this.round = round;
 	}
 
 	public LDBallot(LDRound round, Debater a, Debater n, String decision) {

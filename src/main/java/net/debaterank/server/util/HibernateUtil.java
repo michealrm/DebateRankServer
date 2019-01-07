@@ -16,6 +16,10 @@ public class HibernateUtil {
 	private static Metadata md;
 	private static SessionFactory sf;
 
+	static {
+		buildSessionFactory();
+	}
+
 	private static void buildSessionFactory() {
 		ssr = new StandardServiceRegistryBuilder().configure("hibernate.cfg.xml").build();
 		md = new MetadataSources(ssr).getMetadataBuilder().build();
@@ -24,8 +28,8 @@ public class HibernateUtil {
 	}
 
 	public static Session getSession() {
+		if(sf == null) buildSessionFactory();
 		return sf.openSession();
 	}
 
 }
-
