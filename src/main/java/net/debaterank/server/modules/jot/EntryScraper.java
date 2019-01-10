@@ -56,7 +56,7 @@ public class EntryScraper implements Runnable {
 						if(ldEventRows.isEmpty() && pfEventRows.isEmpty() && cxEventRows.isEmpty()) {
 							log.info(t.getName() + " contains no event rows (" + noEventRows.incrementAndGet() + "). Setting scraped = true and skipping.\t[" + counter.incrementAndGet() + " / " + tournaments.size() + "]");
 							t.setScraped(true);
-							session.update(t);
+							session.merge(t);
 						}
 						else {
 							log.info("Added \"" + t.getName() + "\"'s entry info " + events + "\t[" + counter.getAndIncrement() + " / " + tournaments.size() + "]");
@@ -65,6 +65,7 @@ public class EntryScraper implements Runnable {
 						log.error(e);
 						e.printStackTrace();
 						log.fatal("Could not update " + t.getName());
+						counter.incrementAndGet();
 					}
 				});
 		}

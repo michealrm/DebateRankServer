@@ -24,6 +24,7 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
+import javax.persistence.Query;
 import java.io.IOException;
 import java.net.SocketTimeoutException;
 import java.text.ParseException;
@@ -181,16 +182,21 @@ public class Server {
 			log.fatal("Tabroom could not be updated");
 		}
 
+		ArrayList<Tournament> jotInDB = new ArrayList<>(session.createQuery("select t from Tournament t where scraped is false and link like 'http://www.joyoftournaments.com/%'").list());
+		ArrayList<Tournament> tabroomInDB = new ArrayList<>(session.createQuery("select t from Tournament t where scraped is false and link like 'https://www.tabroom.com/%'").list());
         log.info("Saving tournaments into the DB");
 		for(Tournament t : jotTournaments) {
-			session.saveOrUpdate(t);
+			session.persist(t);
 		}
-		for(Tournament t : tabroomTournaments)
-			session.saveOrUpdate(t);
+		for(Tournament t : tabroomTournaments) {
+			session.persist(t);
+		}
 		transaction.commit();
-        log.info("Saved tournaments");
-        log.info("Getting tournaments where scraped = false");
-        // TODO
+		log.info("Saved " + jotTournaments.size() + " JOT tournaments and " + tabroomTournaments.size() + " tabroom tournaments");
+		jotTournaments.addAll(jotInDB);
+		tabroomInDB.addAll(tabroomInDB);
+		log.info("JOT tournaments in queue: " + jotTournaments.size());
+		log.info("Tabroom tournaments in queue: " + tabroomTournaments.size());
 
         log.info("Closing tournament session");
         session.close();
