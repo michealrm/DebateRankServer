@@ -1,6 +1,7 @@
 /target/
 /bin/
 /.idea/
-log*
 src/main/resources/
 .DS_Store
+/data/
+/log/
