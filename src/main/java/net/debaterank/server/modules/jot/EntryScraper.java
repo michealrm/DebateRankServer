@@ -10,6 +10,7 @@ import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
 import java.io.*;
@@ -72,7 +73,27 @@ public class EntryScraper implements Runnable {
 						session.merge(t);
 					}
 					else {
-						EntryInfo entryInfo = new EntryInfo(t, ldEventRows, pfEventRows, cxEventRows);
+						EntryInfo entryInfo = new EntryInfo(t);
+						for(Element eventRow : ldEventRows) {
+							String p = null;
+							String d = null;
+							String b = null;
+							Element pE = eventRow.select("a[title]:contains(Prelims)").first();
+							Element dE = eventRow.select("a[title]:contains(Double Octos)").first();
+							Element bE = eventRow.select("a[title]:contains(Bracket)").first();
+							if(pE != null)
+								p = pE.absUrl("href");
+							if(dE != null)
+								d = dE.absUrl("href");
+							if(bE != null)
+								b = bE.absUrl("href");
+							if(p == null && d == null && b == null) {
+								continue;
+							}
+							EntryInfo.EventLinks links = new EntryInfo.EventLinks(p, d, b);
+							log.info(links);
+							entryInfo.addLdEventRow(links);
+						}
 						tInfo.add(entryInfo);
 						writeToFile(entryInfo);
 						log.info("Queued and wrote \"" + t.getName() + "\"'s entry info " + events + "\t[" + counter.getAndIncrement() + " / " + tournaments.size() + "]");
@@ -119,14 +140,7 @@ public class EntryScraper implements Runnable {
 			Object o = ois.readObject();
 			if(o instanceof EntryInfo) {
 				EntryInfo entryInfo = (EntryInfo) o;
-
-				if(entryInfo.getLDERStr() != null)
-					entryInfo.setLdEventRows(new Document(entryInfo.getLDERStr()).getAllElements());
-				if(entryInfo.getPFERStr() != null)
-					entryInfo.setPfEventRows(new Document(entryInfo.getPFERStr()).getAllElements());
-				if(entryInfo.getCXERStr() != null)
-					entryInfo.setCxEventRows(new Document(entryInfo.getCXERStr()).getAllElements());
-
+				entryInfo.setTournament(t); // Tournament is transient
 				log.info(t.getName() + " entry data retrieved from file");
 				return entryInfo;
 			}
@@ -148,13 +162,6 @@ public class EntryScraper implements Runnable {
 		String fileName = getFileName(entryInfo.getTournament());
 		FileOutputStream fos = new FileOutputStream(fileName);
 		ObjectOutputStream oos = new ObjectOutputStream(fos);
-
-		if(entryInfo.getLdEventRows() != null)
-			entryInfo.setLDERStr(entryInfo.getLdEventRows().toString());
-		if(entryInfo.getPfEventRows() != null)
-			entryInfo.setPFERStr(entryInfo.getPfEventRows().toString());
-		if(entryInfo.getCxEventRows() != null)
-			entryInfo.setCXERStr(entryInfo.getCxEventRows().toString());
 
 		oos.writeObject(entryInfo);
 		oos.close();

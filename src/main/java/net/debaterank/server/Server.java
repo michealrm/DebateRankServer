@@ -213,7 +213,6 @@ public class Server {
 
 		// Execute
 		execute("entry info", workerManager, moduleManager);
-		System.exit(0); // TEMP
 
         ////////////////////////
 		// Tournament parsing //
@@ -228,6 +227,7 @@ public class Server {
 
 		// Execute //
 		execute("tournament parsing", workerManager, moduleManager);
+		System.exit(0); // TEMP
 	}
 
 	private static void execute(String taskName, WorkerPoolManager workerManager, ModuleManager moduleManager) {

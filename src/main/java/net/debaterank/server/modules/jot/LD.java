@@ -43,13 +43,12 @@ public class LD implements Runnable {
 					Transaction transaction = session.beginTransaction();
 					ArrayList<LDBallot> ballots = new ArrayList<>();
 					ArrayList<LDRound> tournRounds = new ArrayList<>();
-					Elements eventRows = tInfo.getLdEventRows();
+					ArrayList<EntryInfo.EventLinks> eventRows = tInfo.getLdEventRows();
 					log.info("Updating " + t.getName() + " " + t.getLink());
-					for(Element eventRow : eventRows) {
+					for(EntryInfo.EventLinks eventRow : eventRows) {
 						// Prelims
-						Element prelim = eventRow.select("a[title]:contains(Prelims)").first();
-						if(prelim != null) {
-							Document p = Jsoup.connect(prelim.absUrl("href")).timeout(10*1000).get();
+						if(eventRow.prelims != null) {
+							Document p = Jsoup.connect(eventRow.prelims).timeout(10*1000).get();
 							Element table = p.select("table[border=1]").first();
 							Elements rows = table.select("tr:has(table)");
 
@@ -167,9 +166,8 @@ public class LD implements Runnable {
 						}
 
 						// Double Octos
-						Element doubleOctos = eventRow.select("a[title]:contains(Double Octos)").first();
-						if(doubleOctos != null) {
-							Document doc = Jsoup.connect(doubleOctos.absUrl("href")).timeout(10*1000).get();
+						if(eventRow.prelims != null) {
+							Document doc = Jsoup.connect(eventRow.doubleOctas).timeout(10*1000).get();
 
 							Pattern pattern = Pattern.compile("[^\\s]+ (.+?)( \\((.+?)\\))? \\((Aff|Neg)\\) def. [^\\s]+ (.+?)( \\((.+?)\\))? \\((Aff|Neg)\\)");
 							doc.getElementsByTag("font").unwrap();
@@ -200,9 +198,8 @@ public class LD implements Runnable {
 						}
 
 						//Bracket
-						Element bracket = eventRow.select("a[title]:contains(Bracket)").first();
-						if(bracket != null) {
-							Document doc = Jsoup.connect(bracket.absUrl("href")).timeout(10*1000).get();
+						if(eventRow.prelims != null) {
+							Document doc = Jsoup.connect(eventRow.bracket).timeout(10*1000).get();
 
 							// Parse rounds
 							ArrayList<LDRound> rounds = new ArrayList<>();
@@ -302,8 +299,10 @@ public class LD implements Runnable {
 							tournRounds.addAll(rounds); // add results
 						}
 					}
-					session.save(tournRounds);
-					session.save(ballots);
+					for(LDRound r : tournRounds)
+						session.persist(r);
+					for(LDBallot b : ballots)
+						session.persist(b);
 					transaction.commit();
 					log.info("Updated " + t.getName());
 

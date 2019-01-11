@@ -4,18 +4,29 @@ import net.debaterank.server.entities.Tournament;
 import org.jsoup.select.Elements;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.Objects;
 
 public class EntryInfo implements Serializable {
-	private Tournament tournament;
-	private transient Elements ldEventRows;
-	private transient Elements pfEventRows;
-	private transient Elements cxEventRows;
 
-	// Used to writing to file
-	private String ldERStr;
-	private String pfERStr;
-	private String cxERStr;
+	public static class EventLinks implements Serializable {
+		public String prelims, doubleOctas, bracket;
+
+		public EventLinks(String p, String d, String b) {
+			prelims = p;
+			doubleOctas = d;
+			bracket = b;
+		}
+
+		public String toString() {
+			return prelims + " | " + doubleOctas + " | " + bracket;
+		}
+	}
+
+	private transient Tournament tournament;
+	private ArrayList<EventLinks> ldEventRows;
+	private ArrayList<EventLinks> pfEventRows;
+	private ArrayList<EventLinks> cxEventRows;
 
 	public Tournament getTournament() {
 		return tournament;
@@ -25,58 +36,34 @@ public class EntryInfo implements Serializable {
 		this.tournament = tournament;
 	}
 
-	public Elements getLdEventRows() {
+	public void addLdEventRow(EventLinks el) {
+		ldEventRows.add(el);
+	}
+
+	public void addPfEventRow(EventLinks el) {
+		pfEventRows.add(el);
+	}
+
+	public void addCxEventRow(EventLinks el) {
+		cxEventRows.add(el);
+	}
+
+	public ArrayList<EventLinks> getLdEventRows() {
 		return ldEventRows;
 	}
 
-	public void setLdEventRows(Elements ldEventRows) {
-		this.ldEventRows = ldEventRows;
-	}
-
-	public Elements getPfEventRows() {
+	public ArrayList<EventLinks> getPfEventRows() {
 		return pfEventRows;
 	}
 
-	public void setPfEventRows(Elements pfEventRows) {
-		this.pfEventRows = pfEventRows;
-	}
-
-	public Elements getCxEventRows() {
+	public ArrayList<EventLinks> getCxEventRows() {
 		return cxEventRows;
 	}
 
-	public void setCxEventRows(Elements cxEventRows) {
-		this.cxEventRows = cxEventRows;
-	}
-
-	public String getLDERStr() {
-		return ldERStr;
-	}
-
-	public void setLDERStr(String ldERStr) {
-		this.ldERStr = ldERStr;
-	}
-
-	public String getPFERStr() {
-		return pfERStr;
-	}
-
-	public void setPFERStr(String pfERStr) {
-		this.pfERStr = pfERStr;
-	}
-
-	public String getCXERStr() {
-		return cxERStr;
-	}
-
-	public void setCXERStr(String cxERStr) {
-		this.cxERStr = cxERStr;
-	}
-
-	public EntryInfo(Tournament tournament, Elements ldEventRows, Elements pfEventRows, Elements cxEventRows) {
+	public EntryInfo(Tournament tournament) {
 		this.tournament = tournament;
-		this.ldEventRows = ldEventRows;
-		this.pfEventRows = pfEventRows;
-		this.cxEventRows = cxEventRows;
+		this.ldEventRows = new ArrayList<>();
+		this.pfEventRows = new ArrayList<>();
+		this.cxEventRows = new ArrayList<>();
 	}
 }
