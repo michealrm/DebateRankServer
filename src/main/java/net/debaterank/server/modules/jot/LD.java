@@ -44,6 +44,7 @@ public class LD implements Runnable {
 					ArrayList<LDBallot> ballots = new ArrayList<>();
 					ArrayList<LDRound> tournRounds = new ArrayList<>();
 					ArrayList<EntryInfo.EventLinks> eventRows = tInfo.getLdEventRows();
+					ArrayList<Debater> competitorsList = new ArrayList<>();
 					log.info("Updating " + t.getName() + " " + t.getLink());
 					for(EntryInfo.EventLinks eventRow : eventRows) {
 						// Prelims
@@ -59,6 +60,7 @@ public class LD implements Runnable {
 								Debater debater = new Debater(infos.get(3).text(), infos.get(1).text());
 								debater = Debater.getDebaterOrInsert(debater);
 								competitors.put(infos.get(2).text(), debater);
+								competitorsList.add(debater);
 							}
 
 							// Parse rounds
@@ -166,7 +168,7 @@ public class LD implements Runnable {
 						}
 
 						// Double Octos
-						if(eventRow.prelims != null) {
+						if(eventRow.doubleOctas != null) {
 							Document doc = Jsoup.connect(eventRow.doubleOctas).timeout(10*1000).get();
 
 							Pattern pattern = Pattern.compile("[^\\s]+ (.+?)( \\((.+?)\\))? \\((Aff|Neg)\\) def. [^\\s]+ (.+?)( \\((.+?)\\))? \\((Aff|Neg)\\)");
@@ -178,8 +180,8 @@ public class LD implements Runnable {
 								round.setAbsUrl(doc.baseUri());
 								Debater winner = new Debater(matcher.group(1), matcher.group(3));
 								Debater loser = new Debater(matcher.group(5), matcher.group(7));
-								session.save(winner);
-								session.save(loser);
+								winner = findDebater(competitorsList, winner);
+								loser = findDebater(competitorsList, loser);
 
 								if(matcher.group(4).equals("Aff")) {
 									round.setA(winner);
@@ -198,7 +200,7 @@ public class LD implements Runnable {
 						}
 
 						//Bracket
-						if(eventRow.prelims != null) {
+						if(eventRow.bracket != null) {
 							Document doc = Jsoup.connect(eventRow.bracket).timeout(10*1000).get();
 
 							// Parse rounds
@@ -249,14 +251,14 @@ public class LD implements Runnable {
 													l = null;
 												else {
 													l = new Debater(leftText.substring(leftText.indexOf(' ') + 1), leftSchool);
-													session.save(l);
+													l = findDebater(competitorsList, l);
 												}
 												Debater r;
 												if (rightText.contains("&nbsp;"))
 													r = null;
 												else {
 													r = new Debater(rightText.substring(rightText.indexOf(' ') + 1), rightSchool);
-													session.save(r);
+													r = findDebater(competitorsList, r);
 												}
 												currentMatchup.add(Pair.of(l, r));
 												left = null;
@@ -268,7 +270,7 @@ public class LD implements Runnable {
 								if(matchup != null && last != null) {
 
 									// Sort matchups into winner/loser pairs
-									ArrayList<Pair<Debater, Debater>> winnerLoser = new ArrayList<Pair<Debater, Debater>>();
+									ArrayList<Pair<Debater, Debater>> winnerLoser = new ArrayList<>();
 									for(Pair<Debater, Debater> winners : currentMatchup)
 										for(Pair<Debater, Debater> matchups : matchup)
 											if((winners.getLeft() != null && matchups.getLeft() != null && winners.getLeft().equals(matchups.getLeft())) || (winners.getRight() != null && matchups.getRight() != null && winners.getRight().equals(matchups.getLeft())))
@@ -299,8 +301,6 @@ public class LD implements Runnable {
 							tournRounds.addAll(rounds); // add results
 						}
 					}
-					for(LDRound r : tournRounds)
-						session.persist(r);
 					for(LDBallot b : ballots)
 						session.persist(b);
 					transaction.commit();
@@ -315,6 +315,14 @@ public class LD implements Runnable {
 				}
 			});
 		}
+	}
+
+	private static Debater findDebater(ArrayList<Debater> list, Debater debater) {
+		for(Debater d : list) {
+			if (debater.equals(d))
+				return d;
+		}
+		return null;
 	}
 
 }

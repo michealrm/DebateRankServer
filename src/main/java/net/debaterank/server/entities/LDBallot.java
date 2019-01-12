@@ -12,7 +12,7 @@ public class LDBallot {
 	@Id
 	@GeneratedValue(strategy = GenerationType.SEQUENCE)
 	private Long id;
-	@OneToOne
+	@OneToOne(cascade = CascadeType.ALL)
 	@JoinColumn(nullable = false)
 	private LDRound round;
 	@OneToOne

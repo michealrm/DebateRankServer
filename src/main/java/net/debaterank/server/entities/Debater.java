@@ -23,7 +23,7 @@ public class Debater implements Serializable {
 	private String middle;
 	private String last;
 	private String suffix;
-	@OneToOne
+	@ManyToOne
 	@JoinColumn
 	private School school;
 	@OneToOne
@@ -50,7 +50,7 @@ public class Debater implements Serializable {
 	}
 
 	public Debater(String name, String school) {
-		this(name, new School(school.trim().equals(" ") ? null : school.trim()));
+		this(name, new School(school == null || school.trim().equals(" ") ? null : school.trim()));
 	}
 
 	public Debater(String name, School school) {
@@ -74,6 +74,21 @@ public class Debater implements Serializable {
 		return (isSameName(this.first, first) && isSameName(this.last, last));
 	}
 
+	public void replaceNull(Debater d) {
+		if(id == null) id = d.getId();
+		if(d.getId() == null) d.setId(id);
+		if(first == null) first = d.getFirst();
+		if(d.getFirst() == null) d.setFirst(first);
+		if(middle == null) middle = d.getMiddle();
+		if(d.getMiddle() == null) d.setMiddle(middle);
+		if(last == null) last = d.getLast();
+		if(d.getLast() == null) d.setLast(last);
+		if(suffix == null) suffix = d.getSuffix();
+		if(d.getSuffix() == null) d.setSuffix(suffix);
+		if(school == null) school = d.getSchool();
+		if(d.getSchool() == null) d.setSchool(school);
+	}
+
 	public static Debater getDebaterFromLastName(String last, School school) {
 		Session session = HibernateUtil.getSession();
 		return (Debater)session.createQuery("from Debater where last = :n and school = :s ")
@@ -83,6 +98,7 @@ public class Debater implements Serializable {
 	}
 
 	public static Debater getDebater(Debater debater) {
+		if(debater == null) return null;
 		Session session = HibernateUtil.getSession();
 		try {
 			List<Debater> results = (List<Debater>) session.createQuery("from Debater where first = :f and last = :l")
@@ -91,6 +107,7 @@ public class Debater implements Serializable {
 					.getResultList();
 			for (Debater d : results) {
 				if (debater.equals(d)) {
+					d.replaceNull(debater);
 					return d;
 				}
 			}
@@ -101,13 +118,22 @@ public class Debater implements Serializable {
 	}
 
 	public static Debater getDebaterOrInsert(Debater debater) {
+		if(debater == null) return null;
 		Debater d = getDebater(debater);
 		if(d != null) return d;
 		Session session = HibernateUtil.getSession();
-		Transaction t = session.beginTransaction();
-		session.save(debater);
-		t.commit();
-		return debater;
+		try {
+			Transaction t = session.beginTransaction();
+			debater.setSchool(School.getSchoolOrInsert(debater.getSchool())); // TODO: maybe replace the ID then replace nulls?
+			session.save(debater);
+			t.commit();
+			return debater;
+		} catch(Exception e) {
+			e.printStackTrace();
+			return null;
+		} finally {
+			session.close();
+		}
 	}
 
 	public Long getId() {
@@ -165,4 +191,9 @@ public class Debater implements Serializable {
 	public void setPointsTo(Debater pointsTo) {
 		this.pointsTo = pointsTo;
 	}
+
+	public String toString() {
+		return first + " " + middle + " " + last + " " + suffix + ", " + (school == null ? null : school.toString());
+	}
+
 }

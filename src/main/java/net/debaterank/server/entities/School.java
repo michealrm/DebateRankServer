@@ -1,9 +1,14 @@
 package net.debaterank.server.entities;
 
 import net.debaterank.server.Server;
+import net.debaterank.server.util.HibernateUtil;
+import org.hibernate.Session;
+import org.hibernate.Transaction;
 
 import javax.persistence.*;
 import java.io.Serializable;
+import java.util.List;
+import java.util.Objects;
 
 import static net.debaterank.server.util.DRHelper.isSameName;
 
@@ -14,16 +19,52 @@ public class School implements Serializable {
 	@Id
 	@GeneratedValue(strategy = GenerationType.SEQUENCE)
 	private Long id;
+	@Column(unique = true)
 	private String name;
+	@Column(unique = true)
 	private String address;
 	private String state;
+	@Column(unique = true)
 	private String nsda_link;
 
 	public boolean equals(School school) {
 		return isSameName(state, school.getState()) &&
-				(isSameName(address, school.getAddress()) ||
-						isSameName(nsda_link, school.getNsda_link()) ||
-						isSameName(name, school.getName()));
+				isSameName(address, school.getAddress()) &&
+				isSameName(nsda_link, school.getNsda_link()) &&
+				isSameName(name, school.getName());
+	}
+
+	public static School getSchool(School school) {
+		Session session = HibernateUtil.getSession();
+		try {
+			School result = (School)session.createQuery("select s from School s where name is :n")
+					.setParameter("n", school.getName()).uniqueResult();
+			return result;
+		} catch(Exception e) {
+			e.printStackTrace();
+			return null;
+		}
+		finally {
+			session.close();
+		}
+	}
+
+	public static School getSchoolOrInsert(School school) {
+		if(school == null) return null;
+		School s = getSchool(school);
+		if(s != null) return s;
+		Session session = HibernateUtil.getSession();
+		try {
+			Transaction t = session.beginTransaction();
+			session.save(school);
+			t.commit();
+			return school;
+		} catch(Exception e) {
+			e.printStackTrace();
+			return null;
+		} finally {
+			session.close();
+		}
 	}
 
 	public Long getId() {
@@ -78,5 +119,9 @@ public class School implements Serializable {
 
 	public School(String name) {
 		this.name = name;
+	}
+
+	public String toString() {
+		return name;
 	}
 }
