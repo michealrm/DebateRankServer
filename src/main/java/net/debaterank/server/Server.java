@@ -182,8 +182,8 @@ public class Server {
 			log.fatal("Tabroom could not be updated");
 		}
 
-		ArrayList<Tournament> jotInDB = new ArrayList<>(session.createQuery("select t from Tournament t where scraped is false and link like 'http://www.joyoftournaments.com/%'").list());
-		ArrayList<Tournament> tabroomInDB = new ArrayList<>(session.createQuery("select t from Tournament t where scraped is false and link like 'https://www.tabroom.com/%'").list());
+		ArrayList<Tournament> jotInDB = new ArrayList<>(session.createQuery("select t from Tournament t where (ldscraped is false or pfscraped is false or cxscraped is false) and link like 'http://www.joyoftournaments.com/%'").list());
+		ArrayList<Tournament> tabroomInDB = new ArrayList<>(session.createQuery("select t from Tournament t where (ldscraped is false or pfscraped is false or cxscraped is false) and link like 'https://www.tabroom.com/%'").list());
         log.info("Saving tournaments into the DB");
 		for(Tournament t : jotTournaments) {
 			session.persist(t);

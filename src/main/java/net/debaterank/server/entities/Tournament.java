@@ -17,7 +17,33 @@ public class Tournament {
 	private String state;
 	@Temporal(TemporalType.DATE)
 	private Date date;
-	private boolean scraped;
+	private boolean ldScraped;
+	private boolean pfScraped;
+	private boolean cxScraped;
+
+	public boolean isLdScraped() {
+		return ldScraped;
+	}
+
+	public void setLdScraped(boolean ldScraped) {
+		this.ldScraped = ldScraped;
+	}
+
+	public boolean isPfScraped() {
+		return pfScraped;
+	}
+
+	public void setPfScraped(boolean pfScraped) {
+		this.pfScraped = pfScraped;
+	}
+
+	public boolean isCxScraped() {
+		return cxScraped;
+	}
+
+	public void setCxScraped(boolean cxScraped) {
+		this.cxScraped = cxScraped;
+	}
 
 	public Long getId() {
 		return id;
@@ -57,14 +83,6 @@ public class Tournament {
 
 	public void setDate(Date date) {
 		this.date = date;
-	}
-
-	public boolean isScraped() {
-		return scraped;
-	}
-
-	public void setScraped(boolean scraped) {
-		this.scraped = scraped;
 	}
 
 	public Tournament() {

@@ -44,7 +44,7 @@ public class EntryScraper implements Runnable {
 		Session session = HibernateUtil.getSession();
 		Transaction transaction = session.beginTransaction();
 		for(Tournament t : tournaments) {
-			if(t.isScraped()) continue;
+			if(t.isLdScraped() && t.isPfScraped() && t.isCxScraped()) continue;
 			if(entryInfoDataExists(t)) {
 				EntryInfo ei = getFromFile(t);
 				if(ei != null) {
@@ -67,37 +67,22 @@ public class EntryScraper implements Runnable {
 					if(events.charAt(events.length() - 1) == ' ') events = events.substring(0, events.length() - 1);
 					events += ")";
 
-					if(ldEventRows.isEmpty() && pfEventRows.isEmpty() && cxEventRows.isEmpty()) {
-						log.info(t.getName() + " contains no event rows (" + noEventRows.incrementAndGet() + "). Setting scraped = true and skipping.\t[" + counter.incrementAndGet() + " / " + tournaments.size() + "]");
-						t.setScraped(true);
-						session.merge(t);
-					}
-					else {
-						EntryInfo entryInfo = new EntryInfo(t);
-						for(Element eventRow : ldEventRows) {
-							String p = null;
-							String d = null;
-							String b = null;
-							Element pE = eventRow.select("a[title]:contains(Prelims)").first();
-							Element dE = eventRow.select("a[title]:contains(Double Octos)").first();
-							Element bE = eventRow.select("a[title]:contains(Bracket)").first();
-							if(pE != null)
-								p = pE.absUrl("href");
-							if(dE != null)
-								d = dE.absUrl("href");
-							if(bE != null)
-								b = bE.absUrl("href");
-							if(p == null && d == null && b == null) {
-								continue;
-							}
-							EntryInfo.EventLinks links = new EntryInfo.EventLinks(p, d, b);
-							log.info(links);
-							entryInfo.addLdEventRow(links);
-						}
-						tInfo.add(entryInfo);
-						writeToFile(entryInfo);
-						log.info("Queued and wrote \"" + t.getName() + "\"'s entry info " + events + "\t[" + counter.getAndIncrement() + " / " + tournaments.size() + "]");
-					}
+					EntryInfo entryInfo = new EntryInfo(t);
+					if(ldEventRows.isEmpty())
+						t.setLdScraped(true);
+					else
+						getLinks(entryInfo.getLdEventRows(), ldEventRows);
+					if(pfEventRows.isEmpty())
+						t.setPfScraped(true);
+					else
+						getLinks(entryInfo.getPfEventRows(), pfEventRows);
+					if(cxEventRows.isEmpty())
+						t.setCxScraped(true);
+					else
+						getLinks(entryInfo.getCxEventRows(), cxEventRows);
+					tInfo.add(entryInfo);
+					writeToFile(entryInfo);
+					log.info("Queued and wrote \"" + t.getName() + "\"'s entry info " + events + "\t[" + counter.getAndIncrement() + " / " + tournaments.size() + "]");
 				} catch(Exception e) {
 					log.error(e);
 					e.printStackTrace();
@@ -124,6 +109,28 @@ public class EntryScraper implements Runnable {
 		transaction.commit();
 		session.close();
 		log.info("Saved");
+	}
+
+	private ArrayList<EntryInfo.EventLinks> getLinks(ArrayList<EntryInfo.EventLinks> links, Elements eventRows) {
+		for(Element eventRow : eventRows) {
+			String p = null;
+			String d = null;
+			String b = null;
+			Element pE = eventRow.select("a[title]:contains(Prelims)").first();
+			Element dE = eventRow.select("a[title]:contains(Double Octos)").first();
+			Element bE = eventRow.select("a[title]:contains(Bracket)").first();
+			if(pE != null)
+				p = pE.absUrl("href");
+			if(dE != null)
+				d = dE.absUrl("href");
+			if(bE != null)
+				b = bE.absUrl("href");
+			if(p == null && d == null && b == null) {
+				continue;
+			}
+			links.add(new EntryInfo.EventLinks(p, d, b));
+		}
+		return links;
 	}
 
 	private boolean entryInfoDataExists(Tournament t) {

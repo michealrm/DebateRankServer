@@ -10,6 +10,7 @@ import org.apache.logging.log4j.Logger;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.jsoup.Jsoup;
+import org.jsoup.UnsupportedMimeTypeException;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.nodes.TextNode;
@@ -36,7 +37,7 @@ public class LD implements Runnable {
 		// Scrape events per tournament
 		for(EntryInfo tInfo : tournaments) {
 			Tournament t = tInfo.getTournament();
-			if(tInfo.getLdEventRows().isEmpty()) continue;
+			if(t.isLdScraped() || tInfo.getLdEventRows().isEmpty()) continue;
 			manager.newModule(() -> {
 				Session session = HibernateUtil.getSession();
 				try {
@@ -49,7 +50,13 @@ public class LD implements Runnable {
 					for(EntryInfo.EventLinks eventRow : eventRows) {
 						// Prelims
 						if(eventRow.prelims != null) {
-							Document p = Jsoup.connect(eventRow.prelims).timeout(10*1000).get();
+							Document p = null;
+							try {
+								p = Jsoup.connect(eventRow.prelims).timeout(10 * 1000).get();
+							} catch(UnsupportedMimeTypeException umte) {
+								log.warn("UnsupportedMimeTypeException on " + t.getLink() + ". Skipping this event row.");
+								continue;
+							}
 							Element table = p.select("table[border=1]").first();
 							Elements rows = table.select("tr:has(table)");
 
@@ -251,14 +258,12 @@ public class LD implements Runnable {
 													l = null;
 												else {
 													l = new Debater(leftText.substring(leftText.indexOf(' ') + 1), leftSchool);
-													l = findDebater(competitorsList, l);
 												}
 												Debater r;
 												if (rightText.contains("&nbsp;"))
 													r = null;
 												else {
 													r = new Debater(rightText.substring(rightText.indexOf(' ') + 1), rightSchool);
-													r = findDebater(competitorsList, r);
 												}
 												currentMatchup.add(Pair.of(l, r));
 												left = null;
@@ -285,8 +290,8 @@ public class LD implements Runnable {
 
 										LDRound round = new LDRound(t);
 										round.setAbsUrl(doc.baseUri());
-										round.setA(pair.getLeft());
-										round.setN(pair.getRight());
+										round.setA(Debater.getDebater(pair.getLeft()));
+										round.setN(Debater.getDebater(pair.getRight()));
 										round.setRound(last);
 										LDBallot ballot = new LDBallot(round);
 										ballot.setDecision("Aff");
@@ -303,6 +308,8 @@ public class LD implements Runnable {
 					}
 					for(LDBallot b : ballots)
 						session.persist(b);
+					t.setLdScraped(true);
+					session.merge(t);
 					transaction.commit();
 					log.info("Updated " + t.getName());
 
