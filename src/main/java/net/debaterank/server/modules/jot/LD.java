@@ -54,7 +54,7 @@ public class LD implements Runnable {
 							try {
 								p = Jsoup.connect(eventRow.prelims).timeout(10 * 1000).get();
 							} catch(UnsupportedMimeTypeException umte) {
-								log.warn("UnsupportedMimeTypeException on " + t.getLink() + ". Skipping this event row.");
+								log.warn("UnsupportedMimeTypeException on " + t.getLink() + " prelims. Skipping this event row.");
 								continue;
 							}
 							Element table = p.select("table[border=1]").first();
@@ -208,7 +208,13 @@ public class LD implements Runnable {
 
 						//Bracket
 						if(eventRow.bracket != null) {
-							Document doc = Jsoup.connect(eventRow.bracket).timeout(10*1000).get();
+							Document doc = null;
+							try {
+								doc = Jsoup.connect(eventRow.bracket).timeout(10 * 1000).get();
+							} catch(UnsupportedMimeTypeException umte) {
+								log.warn("UnsupportedMimeTypeException on " + t.getLink() + " bracket. Skipping this event row.");
+								continue;
+							}
 
 							// Parse rounds
 							ArrayList<LDRound> rounds = new ArrayList<>();

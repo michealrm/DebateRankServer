@@ -116,9 +116,9 @@ public class EntryScraper implements Runnable {
 			String p = null;
 			String d = null;
 			String b = null;
-			Element pE = eventRow.select("a[title]:contains(Prelims)").first();
-			Element dE = eventRow.select("a[title]:contains(Double Octos)").first();
-			Element bE = eventRow.select("a[title]:contains(Bracket)").first();
+			Element pE = eventRow.select("a[title]:contains(Prelims), a:contains(Prelims)").first();
+			Element dE = eventRow.select("a[title]:contains(Double Octos), a:contains(Double Octos)").first();
+			Element bE = eventRow.select("a[title]:contains(Bracket), a:contains(Bracket)").first();
 			if(pE != null)
 				p = pE.absUrl("href");
 			if(dE != null)
@@ -184,7 +184,7 @@ public class EntryScraper implements Runnable {
 			e.printStackTrace();
 			return null;
 		}
-		byte[] hash = md.digest(Base64.encode(t.getName().getBytes()).getBytes());
+		byte[] hash = md.digest(Base64.encode(t.getLink().getBytes()).getBytes());
 		StringBuilder sb = new StringBuilder();
 		for(byte b : hash)
 			sb.append(String.format("%02x", b));
