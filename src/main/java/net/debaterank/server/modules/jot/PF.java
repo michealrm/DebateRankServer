@@ -3,6 +3,7 @@ package net.debaterank.server.modules.jot;
 import net.debaterank.server.entities.*;
 import net.debaterank.server.modules.WorkerPool;
 import net.debaterank.server.util.HibernateUtil;
+import net.debaterank.server.util.EntryInfo;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -17,7 +18,6 @@ import org.jsoup.select.Elements;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -26,10 +26,10 @@ import static net.debaterank.server.util.DRHelper.getBracketRound;
 public class PF implements Runnable {
 
 	private Logger log;
-	private ArrayList<EntryInfo> tournaments;
+	private ArrayList<EntryInfo<EntryInfo.JOTEventLinks>> tournaments;
 	private WorkerPool manager;
 
-	public PF(ArrayList<EntryInfo> tournaments, WorkerPool manager) {
+	public PF(ArrayList<EntryInfo<EntryInfo.JOTEventLinks>> tournaments, WorkerPool manager) {
 		log = LogManager.getLogger(PF.class);
 		this.tournaments = tournaments;
 		this.manager = manager;
@@ -38,7 +38,7 @@ public class PF implements Runnable {
 	public void run() {
 
 		// Scrape events per tournament
-		for(EntryInfo tInfo : tournaments) {
+		for(EntryInfo<EntryInfo.JOTEventLinks> tInfo : tournaments) {
 			Tournament t = tInfo.getTournament();
 			if(t.isPfScraped() || tInfo.getPfEventRows().isEmpty()) continue;
 			manager.newModule(() -> {
@@ -47,10 +47,10 @@ public class PF implements Runnable {
 					Transaction transaction = session.beginTransaction();
 					ArrayList<PFBallot> ballots = new ArrayList<>();
 					ArrayList<PFRound> tournRounds = new ArrayList<>();
-					ArrayList<EntryInfo.EventLinks> eventRows = tInfo.getPfEventRows();
+					ArrayList<EntryInfo.JOTEventLinks> eventRows = tInfo.getPfEventRows();
 					ArrayList<Team> competitorsList = new ArrayList<>();
 					log.info("Updating " + t.getName() + " " + t.getLink());
-					for(EntryInfo.EventLinks eventRow : eventRows) {
+					for(EntryInfo.JOTEventLinks eventRow : eventRows) {
 						// Prelims
 						if(eventRow.prelims != null) {
 							Document p = Jsoup.connect(eventRow.prelims).timeout(10*1000).get();

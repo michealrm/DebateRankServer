@@ -4,6 +4,7 @@ import net.debaterank.server.entities.*;
 import net.debaterank.server.modules.WorkerPool;
 import net.debaterank.server.util.DRHelper;
 import net.debaterank.server.util.HibernateUtil;
+import net.debaterank.server.util.EntryInfo;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -24,10 +25,10 @@ import java.util.regex.Pattern;
 public class LD implements Runnable {
 
 	private Logger log;
-	private ArrayList<EntryInfo> tournaments;
+	private ArrayList<EntryInfo<EntryInfo.JOTEventLinks>> tournaments;
 	private WorkerPool manager;
 
-	public LD(ArrayList<EntryInfo> tournaments, WorkerPool manager) {
+	public LD(ArrayList<EntryInfo<EntryInfo.JOTEventLinks>> tournaments, WorkerPool manager) {
 		log = LogManager.getLogger(LD.class);
 		this.tournaments = tournaments;
 		this.manager = manager;
@@ -44,10 +45,10 @@ public class LD implements Runnable {
 					Transaction transaction = session.beginTransaction();
 					ArrayList<LDBallot> ballots = new ArrayList<>();
 					ArrayList<LDRound> tournRounds = new ArrayList<>();
-					ArrayList<EntryInfo.EventLinks> eventRows = tInfo.getLdEventRows();
+					ArrayList<EntryInfo.JOTEventLinks> eventRows = tInfo.getLdEventRows();
 					ArrayList<Debater> competitorsList = new ArrayList<>();
 					log.info("Updating " + t.getName() + " " + t.getLink());
-					for(EntryInfo.EventLinks eventRow : eventRows) {
+					for(EntryInfo.JOTEventLinks eventRow : eventRows) {
 						// Prelims
 						if(eventRow.prelims != null) {
 							Document p = null;

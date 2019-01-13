@@ -5,26 +5,19 @@ import net.debaterank.server.modules.ModuleManager;
 import net.debaterank.server.modules.PoolSizeException;
 import net.debaterank.server.modules.WorkerPool;
 import net.debaterank.server.modules.WorkerPoolManager;
-import net.debaterank.server.modules.jot.EntryInfo;
-import net.debaterank.server.modules.jot.EntryScraper;
+import net.debaterank.server.modules.tabroom.TabroomEntryScraper;
+import net.debaterank.server.util.EntryInfo;
+import net.debaterank.server.modules.jot.JOTEntryScraper;
 import net.debaterank.server.util.HibernateUtil;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.hibernate.Session;
-import org.hibernate.SessionFactory;
 import org.hibernate.Transaction;
-import org.hibernate.boot.Metadata;
-import org.hibernate.boot.MetadataSources;
-import org.hibernate.boot.registry.StandardServiceRegistry;
-import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
-import org.hibernate.exception.ConstraintViolationException;
-import org.joda.time.DateTime;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
-import javax.persistence.Query;
 import java.io.IOException;
 import java.net.SocketTimeoutException;
 import java.text.ParseException;
@@ -206,13 +199,20 @@ public class Server {
 		////////////////
 
 		// JOT
-		ArrayList<EntryInfo> jotEntries = new ArrayList<>();
-		WorkerPool entryWP = new WorkerPool();
-		workerManager.add(entryWP);
-		moduleManager.newModule(new EntryScraper(jotTournaments, jotEntries, entryWP));
+		ArrayList<EntryInfo<EntryInfo.JOTEventLinks>> jotEntries = new ArrayList<>();
+		WorkerPool jotEntryWP = new WorkerPool();
+		/*workerManager.add(jotEntryWP);
+		moduleManager.newModule(new JOTEntryScraper(jotTournaments, jotEntries, jotEntryWP));*/
+
+		//Tabroom
+		ArrayList<EntryInfo<EntryInfo.TabroomEventInfo>> tabroomEntries = new ArrayList<>();
+		WorkerPool tabroomEntryWP = new WorkerPool();
+		workerManager.add(tabroomEntryWP);
+		moduleManager.newModule(new TabroomEntryScraper(tabroomTournaments, tabroomEntries, tabroomEntryWP));
 
 		// Execute
 		execute("entry info", workerManager, moduleManager);
+		System.exit(0);
 
         ////////////////////////
 		// Tournament parsing //

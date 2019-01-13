@@ -4,6 +4,7 @@ import com.sun.org.apache.xml.internal.security.utils.Base64;
 import net.debaterank.server.entities.Tournament;
 import net.debaterank.server.modules.WorkerPool;
 import net.debaterank.server.util.HibernateUtil;
+import net.debaterank.server.util.EntryInfo;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.hibernate.Session;
@@ -19,19 +20,21 @@ import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.concurrent.atomic.AtomicInteger;
 
-public class EntryScraper implements Runnable {
+import static net.debaterank.server.util.EntryInfo.*;
+
+public class JOTEntryScraper implements Runnable {
 
 	public static final String dir = "data/jot_entry/";
 
 	private Logger log;
 	private ArrayList<Tournament> tournaments;
-	private ArrayList<EntryInfo> tInfo;
+	private ArrayList<EntryInfo<EntryInfo.JOTEventLinks>> tInfo;
 	private WorkerPool manager;
 	private AtomicInteger counter;
 	private AtomicInteger noEventRows;
 
-	public EntryScraper(ArrayList<Tournament> tournaments, ArrayList<EntryInfo> tInfo, WorkerPool manager) {
-		log = LogManager.getLogger(EntryScraper.class);
+	public JOTEntryScraper(ArrayList<Tournament> tournaments, ArrayList<EntryInfo<EntryInfo.JOTEventLinks>> tInfo, WorkerPool manager) {
+		log = LogManager.getLogger(JOTEntryScraper.class);
 		this.tournaments = tournaments;
 		this.tInfo = tInfo;
 		this.manager = manager;
@@ -45,8 +48,8 @@ public class EntryScraper implements Runnable {
 		Transaction transaction = session.beginTransaction();
 		for(Tournament t : tournaments) {
 			if(t.isLdScraped() && t.isPfScraped() && t.isCxScraped()) continue;
-			if(entryInfoDataExists(t)) {
-				EntryInfo ei = getFromFile(t);
+			if(entryInfoDataExists(dir, t)) {
+				EntryInfo<EntryInfo.JOTEventLinks> ei = getFromFile(dir, t);
 				if(ei != null) {
 					tInfo.add(ei);
 					Tournament infoTourn = ei.getTournament();
@@ -88,7 +91,7 @@ public class EntryScraper implements Runnable {
 					else
 						getLinks(entryInfo.getCxEventRows(), cxEventRows);
 					tInfo.add(entryInfo);
-					writeToFile(entryInfo);
+					writeToFile(dir, entryInfo);
 					log.info("Queued and wrote \"" + t.getName() + "\"'s entry info " + events + "\t[" + counter.getAndIncrement() + " / " + tournaments.size() + "]");
 				} catch(Exception e) {
 					log.error(e);
@@ -112,13 +115,13 @@ public class EntryScraper implements Runnable {
 				return;
 			}
 		}
-		log.info("Saving scraped tournaments in entry scraper");
+		log.info("Saving scraped tournaments in JOT entry scraper");
 		transaction.commit();
 		session.close();
 		log.info("Saved");
 	}
 
-	private ArrayList<EntryInfo.EventLinks> getLinks(ArrayList<EntryInfo.EventLinks> links, Elements eventRows) {
+	private ArrayList<EntryInfo.JOTEventLinks> getLinks(ArrayList<EntryInfo.JOTEventLinks> links, Elements eventRows) {
 		for(Element eventRow : eventRows) {
 			String p = null;
 			String d = null;
@@ -135,66 +138,9 @@ public class EntryScraper implements Runnable {
 			if(p == null && d == null && b == null) {
 				continue;
 			}
-			links.add(new EntryInfo.EventLinks(p, d, b));
+			links.add(new EntryInfo.JOTEventLinks(p, d, b));
 		}
 		return links;
-	}
-
-	private boolean entryInfoDataExists(Tournament t) {
-		return new File(getFileName(t)).exists();
-	}
-
-	private EntryInfo getFromFile(Tournament t) {
-		FileInputStream fis = null;
-		ObjectInputStream ois = null;
-		String fileName = getFileName(t);
-		try {
-			fis = new FileInputStream(fileName);
-			ois = new ObjectInputStream(fis);
-			Object o = ois.readObject();
-			if(o instanceof EntryInfo) {
-				EntryInfo entryInfo = (EntryInfo) o;
-				log.info(t.getName() + " entry data retrieved from file");
-				return entryInfo;
-			}
-		} catch(IOException | ClassNotFoundException e) {}
-		finally {
-			try {
-				fis.close();
-				ois.close();
-			} catch(Exception e) {}
-		}
-		log.info("File retrieval failed for " + t.getName());
-		return null;
-	}
-
-	private void writeToFile(EntryInfo entryInfo) throws IOException {
-		File dirFile = new File(dir);
-		if(!dirFile.exists())
-			dirFile.mkdirs();
-		String fileName = getFileName(entryInfo.getTournament());
-		FileOutputStream fos = new FileOutputStream(fileName);
-		ObjectOutputStream oos = new ObjectOutputStream(fos);
-
-		oos.writeObject(entryInfo);
-		oos.close();
-		fos.close();
-		log.info(entryInfo.getTournament().getName() + " entry info written to file");
-	}
-
-	private String getFileName(Tournament t) {
-		MessageDigest md = null;
-		try {
-			md = MessageDigest.getInstance("MD5");
-		} catch(NoSuchAlgorithmException e) {
-			e.printStackTrace();
-			return null;
-		}
-		byte[] hash = md.digest(Base64.encode(t.getLink().getBytes()).getBytes());
-		StringBuilder sb = new StringBuilder();
-		for(byte b : hash)
-			sb.append(String.format("%02x", b));
-		return dir + sb.toString() + ".dat";
 	}
 
 }
