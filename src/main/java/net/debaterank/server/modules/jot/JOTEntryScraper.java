@@ -7,6 +7,7 @@ import net.debaterank.server.util.HibernateUtil;
 import net.debaterank.server.util.EntryInfo;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.hibernate.Hibernate;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.jsoup.Jsoup;
@@ -44,21 +45,23 @@ public class JOTEntryScraper implements Runnable {
 		// Scrape events per tournament
 		counter = new AtomicInteger(1);
 		noEventRows = new AtomicInteger(0);
-		Session session = HibernateUtil.getSession();
-		Transaction transaction = session.beginTransaction();
+		Session eiSession = HibernateUtil.getSession();
+		Transaction eiTransaction = eiSession.beginTransaction();
 		for(Tournament t : tournaments) {
 			if(t.isLdScraped() && t.isPfScraped() && t.isCxScraped()) continue;
 			if(entryInfoDataExists(dir, t)) {
 				EntryInfo<EntryInfo.JOTEventLinks> ei = getFromFile(dir, t);
 				if(ei != null) {
 					tInfo.add(ei);
-					session.merge(t);
+					eiSession.merge(t);
 					counter.incrementAndGet();
 					continue;
 				}
 			}
 			manager.newModule(() -> {
+				Session session = HibernateUtil.getSession();
 				try {
+					Transaction transaction = session.beginTransaction();
 					Document tPage = Jsoup.connect(t.getLink()).timeout(10 * 1000).get();
 					Elements ldEventRows = tPage.select("tr:has(td:matches(LD|Lincoln|L-D)), tr:has(td:has(nobr:matches(LD|Lincoln|L-D)))");
 					Elements pfEventRows = tPage.select("tr:has(td:matches(PF|Public|Forum|P-F)), tr:has(td:has(nobr:matches(PF|Public|Forum|P-F)))");
@@ -84,14 +87,19 @@ public class JOTEntryScraper implements Runnable {
 						t.setCxScraped(true);
 					else
 						getLinks(entryInfo.getCxEventRows(), cxEventRows);
+					if(ldEventRows.isEmpty() || pfEventRows.isEmpty() || cxEventRows.isEmpty())
+						session.merge(t);
 					tInfo.add(entryInfo);
 					writeToFile(dir, entryInfo);
+					transaction.commit();
 					log.info("Queued and wrote \"" + t.getName() + "\"'s entry info " + events + "\t[" + counter.getAndIncrement() + " / " + tournaments.size() + "]");
 				} catch(Exception e) {
 					log.error(e);
 					e.printStackTrace();
 					log.fatal("Could not update " + t.getName());
 					counter.incrementAndGet();
+				} finally {
+					session.close();
 				}
 			});
 		}
@@ -104,14 +112,13 @@ public class JOTEntryScraper implements Runnable {
 				if(lastCounter == counter.get())
 					break;
 			} catch (InterruptedException e) {
-				log.fatal("Entry scraper thread was interrupted. Attempting to save the tournaments");
-				transaction.commit();
+				log.fatal("Entry scraper thread was interrupted");
 				return;
 			}
 		}
 		log.info("Saving scraped tournaments in JOT entry scraper");
-		transaction.commit();
-		session.close();
+		eiTransaction.commit();
+		eiSession.close();
 		log.info("Saved");
 	}
 

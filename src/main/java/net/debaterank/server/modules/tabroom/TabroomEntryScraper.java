@@ -9,6 +9,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
+import org.hibernate.resource.transaction.spi.TransactionStatus;
 import org.joda.time.DateTime;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -42,20 +43,22 @@ public class TabroomEntryScraper implements Runnable {
 
 	public void run() {
 		// Scrape events per tournament
-		Session session = HibernateUtil.getSession();
-		Transaction transaction = session.beginTransaction();
 		counter = new AtomicInteger(1);
+		Session eiSession = HibernateUtil.getSession();
+		Transaction eiTransaction = eiSession.beginTransaction();
 		for(Tournament t : tournaments) {
 			if(entryInfoDataExists(dir, t)) {
 				EntryInfo<EntryInfo.TabroomEventInfo> ei = getFromFile(dir, t);
 				if(ei != null) {
 					tInfo.add(ei);
-					session.merge(t);
+					eiSession.merge(t);
 					counter.incrementAndGet();
 					continue;
 				}
 			}
 			manager.newModule(() -> {
+				Session session = HibernateUtil.getSession();
+				Transaction transaction = session.beginTransaction();
 				try {
 					StringBuilder tournIDStr = new StringBuilder();
 					int index = t.getLink().indexOf("tourn_id=") + 9;
@@ -137,14 +140,16 @@ public class TabroomEntryScraper implements Runnable {
 						session.merge(t);
 					writeToFile(dir, entryInfo);
 					tInfo.add(entryInfo);
-					log.info(tourn_id + " " + t.getName() + " queued and wrote (" + counter.incrementAndGet() + " / " + tournaments.size() + ")");
+					log.info(tourn_id + " " + t.getName() + " queued and wrote [" + counter.incrementAndGet() + " / " + tournaments.size() + "]");
 					log.info(sb.toString());
-					counter.incrementAndGet();
 					iStream.close();
+					transaction.commit();
 				} catch(Exception e) {
 					e.printStackTrace();
 					log.fatal("Could not update " + t.getName());
 					counter.incrementAndGet();
+				} finally {
+					session.close();
 				}
 			});
 		}
@@ -156,14 +161,13 @@ public class TabroomEntryScraper implements Runnable {
 				if(lastCounter == counter.get())
 					break;
 			} catch (InterruptedException e) {
-				log.fatal("Entry scraper thread was interrupted. Attempting to save the tournaments");
-				transaction.commit();
+				log.fatal("Entry scraper thread was interrupted");
 				return;
 			}
 		}
 		log.info("Saving scraped tournaments in Tabroom entry scraper");
-		transaction.commit();
-		session.close();
+		eiTransaction.commit(); // might not commit anything?
+		eiSession.close();
 		log.info("Saved");
 	}
 }
