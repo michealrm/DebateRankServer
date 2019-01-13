@@ -54,7 +54,7 @@ public class Server {
 		// JOT //
 		/////////
 
-        long lastTime = System.currentTimeMillis();
+		long lastTime = System.currentTimeMillis() + 1000; // offset by 1s
 		try {
 			// Get seasons so we can iterate through all the jotTournaments
 			Document tlist = Jsoup.connect("https://www.joyoftournaments.com/results.asp").get();
@@ -107,7 +107,7 @@ public class Server {
 		/////////////
 
 		SimpleDateFormat tabroomFormatter = new SimpleDateFormat("MM/dd/yyyy");
-        lastTime = System.currentTimeMillis();
+        lastTime = System.currentTimeMillis() + 1000; // offset by 1s
 		try {
 			// Get seasons so we can iterate through all the tournaments
 			Document tlist = Jsoup.connect("https://www.tabroom.com/index/results/").get();
