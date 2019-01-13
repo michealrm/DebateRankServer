@@ -29,7 +29,7 @@ public class DRHelper {
 	}
 
 	public static String cleanString(String str) {
-		return str.toLowerCase();
+		return str == null ? null : str.toLowerCase();
 	}
 
 }

@@ -15,14 +15,11 @@ public class LDBallot {
 	@OneToOne(cascade = CascadeType.ALL)
 	@JoinColumn(nullable = false)
 	private LDRound round;
-	@OneToOne
-	@JoinColumn
-	private Debater a;
-	@OneToOne
-	@JoinColumn
-	private Debater n;
 	private Double a_s;
 	private Double n_s;
+	@ManyToOne
+	@JoinColumn
+	private Judge judge;
 	private String decision;
 
 	public Long getId() {
@@ -39,22 +36,6 @@ public class LDBallot {
 
 	public void setRound(LDRound round) {
 		this.round = round;
-	}
-
-	public Debater getA() {
-		return a;
-	}
-
-	public void setA(Debater a) {
-		this.a = a;
-	}
-
-	public Debater getN() {
-		return n;
-	}
-
-	public void setN(Debater n) {
-		this.n = n;
 	}
 
 	public Double getA_s() {
@@ -81,26 +62,18 @@ public class LDBallot {
 		this.decision = decision;
 	}
 
-	public LDBallot(LDRound round, Debater a, Debater n, Double a_s, Double n_s, String decision) {
-		this.round = round;
-		this.a = a;
-		this.n = n;
-		this.a_s = a_s;
-		this.n_s = n_s;
-		this.decision = decision;
+	public Judge getJudge() {
+		return judge;
 	}
 
-	public LDBallot() {
+	public void setJudge(Judge judge) {
+		this.judge = judge;
 	}
 
 	public LDBallot(LDRound round) {
 		this.round = round;
 	}
 
-	public LDBallot(LDRound round, Debater a, Debater n, String decision) {
-		this.round = round;
-		this.a = a;
-		this.n = n;
-		this.decision = decision;
-	}
+	public LDBallot() {}
+
 }

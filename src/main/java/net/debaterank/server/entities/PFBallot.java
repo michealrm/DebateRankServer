@@ -9,9 +9,11 @@ public class PFBallot {
 	@Id
 	@GeneratedValue(strategy = GenerationType.SEQUENCE)
 	private Long id;
-	@Column(nullable = false)
-	@OneToOne
+	@OneToOne(cascade = CascadeType.ALL)
+	@JoinColumn(nullable = false)
 	private PFRound round;
+	@ManyToOne
+	@JoinColumn
 	private Judge judge;
 	private Double a1_s;
 	private Double a2_s;
@@ -22,6 +24,8 @@ public class PFBallot {
 	private Integer n1_p;
 	private Integer n2_p;
 	private String decision;
+
+	public PFBallot() {}
 
 	public PFBallot(PFRound round) {
 		this.round = round;

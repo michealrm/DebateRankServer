@@ -104,7 +104,7 @@ public class Server {
 			}
 
 			// Update DB / Remove cached jotTournaments from the queue
-            log.info(jotScraped + " tournaments retrieved from JOT. Need to scrape " + jotTournaments.size() + " tournaments from JOT.");
+            log.info(jotScraped + " tournaments retrieved from JOT. Need to add " + jotTournaments.size() + " to the database");
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -174,7 +174,7 @@ public class Server {
 					}
 				}
 
-			log.info(tabroomScraped + " tournaments retrieved from Tabroom. Need to scrape " + tabroomTournaments.size() + " tournaments from Tabroom.");
+			log.info(tabroomScraped + " tournaments retrieved from Tabroom. Need to add " + tabroomTournaments.size() + " to the database");
 
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -219,9 +219,13 @@ public class Server {
 		////////////////////////
 
 		// JOT
-		WorkerPool jotLDWP = new WorkerPool();
+		/*WorkerPool jotLDWP = new WorkerPool();
 		workerManager.add(jotLDWP);
-		moduleManager.newModule(new net.debaterank.server.modules.jot.LD(jotEntries, jotLDWP));
+		moduleManager.newModule(new net.debaterank.server.modules.jot.LD(jotEntries, jotLDWP));*/
+		
+		WorkerPool jotPFWP = new WorkerPool();
+		workerManager.add(jotPFWP);
+		moduleManager.newModule(new net.debaterank.server.modules.jot.PF(jotEntries, jotPFWP));
 
 		// Tabroom
 

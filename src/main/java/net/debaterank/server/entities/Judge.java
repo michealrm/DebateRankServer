@@ -71,6 +71,8 @@ public class Judge {
 		suffix = nt.getSuffix();
 	}
 
+	public Judge() {}
+
 	public Judge(String first, String middle, String last, String suffix) {
 		this.first = first;
 		this.middle = middle;

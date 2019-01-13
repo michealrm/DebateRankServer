@@ -121,6 +121,11 @@ public class Debater implements Serializable {
 		if(debater == null) return null;
 		Debater d = getDebater(debater);
 		if(d != null) return d;
+		return insertDebater(debater);
+	}
+
+	public static Debater insertDebater(Debater debater) {
+		if(debater == null) return null;
 		Session session = HibernateUtil.getSession();
 		try {
 			Transaction t = session.beginTransaction();
