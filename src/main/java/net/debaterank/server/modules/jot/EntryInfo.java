@@ -23,7 +23,7 @@ public class EntryInfo implements Serializable {
 		}
 	}
 
-	private transient Tournament tournament;
+	private Tournament tournament;
 	private ArrayList<EventLinks> ldEventRows;
 	private ArrayList<EventLinks> pfEventRows;
 	private ArrayList<EventLinks> cxEventRows;

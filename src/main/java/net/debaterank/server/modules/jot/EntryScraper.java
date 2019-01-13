@@ -51,12 +51,10 @@ public class EntryScraper implements Runnable {
 					tInfo.add(ei);
 					Tournament infoTourn = ei.getTournament();
 					if(infoTourn.isLdScraped() && infoTourn.isCxScraped() && infoTourn.isPfScraped()) { // if we have the files but the tournament database was dropped
-						System.out.println("merge");
 						t.setLdScraped(true);
 						t.setPfScraped(true);
 						t.setCxScraped(true);
 						session.merge(t);
-						System.exit(0);
 					}
 					counter.incrementAndGet();
 					continue;
@@ -149,14 +147,13 @@ public class EntryScraper implements Runnable {
 	private EntryInfo getFromFile(Tournament t) {
 		FileInputStream fis = null;
 		ObjectInputStream ois = null;
+		String fileName = getFileName(t);
 		try {
-			String fileName = getFileName(t);
 			fis = new FileInputStream(fileName);
 			ois = new ObjectInputStream(fis);
 			Object o = ois.readObject();
 			if(o instanceof EntryInfo) {
 				EntryInfo entryInfo = (EntryInfo) o;
-				entryInfo.setTournament(t); // Tournament is transient
 				log.info(t.getName() + " entry data retrieved from file");
 				return entryInfo;
 			}

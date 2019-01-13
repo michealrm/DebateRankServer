@@ -6,7 +6,7 @@ import java.util.Date;
 
 @Entity
 @Table
-public class Tournament {
+public class Tournament implements Serializable {
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.SEQUENCE)

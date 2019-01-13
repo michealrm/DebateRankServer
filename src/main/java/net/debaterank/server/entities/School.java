@@ -38,7 +38,8 @@ public class School implements Serializable {
 		Session session = HibernateUtil.getSession();
 		try {
 			School result = (School)session.createQuery("select s from School s where name is :n")
-					.setParameter("n", school.getName()).uniqueResult();
+					.setParameter("n", school.getName())
+					.uniqueResult();
 			return result;
 		} catch(Exception e) {
 			e.printStackTrace();
