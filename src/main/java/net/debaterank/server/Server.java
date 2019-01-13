@@ -221,11 +221,15 @@ public class Server {
 		// JOT
 		/*WorkerPool jotLDWP = new WorkerPool();
 		workerManager.add(jotLDWP);
-		moduleManager.newModule(new net.debaterank.server.modules.jot.LD(jotEntries, jotLDWP));*/
+		moduleManager.newModule(new net.debaterank.server.modules.jot.LD(jotEntries, jotLDWP));
 		
 		WorkerPool jotPFWP = new WorkerPool();
 		workerManager.add(jotPFWP);
-		moduleManager.newModule(new net.debaterank.server.modules.jot.PF(jotEntries, jotPFWP));
+		moduleManager.newModule(new net.debaterank.server.modules.jot.PF(jotEntries, jotPFWP));*/
+
+		WorkerPool jotCXWP = new WorkerPool();
+		workerManager.add(jotCXWP);
+		moduleManager.newModule(new net.debaterank.server.modules.jot.CX(jotEntries, jotCXWP));
 
 		// Tabroom
 

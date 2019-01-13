@@ -3,29 +3,75 @@ package net.debaterank.server.entities;
 import javax.persistence.*;
 
 @Entity
-@Table()
+@Table
 public class CXRound {
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.SEQUENCE)
-    private Long id;
+	private Long id;
 	@OneToOne
-    private Tournament tournament;
-    @OneToOne
-    private Debater a1;
-    @OneToOne
-    private Debater a2;
-    @OneToOne
-    private Debater n1;
-    @OneToOne
-    private Debater n2;
+	@JoinColumn(nullable = false)
+	private Tournament tournament;
+	@ManyToOne
+	@JoinColumn
+	private Team a;
+	@ManyToOne
+	@JoinColumn
+	private Team n;
+	private boolean bye;
+	private String round;
+	private String absUrl;
 
-	public CXRound(Tournament tournament, Debater a1, Debater a2, Debater n1, Debater n2) {
+	public CXRound() {}
+
+	public CXRound(Tournament tournament) {
 		this.tournament = tournament;
-		this.a1 = a1;
-		this.a2 = a2;
-		this.n1 = n1;
-		this.n2 = n2;
+	}
+
+	public CXRound(Tournament tournament, Team a, Team n) {
+		this.tournament = tournament;
+		this.a = a;
+		this.n = n;
+	}
+
+	public boolean isBye() {
+		return bye;
+	}
+
+	public void setBye(boolean bye) {
+		this.bye = bye;
+	}
+
+	public String getRound() {
+		return round;
+	}
+
+	public void setRound(String round) {
+		this.round = round;
+	}
+
+	public String getAbsUrl() {
+		return absUrl;
+	}
+
+	public void setAbsUrl(String absUrl) {
+		this.absUrl = absUrl;
+	}
+
+	public Team getA() {
+		return a;
+	}
+
+	public void setA(Team a) {
+		this.a = a;
+	}
+
+	public Team getN() {
+		return n;
+	}
+
+	public void setN(Team n) {
+		this.n = n;
 	}
 
 	public Long getId() {
@@ -43,37 +89,4 @@ public class CXRound {
 	public void setTournament(Tournament tournament) {
 		this.tournament = tournament;
 	}
-
-	public Debater getA1() {
-		return a1;
-	}
-
-	public void setA1(Debater a1) {
-		this.a1 = a1;
-	}
-
-	public Debater getA2() {
-		return a2;
-	}
-
-	public void setA2(Debater a2) {
-		this.a2 = a2;
-	}
-
-	public Debater getN1() {
-		return n1;
-	}
-
-	public void setN1(Debater n1) {
-		this.n1 = n1;
-	}
-
-	public Debater getN2() {
-		return n2;
-	}
-
-	public void setN2(Debater n2) {
-		this.n2 = n2;
-	}
-
 }

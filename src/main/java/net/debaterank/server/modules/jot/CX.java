@@ -23,14 +23,14 @@ import java.util.regex.Pattern;
 
 import static net.debaterank.server.util.DRHelper.getBracketRound;
 
-public class PF implements Runnable {
+public class CX implements Runnable {
 
 	private Logger log;
 	private ArrayList<EntryInfo> tournaments;
 	private WorkerPool manager;
 
-	public PF(ArrayList<EntryInfo> tournaments, WorkerPool manager) {
-		log = LogManager.getLogger(PF.class);
+	public CX(ArrayList<EntryInfo> tournaments, WorkerPool manager) {
+		log = LogManager.getLogger(CX.class);
 		this.tournaments = tournaments;
 		this.manager = manager;
 	}
@@ -40,14 +40,14 @@ public class PF implements Runnable {
 		// Scrape events per tournament
 		for(EntryInfo tInfo : tournaments) {
 			Tournament t = tInfo.getTournament();
-			if(t.isPfScraped() || tInfo.getPfEventRows().isEmpty()) continue;
+			if(t.isCxScraped() || tInfo.getCxEventRows().isEmpty()) continue;
 			manager.newModule(() -> {
 				Session session = HibernateUtil.getSession();
 				try {
 					Transaction transaction = session.beginTransaction();
-					ArrayList<PFBallot> ballots = new ArrayList<>();
-					ArrayList<PFRound> tournRounds = new ArrayList<>();
-					ArrayList<EntryInfo.EventLinks> eventRows = tInfo.getPfEventRows();
+					ArrayList<CXBallot> ballots = new ArrayList<>();
+					ArrayList<CXRound> tournRounds = new ArrayList<>();
+					ArrayList<EntryInfo.EventLinks> eventRows = tInfo.getCxEventRows();
 					ArrayList<Team> competitorsList = new ArrayList<>();
 					log.info("Updating " + t.getName() + " " + t.getLink());
 					for(EntryInfo.EventLinks eventRow : eventRows) {
@@ -73,7 +73,7 @@ public class PF implements Runnable {
 							}
 
 							// Parse rounds
-							ArrayList<PFRound> rounds = new ArrayList<>();
+							ArrayList<CXRound> rounds = new ArrayList<>();
 							for(int i = 0;i<rows.size();i++) {
 								String key = rows.get(i).select("td").first().select("tr:eq(1)").text().replaceAll("\u00a0|&nbsp", " ").split(" ")[0];
 								Team team = competitors.get(key);
@@ -102,7 +102,7 @@ public class PF implements Runnable {
 									catch(Exception e) {
 										continue;
 									}
-									PFRound round = new PFRound(t);
+									CXRound round = new CXRound(t);
 									Team againstTeam = null;
 									if(win == null || win.text() == null || against == null) {
 										continue;
@@ -114,7 +114,7 @@ public class PF implements Runnable {
 											round.setA(team);
 											round.setN(team);
 										} else {
-											PFBallot ballot = new PFBallot(round);
+											CXBallot ballot = new CXBallot(round);
 											if(side == null || side.text() == null || side.text().equals("Pro") || side.text().equals("Aff")) {
 												round.setA(team);
 												ballot.setDecision("Neg");
@@ -155,8 +155,8 @@ public class PF implements Runnable {
 										rounds.add(round);
 									} else if(win.text() != null && side != null && side.text() != null && (side.text().equals("Pro") || side.text().equals("Con") || side.text().equals("Aff") || side.text().equals("Neg"))) {
 										// check if other side (aff / neg) is competitors.get(against.text()) win.text().equals("F")
-										for(PFBallot ballot : ballots) {
-											PFRound r = ballot.getRound();
+										for(CXBallot ballot : ballots) {
+											CXRound r = ballot.getRound();
 											if(r.getA() != null && r.getA().equals(team) && r.getRound().equals(String.valueOf(k+1))) {
 												try {
 													if(speaks1.text() != null)
@@ -189,7 +189,7 @@ public class PF implements Runnable {
 										}
 										// no existing document found. we need to make a new one
 										if ((win.text().equals("W") || win.text().equals("L")) && against.text() != null && (againstTeam = competitors.get(against.text())) != null) {
-											PFBallot ballot = new PFBallot(round);
+											CXBallot ballot = new CXBallot(round);
 											if (side.text().equals("Pro") || side.text().equals("Aff")) {
 												round.setA(team);
 												round.setN(againstTeam);
@@ -243,7 +243,7 @@ public class PF implements Runnable {
 							Pattern pattern = Pattern.compile("[^\\s]+ ([A-Za-z]+?) - ([A-Za-z]+?)( \\((.+?)\\))? \\((Aff|Neg)\\) def. [^\\s]+ ([A-Za-z]+?) - ([A-Za-z]+?)( \\((.+?)\\))? \\((Aff|Neg)\\)");
 							doc.getElementsByTag("font").unwrap();
 							Matcher matcher = pattern.matcher(doc.toString().replaceAll("<br>", ""));
-							ArrayList<PFRound> rounds = new ArrayList<>();
+							ArrayList<CXRound> rounds = new ArrayList<>();
 							while(matcher.find()) {
 
 								String leftDebater = matcher.group(1);
@@ -271,7 +271,7 @@ public class PF implements Runnable {
 									continue;
 								}
 
-								PFRound round = new PFRound(t);
+								CXRound round = new CXRound(t);
 								round.setAbsUrl(doc.baseUri());
 								if(matcher.group(5).equals("Pro") || matcher.group(5).equals("Aff")) {
 									round.setA(team);
@@ -280,7 +280,7 @@ public class PF implements Runnable {
 									round.setA(against);
 									round.setN(team);
 								}
-								PFBallot ballot = new PFBallot(round);
+								CXBallot ballot = new CXBallot(round);
 								ballot.setDecision(matcher.group(5));
 								round.setRound("DO");
 								rounds.add(round);
@@ -293,7 +293,7 @@ public class PF implements Runnable {
 							Document doc = Jsoup.connect(eventRow.bracket).timeout(10*1000).get();
 
 							// Parse rounds
-							ArrayList<PFRound> rounds = new ArrayList<>();
+							ArrayList<CXRound> rounds = new ArrayList<>();
 							String roundStr = null, last = null;
 							ArrayList<Pair<Team, Team>> matchup = new ArrayList<Pair<Team, Team>>();
 							for(int i = 0;(roundStr = getBracketRound(doc, i)) != null;i++) {
@@ -384,11 +384,11 @@ public class PF implements Runnable {
 										if(pair.getLeft() == null || pair.getRight() == null)
 											continue;
 
-										PFRound round = new PFRound(t);
+										CXRound round = new CXRound(t);
 										round.setAbsUrl(doc.baseUri());
 										round.setA(pair.getLeft());
 										round.setN(pair.getRight());
-										PFBallot ballot = new PFBallot(round);
+										CXBallot ballot = new CXBallot(round);
 										ballot.setDecision("Aff");
 										ballots.add(ballot);
 
@@ -402,9 +402,9 @@ public class PF implements Runnable {
 							tournRounds.addAll(rounds); // add results
 						}
 					}
-					for(PFBallot b : ballots)
+					for(CXBallot b : ballots)
 						session.persist(b);
-					t.setPfScraped(true);
+					t.setCxScraped(true);
 					session.merge(t);
 					transaction.commit();
 					log.info("Updated " + t.getName());
@@ -418,7 +418,7 @@ public class PF implements Runnable {
 			});
 		}
 	}
-	
+
 	private static Team getTeamFromLastName(ArrayList<Team> list, String one, String two, String school) {
 		for(Team t : list) {
 			if (t != null && t.getOne() != null && t.getTwo() != null && t.getOne().getLast() != null && t.getTwo().getLast() != null && t.getOne().getLast().equals(one) && t.getTwo().getLast().equals(two) && t.getOne().getSchool().getName().equals(school))
@@ -426,7 +426,7 @@ public class PF implements Runnable {
 		}
 		return null;
 	}
-	
+
 	private static Team findTeam(ArrayList<Team> list, Team team) {
 		for(Team t : list) {
 			if (team.equals(t))
@@ -434,5 +434,5 @@ public class PF implements Runnable {
 		}
 		return null;
 	}
-	
+
 }

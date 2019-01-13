@@ -3,16 +3,17 @@ package net.debaterank.server.entities;
 import javax.persistence.*;
 
 @Entity
-@Table()
+@Table
 public class CXBallot {
 
-    @Id
+	@Id
 	@GeneratedValue(strategy = GenerationType.SEQUENCE)
-    private Long id;
-    @Column(nullable = false)
-	@OneToOne
+	private Long id;
+	@OneToOne(cascade = CascadeType.ALL)
+	@JoinColumn(nullable = false)
 	private CXRound round;
-	@OneToOne
+	@ManyToOne
+	@JoinColumn
 	private Judge judge;
 	private Double a1_s;
 	private Double a2_s;
@@ -23,6 +24,8 @@ public class CXBallot {
 	private Integer n1_p;
 	private Integer n2_p;
 	private String decision;
+
+	public CXBallot() {}
 
 	public CXBallot(CXRound round) {
 		this.round = round;
