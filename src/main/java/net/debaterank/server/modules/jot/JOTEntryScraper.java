@@ -52,13 +52,7 @@ public class JOTEntryScraper implements Runnable {
 				EntryInfo<EntryInfo.JOTEventLinks> ei = getFromFile(dir, t);
 				if(ei != null) {
 					tInfo.add(ei);
-					Tournament infoTourn = ei.getTournament();
-					if(infoTourn.isLdScraped() && infoTourn.isCxScraped() && infoTourn.isPfScraped()) { // if we have the files but the tournament database was dropped
-						t.setLdScraped(true);
-						t.setPfScraped(true);
-						t.setCxScraped(true);
-						session.merge(t);
-					}
+					session.merge(t);
 					counter.incrementAndGet();
 					continue;
 				}

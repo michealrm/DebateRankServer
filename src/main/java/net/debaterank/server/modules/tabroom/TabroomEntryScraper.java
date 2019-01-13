@@ -46,6 +46,15 @@ public class TabroomEntryScraper implements Runnable {
 		Transaction transaction = session.beginTransaction();
 		counter = new AtomicInteger(1);
 		for(Tournament t : tournaments) {
+			if(entryInfoDataExists(dir, t)) {
+				EntryInfo<EntryInfo.TabroomEventInfo> ei = getFromFile(dir, t);
+				if(ei != null) {
+					tInfo.add(ei);
+					session.merge(t);
+					counter.incrementAndGet();
+					continue;
+				}
+			}
 			manager.newModule(() -> {
 				try {
 					StringBuilder tournIDStr = new StringBuilder();
@@ -80,6 +89,10 @@ public class TabroomEntryScraper implements Runnable {
 					boolean pfExists = false;
 					boolean cxExists = false;
 					EntryInfo<EntryInfo.TabroomEventInfo> entryInfo = new EntryInfo<>(t);
+					StringBuilder sb = new StringBuilder();
+					sb.append("TID");
+					sb.append(tourn_id);
+					sb.append(" ");
 					for(int i = 0; i < eventsArr.length(); i++) {
 						try {
 							JSONObject jObject = eventsArr.getJSONObject(i);
@@ -89,19 +102,25 @@ public class TabroomEntryScraper implements Runnable {
 							if(tourn == tourn_id) {
 								if (eventName.matches("^.*(LD|Lincoln|L-D).*$")) {
 									String endpoint = "https://www.tabroom.com/api/tourn_published.mhtml?tourn_id=" + tourn + "&event_id=" + event + "&output=json";
-									log.info("Queuing LD " + event + " for " + t.getName());
+									sb.append("LD");
+									sb.append(event);
+									sb.append(" ");
 									entryInfo.addLdEventRow(new EntryInfo.TabroomEventInfo(tourn_id, event, endpoint));
 									ldExists = true;
 								}
 								if (eventName.matches("^.*(PF|Public|Forum|P-F).*$")) {
 									String endpoint = "https://www.tabroom.com/api/tourn_published.mhtml?tourn_id=" + tourn + "&event_id=" + event + "&output=json";
-									log.info("Queuing PF " + event + " for " + t.getName());
+									sb.append("PF");
+									sb.append(event);
+									sb.append(" ");
 									entryInfo.addPfEventRow(new EntryInfo.TabroomEventInfo(tourn_id, event, endpoint));
 									pfExists = true;
 								}
 								if (eventName.matches("^.*(CX|Cross|Examination|C-X|Policy).*$")) {
 									String endpoint = "https://www.tabroom.com/api/tourn_published.mhtml?tourn_id=" + tourn + "&event_id=" + event + "&output=json";
-									log.info("Queuing CX " + event + " for " + t.getName());
+									sb.append("CX");
+									sb.append(event);
+									sb.append(" ");
 									entryInfo.addCxEventRow(new EntryInfo.TabroomEventInfo(tourn_id, event, endpoint));
 									cxExists = true;
 								}
@@ -116,7 +135,10 @@ public class TabroomEntryScraper implements Runnable {
 						t.setCxScraped(true);
 					if(!ldExists || !pfExists || !cxExists)
 						session.merge(t);
-					log.info(tourn_id + " " + t.getName() + " queued (" + counter.incrementAndGet() + " / " + tournaments.size() + ")");
+					writeToFile(dir, entryInfo);
+					tInfo.add(entryInfo);
+					log.info(tourn_id + " " + t.getName() + " queued and wrote (" + counter.incrementAndGet() + " / " + tournaments.size() + ")");
+					log.info(sb.toString());
 					counter.incrementAndGet();
 					iStream.close();
 				} catch(Exception e) {

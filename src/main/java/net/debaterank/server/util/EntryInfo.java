@@ -101,9 +101,10 @@ public class EntryInfo <T extends Serializable> implements Serializable {
 			Object o = ois.readObject();
 			if(o instanceof EntryInfo) {
 				EntryInfo entryInfo = (EntryInfo) o;
-				if(t.isLdScraped()) entryInfo.getTournament().setLdScraped(true);
-				if(t.isPfScraped()) entryInfo.getTournament().setPfScraped(true);
-				if(t.isCxScraped()) entryInfo.getTournament().setCxScraped(true);
+				t.setLdScraped(entryInfo.getTournament().isLdScraped() || t.isLdScraped());
+				t.setPfScraped(entryInfo.getTournament().isPfScraped() || t.isPfScraped());
+				t.setCxScraped(entryInfo.getTournament().isCxScraped() || t.isCxScraped());
+				entryInfo.setTournament(t);
 				log.info(t.getName() + " entry data retrieved from file");
 				return entryInfo;
 			}

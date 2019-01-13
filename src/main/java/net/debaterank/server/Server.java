@@ -201,14 +201,16 @@ public class Server {
 		// JOT
 		ArrayList<EntryInfo<EntryInfo.JOTEventLinks>> jotEntries = new ArrayList<>();
 		WorkerPool jotEntryWP = new WorkerPool();
-		/*workerManager.add(jotEntryWP);
-		moduleManager.newModule(new JOTEntryScraper(jotTournaments, jotEntries, jotEntryWP));*/
+		workerManager.add(jotEntryWP);
+		moduleManager.newModule(new JOTEntryScraper(jotTournaments, jotEntries, jotEntryWP));
 
 		//Tabroom
+		/*
 		ArrayList<EntryInfo<EntryInfo.TabroomEventInfo>> tabroomEntries = new ArrayList<>();
 		WorkerPool tabroomEntryWP = new WorkerPool();
 		workerManager.add(tabroomEntryWP);
 		moduleManager.newModule(new TabroomEntryScraper(tabroomTournaments, tabroomEntries, tabroomEntryWP));
+		*/
 
 		// Execute
 		execute("entry info", workerManager, moduleManager);
