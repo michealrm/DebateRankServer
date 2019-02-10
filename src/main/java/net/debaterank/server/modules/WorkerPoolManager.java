@@ -37,13 +37,23 @@ public class WorkerPoolManager {
 		managers.add(pool);
 		return pool;
 	}
-	
+
+	public void clear() {
+		managers.clear();
+	}
+
 	public void start() throws PoolSizeException {
-		int count = managers.size() == 0 ? 0 : (int)Math.ceil((double)POOL_LENGTH / managers.size());
+		int count = managers.size() == 0 ? 0 : POOL_LENGTH / managers.size();
+		int remainder = POOL_LENGTH % managers.size();
 		if(count == 0)
 			throw new PoolSizeException(count, POOL_LENGTH);
 		for(WorkerPool manager : managers)
-			manager.start(count);
+			if(remainder > 0) {
+				manager.start(count + 1);
+				remainder--;
+			} else {
+				manager.start(count);
+			}
 	}
 	
 	public int getActiveCount() {

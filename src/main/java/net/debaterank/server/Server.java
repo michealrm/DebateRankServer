@@ -253,6 +253,7 @@ public class Server {
 				System.exit(1);
 			}
 		} while (moduleManager.getActiveCount() != 0 || workerManager.getActiveCount() != 0);
+		workerManager.clear();
 		log.info("Finished executing " + taskName + " in " + ((System.currentTimeMillis() - startTime) % 1000) + " seconds");
 	}
 
