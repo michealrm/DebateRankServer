@@ -20,21 +20,21 @@ import java.util.*;
 import static net.debaterank.server.util.NetIOHelper.getInputStream;
 import static net.debaterank.server.util.NetIOHelper.readJsonFromInputStream;
 
-public class CX implements Runnable {
+public class PF implements Runnable {
 
 	private Logger log;
 	private ArrayList<EntryInfo<EntryInfo.TabroomEventInfo>> tournaments;
 	private WorkerPool manager;
 
-	public CX(ArrayList<EntryInfo<EntryInfo.TabroomEventInfo>> tournaments, WorkerPool manager) {
-		log = LogManager.getLogger(CX.class);
+	public PF(ArrayList<EntryInfo<EntryInfo.TabroomEventInfo>> tournaments, WorkerPool manager) {
+		log = LogManager.getLogger(PF.class);
 		this.tournaments = tournaments;
 		this.manager = manager;
 	}
 
 	public void run() {
 		for(EntryInfo<EntryInfo.TabroomEventInfo> tInfo : tournaments) {
-			ArrayList<EntryInfo.TabroomEventInfo> rows = tInfo.getCxEventRows();
+			ArrayList<EntryInfo.TabroomEventInfo> rows = tInfo.getPfEventRows();
 			for(EntryInfo.TabroomEventInfo row : rows) {
 				manager.newModule(() -> {
 					try {
@@ -56,7 +56,7 @@ public class CX implements Runnable {
 			int tourn_id = ei.tourn_id;
 			int event_id = ei.event_id;
 
-			log.info("Updating " + t.getName() + ". Tournament ID: " + tourn_id + " Event ID: CX" + event_id);
+			log.info("Updating " + t.getName() + ". Tournament ID: " + tourn_id + " Event ID: PF" + event_id);
 
 			// Getting schools
 			HashMap<Integer, School> schools = new HashMap<>();
@@ -132,14 +132,14 @@ public class CX implements Runnable {
 			}
 
 			// Getting panels
-			HashMap<Integer, CXRound> panels = new HashMap<>();
+			HashMap<Integer, PFRound> panels = new HashMap<>();
 			JSONArray jsonPanel = jsonObject.getJSONArray("panel");
 			for (int i = 0; i < jsonPanel.length(); i++) {
 				JSONObject jObject = jsonPanel.getJSONObject(i);
 				int id = jObject.getInt("ID");
 				int round = jObject.getInt("ROUND");
 				boolean bye = jObject.getInt("BYE") == 1;
-				CXRound r = new CXRound(t);
+				PFRound r = new PFRound(t);
 				r.setBye(bye);
 				r.setRound(roundStrings.get(round));
 
@@ -147,7 +147,7 @@ public class CX implements Runnable {
 			}
 
 			// Finally, ballot parsing
-			HashMap<Integer, Pair<CXRound, CXBallot>> ballots = new HashMap<>();
+			HashMap<Integer, Pair<PFRound, PFBallot>> ballots = new HashMap<>();
 			JSONArray jsonBallot = jsonObject.getJSONArray("ballot");
 			for (int i = 0; i < jsonBallot.length(); i++) {
 				try {
@@ -166,7 +166,7 @@ public class CX implements Runnable {
 					if (jObject.has("BYE"))
 						bye = jObject.getInt("BYE") == 1;
 
-					CXRound round = panels.get(panel);
+					PFRound round = panels.get(panel);
 					if (round == null) {
 						log.warn("Panel " + panel + " in " + t.getLink() + " was null! Skipping this ballot");
 						continue;
@@ -182,7 +182,7 @@ public class CX implements Runnable {
 					}
 					round.setBye(round.isBye() || bye);
 
-					CXBallot ballot = new CXBallot(round);
+					PFBallot ballot = new PFBallot(round);
 					ballot.setJudge(judges.get(judge)); // This can be null
 
 					ballots.put(id, Pair.of(round, ballot));
@@ -201,9 +201,9 @@ public class CX implements Runnable {
 					double score = jObject.getDouble("SCORE");
 					int id = jObject.getInt("ID");
 
-					Pair<CXRound, CXBallot> ballot = ballots.get(ballotID);
+					Pair<PFRound, PFBallot> ballot = ballots.get(ballotID);
 					if (ballot == null) {
-						log.warn("CXBallot " + ballotID + " in " + t.getLink() + " is null. Skipping ballot score");
+						log.warn("PFBallot " + ballotID + " in " + t.getLink() + " is null. Skipping ballot score");
 						continue;
 					}
 
@@ -253,19 +253,19 @@ public class CX implements Runnable {
 								ballot.getRight().setN2_p((int) score);
 						}
 					} else {
-						log.warn("CXBallot score " + id + " in " + t.getLink() + " contains an invalid recipient. Skipping");
+						log.warn("PFBallot score " + id + " in " + t.getLink() + " contains an invalid recipient. Skipping");
 					}
 				} catch (JSONException e) {
 				}
 			}
 
 			// Collapse ballots to one judge per ballot
-			ArrayList<CXBallot> collBallots = new ArrayList<>();
-			for (Pair<CXRound, CXBallot> pair : ballots.values()) {
-				CXBallot ballot = pair.getRight();
+			ArrayList<PFBallot> collBallots = new ArrayList<>();
+			for (Pair<PFRound, PFBallot> pair : ballots.values()) {
+				PFBallot ballot = pair.getRight();
 				if (!collBallots.contains(ballot))
 					collBallots.add(ballot);
-				for (CXBallot b : collBallots) {
+				for (PFBallot b : collBallots) {
 					if (b.getJudge() == ballot.getJudge())
 						b.replaceNull(ballot);
 				}
@@ -273,10 +273,10 @@ public class CX implements Runnable {
 
 			// Update database
 			int i = 0;
-			for(CXBallot ballot : collBallots) {
+			for(PFBallot ballot : collBallots) {
 				session.persist(ballot);
 			}
-			t.setCxScraped(true);
+			t.setPfScraped(true);
 			session.merge(t);
 			transaction.commit();
 			log.info("Updated " + t.getName());
