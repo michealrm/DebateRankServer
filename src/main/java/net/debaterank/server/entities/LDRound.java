@@ -9,13 +9,13 @@ public class LDRound {
 	@Id
 	@GeneratedValue(strategy = GenerationType.SEQUENCE)
 	private Long id;
-	@OneToOne
+	@ManyToOne
 	@JoinColumn(nullable = false)
 	private Tournament tournament;
-	@OneToOne
+	@ManyToOne
 	@JoinColumn
 	private Debater a;
-	@OneToOne
+	@ManyToOne
 	@JoinColumn
 	private Debater n;
 	private boolean bye;

@@ -31,6 +31,12 @@ public class WorkerPoolManager {
 	public void add(WorkerPool manager) {
 		managers.add(manager);
 	}
+
+	public WorkerPool newPool() {
+		WorkerPool pool = new WorkerPool();
+		managers.add(pool);
+		return pool;
+	}
 	
 	public void start() throws PoolSizeException {
 		int count = managers.size() == 0 ? 0 : (int)Math.ceil((double)POOL_LENGTH / managers.size());

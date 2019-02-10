@@ -1,3 +1,9 @@
 Implement a "clean" command that deletes /data/ and drops the database
 See: https://stackoverflow.com/questions/18223665/postgresql-query-from-bash-script-as-database-user-postgres
 
+Reimplement no side bool
+
+Replace null API using generics and reflection
+
+ModuleManager not using one thread for worker pool if the pool size is an odd number
+

@@ -187,7 +187,7 @@ public class Server {
 		transaction.commit();
 		log.info("Saved " + jotTournaments.size() + " JOT tournaments and " + tabroomTournaments.size() + " tabroom tournaments");
 		jotTournaments.addAll(jotInDB);
-		tabroomInDB.addAll(tabroomInDB);
+		tabroomTournaments.addAll(tabroomInDB);
 		log.info("JOT tournaments in queue: " + jotTournaments.size());
 		log.info("Tabroom tournaments in queue: " + tabroomTournaments.size());
 
@@ -199,20 +199,17 @@ public class Server {
 		////////////////
 
 		// JOT
-		ArrayList<EntryInfo<EntryInfo.JOTEventLinks>> jotEntries = new ArrayList<>();
+		/*ArrayList<EntryInfo<EntryInfo.JOTEventLinks>> jotEntries = new ArrayList<>();
 		WorkerPool jotEntryWP = new WorkerPool();
 		workerManager.add(jotEntryWP);
-		moduleManager.newModule(new JOTEntryScraper(jotTournaments, jotEntries, jotEntryWP));
+		moduleManager.newModule(new JOTEntryScraper(jotTournaments, jotEntries, jotEntryWP));*/
 
 		//Tabroom
 		ArrayList<EntryInfo<EntryInfo.TabroomEventInfo>> tabroomEntries = new ArrayList<>();
-		WorkerPool tabroomEntryWP = new WorkerPool();
-		workerManager.add(tabroomEntryWP);
-		moduleManager.newModule(new TabroomEntryScraper(tabroomTournaments, tabroomEntries, tabroomEntryWP));
+		moduleManager.newModule(new TabroomEntryScraper(tabroomTournaments, tabroomEntries, workerManager.newPool()));
 
 		// Execute
 		execute("entry info", workerManager, moduleManager);
-		System.exit(0);
 
         ////////////////////////
 		// Tournament parsing //
@@ -225,13 +222,14 @@ public class Server {
 		
 		WorkerPool jotPFWP = new WorkerPool();
 		workerManager.add(jotPFWP);
-		moduleManager.newModule(new net.debaterank.server.modules.jot.PF(jotEntries, jotPFWP));*/
+		moduleManager.newModule(new net.debaterank.server.modules.jot.PF(jotEntries, jotPFWP));
 
 		WorkerPool jotCXWP = new WorkerPool();
 		workerManager.add(jotCXWP);
-		moduleManager.newModule(new net.debaterank.server.modules.jot.CX(jotEntries, jotCXWP));
+		moduleManager.newModule(new net.debaterank.server.modules.jot.CX(jotEntries, jotCXWP));*/
 
 		// Tabroom
+		moduleManager.newModule(new net.debaterank.server.modules.tabroom.LD(tabroomEntries, workerManager.newPool()));
 
 		// Execute //
 		execute("tournament parsing", workerManager, moduleManager);

@@ -13,7 +13,7 @@ public class LDBallot {
 	@GeneratedValue(strategy = GenerationType.SEQUENCE)
 	private Long id;
 	@OneToOne(cascade = CascadeType.ALL)
-	@JoinColumn(nullable = false)
+	@JoinColumn
 	private LDRound round;
 	private Double a_s;
 	private Double n_s;
@@ -60,6 +60,21 @@ public class LDBallot {
 
 	public void setDecision(String decision) {
 		this.decision = decision;
+	}
+
+	public void replaceNull(LDBallot b) {
+		if(b == null) return;
+		if(id == null) id = b.getId();
+		if(b.getId() == null) b.setId(id);
+		if(round == null) round = b.getRound();
+		if(b.getRound() == null) b.setRound(round);
+		if(a_s == null) a_s = b.getA_s();
+		if(b.getA_s() == null) b.setA_s(a_s);
+		if(n_s == null) b.setN_s(n_s);
+		if(judge == null) judge = b.getJudge();
+		if(b.getJudge() == null) b.setJudge(judge);
+		if(decision == null) decision = b.getDecision();
+		if(b.getDecision() == null) b.setDecision(decision);
 	}
 
 	public Judge getJudge() {

@@ -9,7 +9,7 @@ public class CXRound {
 	@Id
 	@GeneratedValue(strategy = GenerationType.SEQUENCE)
 	private Long id;
-	@OneToOne
+	@ManyToOne
 	@JoinColumn(nullable = false)
 	private Tournament tournament;
 	@ManyToOne
