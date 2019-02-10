@@ -70,7 +70,8 @@ public class LDBallot {
 		if(b.getRound() == null) b.setRound(round);
 		if(a_s == null) a_s = b.getA_s();
 		if(b.getA_s() == null) b.setA_s(a_s);
-		if(n_s == null) b.setN_s(n_s);
+		if(n_s == null) n_s = b.getN_s();
+		if(b.getN_s() == null) b.setN_s(n_s);
 		if(judge == null) judge = b.getJudge();
 		if(b.getJudge() == null) b.setJudge(judge);
 		if(decision == null) decision = b.getDecision();

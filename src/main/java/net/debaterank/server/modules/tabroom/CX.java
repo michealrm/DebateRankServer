@@ -20,21 +20,21 @@ import java.util.*;
 import static net.debaterank.server.util.NetIOHelper.getInputStream;
 import static net.debaterank.server.util.NetIOHelper.readJsonFromInputStream;
 
-public class LD implements Runnable {
+public class CX implements Runnable {
 
 	private Logger log;
 	private ArrayList<EntryInfo<EntryInfo.TabroomEventInfo>> tournaments;
 	private WorkerPool manager;
 
-	public LD(ArrayList<EntryInfo<EntryInfo.TabroomEventInfo>> tournaments, WorkerPool manager) {
-		log = LogManager.getLogger(LD.class);
+	public CX(ArrayList<EntryInfo<EntryInfo.TabroomEventInfo>> tournaments, WorkerPool manager) {
+		log = LogManager.getLogger(CX.class);
 		this.tournaments = tournaments;
 		this.manager = manager;
 	}
 
 	public void run() {
 		for(EntryInfo<EntryInfo.TabroomEventInfo> tInfo : tournaments) {
-			ArrayList<EntryInfo.TabroomEventInfo> rows = tInfo.getLdEventRows();
+			ArrayList<EntryInfo.TabroomEventInfo> rows = tInfo.getCxEventRows();
 			for(EntryInfo.TabroomEventInfo row : rows) {
 				manager.newModule(() -> {
 					try {
@@ -68,30 +68,33 @@ public class LD implements Runnable {
 				schools.put(id, school);
 			}
 
-			// Getting competitors
-			HashMap<Integer, Debater> competitors = new HashMap<>();
-			JSONArray jsonEntry = jsonObject.getJSONArray("entry");
-			for (int i = 0; i < jsonEntry.length(); i++) {
-				try {
-					JSONObject jObject = jsonEntry.getJSONObject(i);
-					String fullname = jObject.getString("FULLNAME");
-					int id = jObject.getInt("ID");
-					School school = schools.get(jObject.getInt("SCHOOL"));
-					Debater debater = new Debater(fullname, school);
-					debater = Debater.getDebaterOrInsert(debater);
-					competitors.put(id, debater);
-				} catch (JSONException e) {
-				}
-			}
-
-			// Getting entry students
-			HashMap<Integer, Integer> entryStudents = new HashMap<>();
+			// Getting competitors / entry students
+			HashMap<Integer, Team> competitors = new HashMap<>();
+			HashMap<Integer, Debater> entryStudents = new HashMap<>();
+			HashMap<Debater, Team> teams = new HashMap<>();
 			JSONArray jsonEntry_student = jsonObject.getJSONArray("entry_student");
 			for (int i = 0; i < jsonEntry_student.length(); i++) {
 				JSONObject jObject = jsonEntry_student.getJSONObject(i);
-				int id = jObject.getInt("ID");
 				int entry = jObject.getInt("ENTRY");
-				entryStudents.put(id, entry);
+				int id = jObject.getInt("ID");
+				String first = jObject.getString("FIRST");
+				String last = jObject.getString("LAST");
+				School school = schools.get(jObject.getInt("SCHOOL"));
+				Team team;
+				if ((team = competitors.get(entry)) == null) {
+					team = new Team();
+					competitors.put(entry, team);
+				}
+				Debater debater = new Debater(first + " " + last, school);
+				teams.put(debater, team);
+				entryStudents.put(id, debater);
+				if (team.getOne() == null)
+					team.setOne(debater);
+				else
+					team.setTwo(debater);
+			}
+			for (Team team : competitors.values()) {
+				team = Team.getTeamOrInsert(team);
 			}
 
 			// Getting judges
@@ -128,28 +131,28 @@ public class LD implements Runnable {
 			}
 
 			// Getting panels
-			HashMap<Integer, LDRound> panels = new HashMap<>();
+			HashMap<Integer, CXRound> panels = new HashMap<>();
 			JSONArray jsonPanel = jsonObject.getJSONArray("panel");
 			for (int i = 0; i < jsonPanel.length(); i++) {
 				JSONObject jObject = jsonPanel.getJSONObject(i);
 				int id = jObject.getInt("ID");
 				int round = jObject.getInt("ROUND");
 				boolean bye = jObject.getInt("BYE") == 1;
-				LDRound r = new LDRound(t);
+				CXRound r = new CXRound(t);
 				r.setBye(bye);
 				r.setRound(roundStrings.get(round));
-				r.setAbsUrl(t.getLink());
+
 				panels.put(id, r);
 			}
 
 			// Finally, ballot parsing
-			HashMap<Integer, Pair<LDRound, LDBallot>> ballots = new HashMap<>();
+			HashMap<Integer, Pair<CXRound, CXBallot>> ballots = new HashMap<>();
 			JSONArray jsonBallot = jsonObject.getJSONArray("ballot");
 			for (int i = 0; i < jsonBallot.length(); i++) {
 				try {
 					JSONObject jObject = jsonBallot.getJSONObject(i);
 					int id = jObject.getInt("ID");
-					int debater = jObject.getInt("ENTRY");
+					int team = jObject.getInt("ENTRY");
 					int panel = jObject.getInt("PANEL");
 					int judge = 0;
 					try {
@@ -162,23 +165,23 @@ public class LD implements Runnable {
 					if (jObject.has("BYE"))
 						bye = jObject.getInt("BYE") == 1;
 
-					LDRound round = panels.get(panel);
+					CXRound round = panels.get(panel);
 					if (round == null) {
 						log.warn("Panel " + panel + " in " + t.getLink() + " was null! Skipping this ballot");
 						continue;
 					}
 					if (side == 1 && round.getA() == null)
-						round.setA(competitors.get(debater));
+						round.setA(competitors.get(team));
 					else if (side == 2 && round.getN() == null)
-						round.setN(competitors.get(debater));
+						round.setN(competitors.get(team));
 					else if (side == -1) {
-						round.setA(competitors.get(debater));
-						round.setN(competitors.get(debater));
-						// round.setNoSide(true); TODO: Reimplement no side
+						round.setA(competitors.get(team));
+						round.setN(competitors.get(team));
+						// round.setNoSide(true);
 					}
 					round.setBye(round.isBye() || bye);
 
-					LDBallot ballot = new LDBallot(round);
+					CXBallot ballot = new CXBallot(round);
 					ballot.setJudge(judges.get(judge)); // This can be null
 
 					ballots.put(id, Pair.of(round, ballot));
@@ -197,42 +200,65 @@ public class LD implements Runnable {
 					double score = jObject.getDouble("SCORE");
 					int id = jObject.getInt("ID");
 
-					Pair<LDRound, LDBallot> ballot = ballots.get(ballotID);
+					Pair<CXRound, CXBallot> ballot = ballots.get(ballotID);
 					if (ballot == null) {
-						log.warn("LDBallot " + ballotID + " in " + t.getLink() + " is null. Skipping ballot score");
+						log.warn("CXBallot " + ballotID + " in " + t.getLink() + " is null. Skipping ballot score");
 						continue;
 					}
 
-					Debater aff = ballot.getLeft().getA();
-					Debater neg = ballot.getLeft().getN();
+					Team aff = ballot.getLeft().getA();
+					Team neg = ballot.getLeft().getN();
 
 					if (score_id.equals("WIN")) { // WIN RECIPIENT is the team / entry ID
-						Debater debater = competitors.get(recipient);
-
-						if ((debater == aff && score == 1.0) || (debater == neg && score == 0.0))
+						Team team = competitors.get(recipient);
+						if ((team == aff && score == 1.0) || (team == neg && score == 0.0))
 							ballot.getRight().setDecision("Aff");
-						else if ((debater == neg && score == 1.0) || (debater == aff && score == 0.0))
+						else if ((team == neg && score == 1.0) || (team == aff && score == 0.0))
 							ballot.getRight().setDecision("Neg");
-					}
-					if (score_id.equals("POINTS")) { // POINTS RECIPIENT is the entry_student ID
-						Debater debater = competitors.get(entryStudents.get(recipient));
-						if (debater == aff) {
-							ballot.getRight().setA_s(score);
+					} else if (score_id.equals("POINTS")) { // POINTS RECIPIENT is the entry_student ID
+						Debater debater = entryStudents.get(recipient);
+						Team team = teams.get(debater);
+						if (team == aff) {
+							if (team.getOne() == debater)
+								ballot.getRight().setA1_s(score);
+							if (team.getTwo() == debater)
+								ballot.getRight().setA2_s(score);
 						}
-						if (debater == neg) {
-							ballot.getRight().setN_s(score);
+						if (team == neg) {
+							if (team.getOne() == debater)
+								ballot.getRight().setN1_s(score);
+							if (team.getTwo() == debater)
+								ballot.getRight().setN2_s(score);
 						}
+					} else if (score_id.equals("RANK")) { // POINTS RECIPIENT is the entry_student ID
+						Debater debater = entryStudents.get(recipient);
+						Team team = teams.get(debater);
+						if (team == aff) {
+							if (team.getOne() == debater)
+								ballot.getRight().setA1_p((int) score);
+							if (team.getTwo() == debater)
+								ballot.getRight().setA2_p((int) score);
+						}
+						if (team == neg) {
+							if (team.getOne() == debater)
+								ballot.getRight().setN1_p((int) score);
+							if (team.getTwo() == debater)
+								ballot.getRight().setN2_p((int) score);
+						}
+					} else {
+						log.warn("CXBallot score " + id + " in " + t.getLink() + " contains an invalid recipient. Skipping");
 					}
-				} catch (JSONException e) {}
+				} catch (JSONException e) {
+				}
 			}
 
 			// Collapse ballots to one judge per ballot
-			ArrayList<LDBallot> collBallots = new ArrayList<>();
-			for (Pair<LDRound, LDBallot> pair : ballots.values()) {
-				LDBallot ballot = pair.getRight();
+			ArrayList<CXBallot> collBallots = new ArrayList<>();
+			for (Pair<CXRound, CXBallot> pair : ballots.values()) {
+				CXBallot ballot = pair.getRight();
 				if (!collBallots.contains(ballot))
 					collBallots.add(ballot);
-				for (LDBallot b : collBallots) {
+				for (CXBallot b : collBallots) {
 					if (b.getJudge() == ballot.getJudge())
 						b.replaceNull(ballot);
 				}
@@ -240,7 +266,7 @@ public class LD implements Runnable {
 
 			// Update database
 			int i = 0;
-			for(LDBallot ballot : collBallots) {
+			for(CXBallot ballot : collBallots) {
 				session.persist(ballot);
 			}
 			t.setLdScraped(true);

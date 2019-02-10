@@ -229,7 +229,8 @@ public class Server {
 		moduleManager.newModule(new net.debaterank.server.modules.jot.CX(jotEntries, jotCXWP));*/
 
 		// Tabroom
-		moduleManager.newModule(new net.debaterank.server.modules.tabroom.LD(tabroomEntries, workerManager.newPool()));
+		// moduleManager.newModule(new net.debaterank.server.modules.tabroom.LD(tabroomEntries, workerManager.newPool()));
+		moduleManager.newModule(new net.debaterank.server.modules.tabroom.CX(tabroomEntries, workerManager.newPool()));
 
 		// Execute //
 		execute("tournament parsing", workerManager, moduleManager);

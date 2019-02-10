@@ -5,7 +5,6 @@ import org.hibernate.Session;
 import org.hibernate.Transaction;
 
 import javax.persistence.*;
-import java.util.List;
 import java.util.Objects;
 
 @Entity
