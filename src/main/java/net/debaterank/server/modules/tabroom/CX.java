@@ -56,7 +56,7 @@ public class CX implements Runnable {
 			int tourn_id = ei.tourn_id;
 			int event_id = ei.event_id;
 
-			log.info("Updating " + t.getName() + ". Tournament ID: " + tourn_id + " Event ID: LD" + event_id);
+			log.info("Updating " + t.getName() + ". Tournament ID: " + tourn_id + " Event ID: CX" + event_id);
 
 			// Getting schools
 			HashMap<Integer, School> schools = new HashMap<>();
@@ -86,6 +86,7 @@ public class CX implements Runnable {
 					competitors.put(entry, team);
 				}
 				Debater debater = new Debater(first + " " + last, school);
+				debater = Debater.getDebaterOrInsert(debater);
 				teams.put(debater, team);
 				entryStudents.put(id, debater);
 				if (team.getOne() == null)
@@ -93,8 +94,8 @@ public class CX implements Runnable {
 				else
 					team.setTwo(debater);
 			}
-			for (Team team : competitors.values()) {
-				team = Team.getTeamOrInsert(team);
+			for (Map.Entry<Integer, Team> es : competitors.entrySet()) {
+				es.setValue(Team.getTeamOrInsert(es.getValue()));
 			}
 
 			// Getting judges
@@ -218,6 +219,9 @@ public class CX implements Runnable {
 					} else if (score_id.equals("POINTS")) { // POINTS RECIPIENT is the entry_student ID
 						Debater debater = entryStudents.get(recipient);
 						Team team = teams.get(debater);
+						if(team == null) {
+							continue;
+						}
 						if (team == aff) {
 							if (team.getOne() == debater)
 								ballot.getRight().setA1_s(score);
