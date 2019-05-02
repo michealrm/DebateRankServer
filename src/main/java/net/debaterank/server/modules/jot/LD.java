@@ -211,10 +211,10 @@ public class LD implements Runnable {
 						if(eventRow.bracket != null) {
 							Document doc = null;
 							try {
-								doc = Jsoup.connect(eventRow.bracket).timeout(10 * 1000).get();
-							} catch(UnsupportedMimeTypeException umte) {
-								log.warn("UnsupportedMimeTypeException on " + t.getLink() + " bracket. Skipping this event row.");
-								continue;
+								doc = Jsoup.connect(eventRow.bracket).timeout(10*1000).get();
+							} catch(UnsupportedMimeTypeException e) {
+								log.info("Brackets tyep unsupported: " + e.getMimeType() + ". Skipping.");
+								break;
 							}
 
 							// Parse rounds

@@ -10,6 +10,7 @@ import org.apache.logging.log4j.Logger;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.jsoup.Jsoup;
+import org.jsoup.UnsupportedMimeTypeException;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.nodes.TextNode;
@@ -53,7 +54,13 @@ public class CX implements Runnable {
 					for(EntryInfo.JOTEventLinks eventRow : eventRows) {
 						// Prelims
 						if(eventRow.prelims != null) {
-							Document p = Jsoup.connect(eventRow.prelims).timeout(10*1000).get();
+							Document p = null;
+							try {
+								p = Jsoup.connect(eventRow.prelims).timeout(10*1000).get();
+							} catch(UnsupportedMimeTypeException e) {
+								log.info("Prelims type unsupported: " + e.getMimeType() + ". Skipping.");
+								break;
+							}
 							Element table = p.select("table[border=1]").first();
 							Elements rows = table.select("tr:has(table)");
 
@@ -290,7 +297,13 @@ public class CX implements Runnable {
 
 						//Bracket
 						if(eventRow.bracket != null) {
-							Document doc = Jsoup.connect(eventRow.bracket).timeout(10*1000).get();
+							Document doc = null;
+							try {
+								doc = Jsoup.connect(eventRow.bracket).timeout(10*1000).get();
+							} catch(UnsupportedMimeTypeException e) {
+								log.info("Brackets tyep unsupported: " + e.getMimeType() + ". Skipping.");
+								break;
+							}
 
 							// Parse rounds
 							ArrayList<CXRound> rounds = new ArrayList<>();
@@ -421,7 +434,7 @@ public class CX implements Runnable {
 
 	private static Team getTeamFromLastName(ArrayList<Team> list, String one, String two, String school) {
 		for(Team t : list) {
-			if (t != null && t.getOne() != null && t.getTwo() != null && t.getOne().getLast() != null && t.getTwo().getLast() != null && t.getOne().getLast().equals(one) && t.getTwo().getLast().equals(two) && t.getOne().getSchool().getName().equals(school))
+			if (t != null && t.getOne() != null && t.getTwo() != null && t.getOne().getLast() != null && t.getTwo().getLast() != null && t.getOne().getLast().equals(one) && t.getTwo().getLast().equals(two) && ((t.getOne().getSchool() == null && school == null) || (t.getOne().getSchool() != null && school != null && t.getOne().getSchool().getName().equals(school))))
 				return t;
 		}
 		return null;
