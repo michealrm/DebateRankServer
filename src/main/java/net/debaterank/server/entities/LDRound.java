@@ -4,51 +4,23 @@ import javax.persistence.*;
 
 @Entity
 @Table
-public class LDRound {
+public class LDRound extends Round {
 
-	@Id
-	@GeneratedValue(strategy = GenerationType.SEQUENCE)
-	private Long id;
-	@ManyToOne
-	@JoinColumn(nullable = false)
-	private Tournament tournament;
 	@ManyToOne
 	@JoinColumn
 	private Debater a;
 	@ManyToOne
 	@JoinColumn
 	private Debater n;
-	private boolean bye;
-	private String round;
-	private String absUrl;
 
 	public LDRound(Tournament tournament) {
-		this.tournament = tournament;
+		super(tournament);
 	}
 
 	public LDRound(Tournament tournament, Debater a, Debater n) {
-		this.tournament = tournament;
+		super(tournament);
 		this.a = a;
 		this.n = n;
-	}
-
-	public LDRound() {
-	}
-
-	public Long getId() {
-		return id;
-	}
-
-	public void setId(Long id) {
-		this.id = id;
-	}
-
-	public Tournament getTournament() {
-		return tournament;
-	}
-
-	public void setTournament(Tournament tournament) {
-		this.tournament = tournament;
 	}
 
 	public Debater getA() {
@@ -65,30 +37,6 @@ public class LDRound {
 
 	public void setN(Debater n) {
 		this.n = n;
-	}
-
-	public String getRound() {
-		return round;
-	}
-
-	public void setRound(String round) {
-		this.round = round;
-	}
-
-	public String getAbsUrl() {
-		return absUrl;
-	}
-
-	public void setAbsUrl(String absUrl) {
-		this.absUrl = absUrl;
-	}
-
-	public boolean isBye() {
-		return bye;
-	}
-
-	public void setBye(boolean bye) {
-		this.bye = bye;
 	}
 
 }

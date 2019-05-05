@@ -30,8 +30,6 @@ public class Debater implements Serializable {
 	@JoinColumn
 	private Debater pointsTo;
 
-	public Debater() {}
-
 	public Debater(Long id, String first, String middle, String last, String suffix, School school) {
 		this.id = id;
 		this.first = first;
