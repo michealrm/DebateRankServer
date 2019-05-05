@@ -10,6 +10,7 @@ import javax.persistence.*;
 import java.util.List;
 
 import static net.debaterank.server.util.DRHelper.isSameName;
+import static net.debaterank.server.util.DRHelper.replaceNull;
 
 @Entity
 @Table
@@ -99,21 +100,6 @@ public class Judge {
 		this.suffix = suffix;
 	}
 
-	public void replaceNull(Judge d) {
-		if(id == null) id = d.getId();
-		if(d.getId() == null) d.setId(id);
-		if(first == null) first = d.getFirst();
-		if(d.getFirst() == null) d.setFirst(first);
-		if(middle == null) middle = d.getMiddle();
-		if(d.getMiddle() == null) d.setMiddle(middle);
-		if(last == null) last = d.getLast();
-		if(d.getLast() == null) d.setLast(last);
-		if(suffix == null) suffix = d.getSuffix();
-		if(d.getSuffix() == null) d.setSuffix(suffix);
-		if(school == null) school = d.getSchool();
-		if(d.getSchool() == null) d.setSchool(school);
-	}
-
 	public static Judge getJudge(Judge judge) {
 		if(judge == null) return null;
 		Session session = HibernateUtil.getSession();
@@ -124,7 +110,7 @@ public class Judge {
 					.getResultList();
 			for (Judge j : results) {
 				if (judge.equals(j)) {
-					j.replaceNull(judge);
+					replaceNull(j, judge);
 					return j;
 				}
 			}
