@@ -3,7 +3,7 @@ package net.debaterank.server.models;
 import javax.persistence.*;
 
 @MappedSuperclass
-public class Round {
+public class DuoRound {
 
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE)
@@ -11,12 +11,26 @@ public class Round {
     @ManyToOne
     @JoinColumn(nullable = false)
     private Tournament tournament;
+    @ManyToOne
+    @JoinColumn
+    private Team a;
+    @ManyToOne
+    @JoinColumn
+    private Team n;
     private boolean bye;
     private String round;
     private String absUrl;
 
-    public Round(Tournament t) {
+    public DuoRound() {}
+
+    public DuoRound(Tournament t) {
         tournament = t;
+    }
+
+    public DuoRound(Tournament t, Team a, Team n) {
+        tournament = t;
+        this.a = a;
+        this.n = n;
     }
 
     public boolean isBye() {
@@ -58,4 +72,21 @@ public class Round {
     public void setTournament(Tournament tournament) {
         this.tournament = tournament;
     }
+
+    public Team getA() {
+        return a;
+    }
+
+    public void setA(Team a) {
+        this.a = a;
+    }
+
+    public Team getN() {
+        return n;
+    }
+
+    public void setN(Team n) {
+        this.n = n;
+    }
+
 }

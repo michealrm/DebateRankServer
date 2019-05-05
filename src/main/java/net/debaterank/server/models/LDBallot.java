@@ -4,10 +4,36 @@ import javax.persistence.*;
 
 @Entity
 @Table
-public class LDBallot extends Ballot<LDRound> {
+public class LDBallot {
 
+	@Id
+	@GeneratedValue(strategy = GenerationType.SEQUENCE)
+	private Long id;
+	@OneToOne(cascade = CascadeType.ALL)
+	@JoinColumn
+	private LDRound round;
 	private Double a_s;
 	private Double n_s;
+	@ManyToOne
+	@JoinColumn
+	private Judge judge;
+	private String decision;
+
+	public Long getId() {
+		return id;
+	}
+
+	public void setId(Long id) {
+		this.id = id;
+	}
+
+	public LDRound getRound() {
+		return round;
+	}
+
+	public void setRound(LDRound round) {
+		this.round = round;
+	}
 
 	public Double getA_s() {
 		return a_s;
@@ -25,8 +51,26 @@ public class LDBallot extends Ballot<LDRound> {
 		this.n_s = n_s;
 	}
 
-	public LDBallot(LDRound round) {
-		super(round);
+	public String getDecision() {
+		return decision;
 	}
+
+	public void setDecision(String decision) {
+		this.decision = decision;
+	}
+
+	public Judge getJudge() {
+		return judge;
+	}
+
+	public void setJudge(Judge judge) {
+		this.judge = judge;
+	}
+
+	public LDBallot(LDRound round) {
+		this.round = round;
+	}
+
+	public LDBallot() {}
 
 }
