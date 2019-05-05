@@ -21,6 +21,20 @@ public class Tournament implements Serializable {
 	private boolean pfScraped;
 	private boolean cxScraped;
 
+	public boolean isScraped(String event) {
+		if(event.equals("LD")) return ldScraped;
+		else if(event.equals("PF")) return pfScraped;
+		else if (event.equals("CX")) return cxScraped;
+		else return false;
+	}
+
+	public void setScraped(String event, boolean scraped) {
+		if(event.equals("LD")) ldScraped = scraped;
+		else if(event.equals("PF")) pfScraped = scraped;
+		else if (event.equals("CX")) cxScraped = scraped;
+		else return;
+	}
+
 	public boolean isLdScraped() {
 		return ldScraped;
 	}

@@ -1,10 +1,11 @@
 package net.debaterank.server.modules.jot;
 
-import net.debaterank.server.entities.*;
+import net.debaterank.server.models.*;
 import net.debaterank.server.modules.WorkerPool;
 import net.debaterank.server.util.DRHelper;
 import net.debaterank.server.util.HibernateUtil;
 import net.debaterank.server.util.EntryInfo;
+import net.debaterank.server.util.JOTHelper;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -188,8 +189,8 @@ public class LD implements Runnable {
 								round.setAbsUrl(doc.baseUri());
 								Debater winner = new Debater(matcher.group(1), matcher.group(3));
 								Debater loser = new Debater(matcher.group(5), matcher.group(7));
-								winner = findDebater(competitorsList, winner);
-								loser = findDebater(competitorsList, loser);
+								winner = DRHelper.findDebater(competitorsList, winner);
+								loser = DRHelper.findDebater(competitorsList, loser);
 
 								if(matcher.group(4).equals("Aff")) {
 									round.setA(winner);
@@ -221,7 +222,7 @@ public class LD implements Runnable {
 							ArrayList<LDRound> rounds = new ArrayList<>();
 							String roundStr, last = null;
 							ArrayList<Pair<Debater, Debater>> matchup = new ArrayList<>();
-							for(int i = 0;(roundStr = DRHelper.getBracketRound(doc, i)) != null;i++) {
+							for(int i = 0; (roundStr = JOTHelper.getBracketRound(doc, i)) != null; i++) {
 
 								ArrayList<Pair<Debater, Debater>> currentMatchup = new ArrayList<>();
 
@@ -329,14 +330,6 @@ public class LD implements Runnable {
 				}
 			});
 		}
-	}
-
-	private static Debater findDebater(ArrayList<Debater> list, Debater debater) {
-		for(Debater d : list) {
-			if (debater.equals(d))
-				return d;
-		}
-		return null;
 	}
 
 }

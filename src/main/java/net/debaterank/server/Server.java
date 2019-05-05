@@ -1,9 +1,8 @@
 package net.debaterank.server;
 
-import net.debaterank.server.entities.Tournament;
+import net.debaterank.server.models.Tournament;
 import net.debaterank.server.modules.ModuleManager;
 import net.debaterank.server.modules.PoolSizeException;
-import net.debaterank.server.modules.WorkerPool;
 import net.debaterank.server.modules.WorkerPoolManager;
 import net.debaterank.server.modules.tabroom.TabroomEntryScraper;
 import net.debaterank.server.util.EntryInfo;

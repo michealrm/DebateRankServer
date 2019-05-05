@@ -1,15 +1,13 @@
 package net.debaterank.server.modules.tabroom;
 
-import net.debaterank.server.entities.Tournament;
+import net.debaterank.server.models.Tournament;
 import net.debaterank.server.modules.WorkerPool;
-import net.debaterank.server.modules.jot.JOTEntryScraper;
 import net.debaterank.server.util.EntryInfo;
 import net.debaterank.server.util.HibernateUtil;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
-import org.hibernate.resource.transaction.spi.TransactionStatus;
 import org.joda.time.DateTime;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -19,7 +17,7 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import static net.debaterank.server.util.NetIOHelper.readJsonFromInputStream;
+import static net.debaterank.server.util.DRHelper.readJsonFromInputStream;
 import static net.debaterank.server.util.EntryInfo.*;
 
 // <Tournament, <Tournament ID, Event ID>>

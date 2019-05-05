@@ -1,6 +1,6 @@
 package net.debaterank.server.modules.tabroom;
 
-import net.debaterank.server.entities.*;
+import net.debaterank.server.models.*;
 import net.debaterank.server.modules.WorkerPool;
 import net.debaterank.server.util.EntryInfo;
 import net.debaterank.server.util.HibernateUtil;
@@ -17,8 +17,7 @@ import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.util.*;
 
-import static net.debaterank.server.util.NetIOHelper.getInputStream;
-import static net.debaterank.server.util.NetIOHelper.readJsonFromInputStream;
+import static net.debaterank.server.util.DRHelper.*;
 
 public class PF implements Runnable {
 
@@ -113,8 +112,8 @@ public class PF implements Runnable {
 			}
 
 			// Getting round keys / names
-			HashMap<Integer, String> roundStrings = new HashMap<>(); // <Round ID, Round String>
-			HashMap<Integer, RoundInfo> roundInfos = new HashMap<>(); // <Round ID, RoundInfo>
+			HashMap<Integer, String> roundStrings = new HashMap<>(); // <DuoRound ID, DuoRound String>
+			HashMap<Integer, RoundInfo> roundInfos = new HashMap<>(); // <DuoRound ID, RoundInfo>
 			JSONArray jsonRound = jsonObject.getJSONArray("round");
 			for (int i = 0; i < jsonRound.length(); i++) {
 				JSONObject jObject = jsonRound.getJSONObject(i);
@@ -190,7 +189,7 @@ public class PF implements Runnable {
 				}
 			}
 
-			// Round results
+			// DuoRound results
 			JSONArray jsonBallot_score = jsonObject.getJSONArray("ballot_score");
 			for (int i = 0; i < jsonBallot_score.length(); i++) {
 				try {
@@ -267,7 +266,7 @@ public class PF implements Runnable {
 					collBallots.add(ballot);
 				for (PFBallot b : collBallots) {
 					if (b.getJudge() == ballot.getJudge())
-						b.replaceNull(ballot);
+						replaceNull(b, ballot);
 				}
 			}
 

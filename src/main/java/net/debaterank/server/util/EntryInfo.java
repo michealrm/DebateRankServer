@@ -1,7 +1,7 @@
 package net.debaterank.server.util;
 
 import com.sun.org.apache.xml.internal.security.utils.Base64;
-import net.debaterank.server.entities.Tournament;
+import net.debaterank.server.models.Tournament;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -78,6 +78,18 @@ public class EntryInfo <T extends Serializable> implements Serializable {
 
 	public ArrayList<T> getCxEventRows() {
 		return cxEventRows;
+	}
+
+	/**
+	 * Returns the specified event rows
+	 * @param event LD, PF, or CX
+	 * @return the specified event rows
+	 */
+	public ArrayList<T> getEventRows(String event) {
+		if(event.equals("LD")) return ldEventRows;
+		else if(event.equals("PF")) return pfEventRows;
+		else if (event.equals("CX")) return cxEventRows;
+		else return null;
 	}
 
 	public EntryInfo(Tournament tournament) {

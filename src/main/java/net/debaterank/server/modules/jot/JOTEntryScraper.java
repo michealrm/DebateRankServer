@@ -1,13 +1,11 @@
 package net.debaterank.server.modules.jot;
 
-import com.sun.org.apache.xml.internal.security.utils.Base64;
-import net.debaterank.server.entities.Tournament;
+import net.debaterank.server.models.Tournament;
 import net.debaterank.server.modules.WorkerPool;
 import net.debaterank.server.util.HibernateUtil;
 import net.debaterank.server.util.EntryInfo;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.hibernate.Hibernate;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.jsoup.Jsoup;
@@ -15,9 +13,6 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
-import java.io.*;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.concurrent.atomic.AtomicInteger;
 
