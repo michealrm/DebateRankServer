@@ -1,14 +1,11 @@
-package net.debaterank.server.entities;
+package net.debaterank.server.models;
 
-import net.debaterank.server.Server;
 import net.debaterank.server.util.HibernateUtil;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 
 import javax.persistence.*;
 import java.io.Serializable;
-import java.util.List;
-import java.util.Objects;
 
 import static net.debaterank.server.util.DRHelper.isSameName;
 

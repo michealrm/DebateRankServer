@@ -1,11 +1,11 @@
-package net.debaterank.server.entities;
+package net.debaterank.server.models;
 
 import javax.persistence.*;
 
 @Entity
 @Table
 public class CXBallot extends Ballot<CXRound> {
-	
+
 	private Double a1_s;
 	private Double a2_s;
 	private Double n1_s;

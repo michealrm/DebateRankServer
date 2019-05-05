@@ -1,4 +1,4 @@
-package net.debaterank.server.entities;
+package net.debaterank.server.models;
 
 import javax.persistence.*;
 
