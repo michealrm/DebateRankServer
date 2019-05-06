@@ -6,6 +6,7 @@ import javax.persistence.*;
 @Table
 public class CXBallot extends DuoBallot<CXRound> {
 
+	public CXBallot() {}
 	public CXBallot(CXRound round) {
 		super(round);
 	}

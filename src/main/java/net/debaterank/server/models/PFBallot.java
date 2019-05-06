@@ -6,6 +6,7 @@ import javax.persistence.*;
 @Table
 public class PFBallot extends DuoBallot<PFRound> {
 
+	public PFBallot() {}
 	public PFBallot(PFRound round) {
 		super(round);
 	}
