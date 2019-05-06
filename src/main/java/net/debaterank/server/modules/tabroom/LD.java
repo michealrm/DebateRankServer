@@ -253,7 +253,7 @@ public class LD implements Runnable {
 
 	private HashMap<Integer, String> roundToFriendlyRound(List<RoundInfo> infos) {
 		String[] elimsStrings = {"TO", "DO", "O", "Q", "S", "F"};
-		Collections.sort(infos, (o1, o2) -> o1.number - o2.number);
+		Collections.sort(infos, Comparator.comparingInt(o -> o.number));
 		ArrayList<RoundInfo> infosCopy = new ArrayList<>(infos);
 		ArrayList<Pair<Integer, String>> elims = new ArrayList<>();
 		for(int i = 0;i<infosCopy.size();i++)
