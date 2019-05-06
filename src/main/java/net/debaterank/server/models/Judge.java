@@ -20,6 +20,8 @@ public class Judge {
 	@GeneratedValue(strategy = GenerationType.SEQUENCE)
 	private Long id;
 	private String first, middle, last, suffix;
+	@ManyToOne
+	@JoinColumn
 	private School school;
 
 	public boolean equals(Judge judge) {

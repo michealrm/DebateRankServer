@@ -55,6 +55,7 @@ public class TabroomEntryScraper implements Runnable {
 				}
 			}
 			manager.newModule(() -> {
+
 				Session session = HibernateUtil.getSession();
 				Transaction transaction = session.beginTransaction();
 				try {
@@ -100,6 +101,7 @@ public class TabroomEntryScraper implements Runnable {
 							int tourn = jObject.getInt("TOURN");
 							int event = jObject.getInt("ID");
 							String eventName = jObject.getString("EVENTNAME");
+							// TODO: Make this testable and sepearate this into its own method. We should assert that any events that match the ID get added
 							if(tourn == tourn_id) {
 								if (eventName.matches("^.*(LD|Lincoln|L-D).*$")) {
 									String endpoint = "https://www.tabroom.com/api/tourn_published.mhtml?tourn_id=" + tourn + "&event_id=" + event + "&output=json";
@@ -109,7 +111,7 @@ public class TabroomEntryScraper implements Runnable {
 									entryInfo.addLdEventRow(new EntryInfo.TabroomEventInfo(tourn_id, event, endpoint));
 									ldExists = true;
 								}
-								if (eventName.matches("^.*(PF|Public|Forum|P-F).*$")) {
+								else if (eventName.matches("^.*(PF|Public Forum|P-F).*$")) {
 									String endpoint = "https://www.tabroom.com/api/tourn_published.mhtml?tourn_id=" + tourn + "&event_id=" + event + "&output=json";
 									sb.append("PF");
 									sb.append(event);
@@ -117,13 +119,16 @@ public class TabroomEntryScraper implements Runnable {
 									entryInfo.addPfEventRow(new EntryInfo.TabroomEventInfo(tourn_id, event, endpoint));
 									pfExists = true;
 								}
-								if (eventName.matches("^.*(CX|Cross|Examination|C-X|Policy).*$")) {
+								// eventName.matches("^.*(CX|Cross|Examination|C-X|Policy|Open|JV|Novice).*$")
+								else if (!eventName.matches("^.*(Communication Analysis|Impromptu|Informative|Interp|IPDA|Persuasion|POI|Prose|Speech|LD|Lincoln|L-D|PF|Public Forum|P-F).*$")) {
 									String endpoint = "https://www.tabroom.com/api/tourn_published.mhtml?tourn_id=" + tourn + "&event_id=" + event + "&output=json";
 									sb.append("CX");
 									sb.append(event);
 									sb.append(" ");
 									entryInfo.addCxEventRow(new EntryInfo.TabroomEventInfo(tourn_id, event, endpoint));
 									cxExists = true;
+								} else {
+									log.fatal(t.getLink() + " Error - unassigned event: " + eventName);
 								}
 							}
 						} catch(Exception e1) {}

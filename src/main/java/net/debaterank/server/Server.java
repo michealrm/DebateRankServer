@@ -126,7 +126,8 @@ public class Server {
 //					circuits.remove("15"); // College invitationals
 //					circuits.remove("49"); // Afghan
 //					circuits.remove("141"); // Canada
-					circuits.add("6"); // National Circuit (US HS)
+//					circuits.add("6"); // National Circuit (US HS)
+					circuits.add("43");
 
 					for(String circuit : circuits) {
 						Document doc = null;
@@ -199,7 +200,7 @@ public class Server {
 
 		// JOT
 		ArrayList<EntryInfo<EntryInfo.JOTEventLinks>> jotEntries = new ArrayList<>();
-		moduleManager.newModule(new JOTEntryScraper(jotTournaments, jotEntries, workerManager.newPool()));
+		//moduleManager.newModule(new JOTEntryScraper(jotTournaments, jotEntries, workerManager.newPool()));
 
 		//Tabroom
 		ArrayList<EntryInfo<EntryInfo.TabroomEventInfo>> tabroomEntries = new ArrayList<>();
@@ -213,13 +214,13 @@ public class Server {
 		////////////////////////
 
 		// JOT
-		moduleManager.newModule(new net.debaterank.server.modules.jot.LD(jotEntries, workerManager.newPool()));
-		moduleManager.newModule(new net.debaterank.server.modules.jot.PF(jotEntries, workerManager.newPool()));
-		moduleManager.newModule(new net.debaterank.server.modules.jot.CX(jotEntries, workerManager.newPool()));
+		//moduleManager.newModule(new net.debaterank.server.modules.jot.LD(jotEntries, workerManager.newPool()));
+		//moduleManager.newModule(new net.debaterank.server.modules.jot.PF(jotEntries, workerManager.newPool()));
+		//moduleManager.newModule(new net.debaterank.server.modules.jot.CX(jotEntries, workerManager.newPool()));
 
 		// Tabroom
-		moduleManager.newModule(new net.debaterank.server.modules.tabroom.LD(tabroomEntries, workerManager.newPool()));
-		moduleManager.newModule(new net.debaterank.server.modules.tabroom.PF(tabroomEntries, workerManager.newPool()));
+		//moduleManager.newModule(new net.debaterank.server.modules.tabroom.LD(tabroomEntries, workerManager.newPool()));
+		//moduleManager.newModule(new net.debaterank.server.modules.tabroom.PF(tabroomEntries, workerManager.newPool()));
 		moduleManager.newModule(new net.debaterank.server.modules.tabroom.CX(tabroomEntries, workerManager.newPool()));
 
 		// Execute //
