@@ -224,6 +224,8 @@ public class Server {
 
 		// Execute //
 		execute("tournament parsing", workerManager, moduleManager);
+
+		moduleManager.shutdown();
 	}
 
 	private static void execute(String taskName, WorkerPoolManager workerManager, ModuleManager moduleManager) {
