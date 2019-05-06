@@ -38,7 +38,6 @@ public class TabroomEntryScraper implements Runnable {
 		this.manager = manager;
 	}
 
-
 	public void run() {
 		// Scrape events per tournament
 		counter = new AtomicInteger(1);

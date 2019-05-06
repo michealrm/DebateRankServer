@@ -162,6 +162,7 @@ public class DuoEvent<E, R extends DuoRound, B extends DuoBallot<R>> implements 
                 info.elim = pairingScheme.equals("Elim");
                 roundInfos.put(id, info);
             }
+
             HashMap<Integer, String> roundNumberToEntry = roundToFriendlyRound(new ArrayList<>(roundInfos.values()));
             for (Map.Entry<Integer, RoundInfo> entry : roundInfos.entrySet()) {
                 roundStrings.put(entry.getKey(), roundNumberToEntry.get(entry.getValue().number));

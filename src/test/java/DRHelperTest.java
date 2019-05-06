@@ -1,5 +1,3 @@
-package net.debaterank.server.test;
-
 import net.debaterank.server.models.Debater;
 import org.junit.Test;
 import static org.junit.Assert.*;

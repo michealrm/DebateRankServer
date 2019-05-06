@@ -229,7 +229,7 @@ public class Server {
 		moduleManager.shutdown();
 	}
 
-	private static void execute(String taskName, WorkerPoolManager workerManager, ModuleManager moduleManager) {
+	public static void execute(String taskName, WorkerPoolManager workerManager, ModuleManager moduleManager) {
 		log.info("Executing " + taskName);
 		long startTime = System.currentTimeMillis();
 		try {
