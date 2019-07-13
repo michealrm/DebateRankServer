@@ -27,6 +27,7 @@ public class TabroomTest {
         workerManager = new WorkerPoolManager();
     }
 
+    /*
     @Test
     public void testCX() {
         Tournament tCEDA = new Tournament("CEDA Nationals Long Beach", "link", "state", new SimpleDateFormat("MM/dd/yyyy").parse("04/04/2019"));
@@ -40,8 +41,10 @@ public class TabroomTest {
 
         moduleManager.newModule(new net.debaterank.server.modules.tabroom.CX(entryQueue, workerManager.newPool()));
 
+        Session session = HibernateUtil.getSession();
         // TODO: Implement database assertions
     }
+    */
 
     @After
     public void cleanUp() {
