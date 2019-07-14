@@ -126,8 +126,8 @@ public class Server {
 //					circuits.remove("15"); // College invitationals
 //					circuits.remove("49"); // Afghan
 //					circuits.remove("141"); // Canada
-//					circuits.add("6"); // National Circuit (US HS)
-					circuits.add("43");
+					circuits.add("6"); // National Circuit (US HS)
+//					circuits.add("43");
 
 					for(String circuit : circuits) {
 						Document doc = null;

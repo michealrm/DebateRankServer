@@ -1,7 +1,7 @@
 /target/
 /bin/
 /.idea/
-/src/main/resources/
+/src/main/resources/hibernate.properties
 .DS_Store
 /data/
 /log/

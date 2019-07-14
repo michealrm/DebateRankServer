@@ -24,7 +24,7 @@ public class WorkerPoolManager {
 		} catch (ConfigurationException e) {
 			e.printStackTrace();
 		}
-		POOL_LENGTH = config.getInt("pool");
+		POOL_LENGTH = config.getInt("worker_pool");
 	}
 	
 	public WorkerPoolManager() {
