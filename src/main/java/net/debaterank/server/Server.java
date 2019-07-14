@@ -217,6 +217,7 @@ public class Server {
 		// Execute //
 		execute("tournament parsing", workerManager, moduleManager);
 
+		workerManager.shutdown();
 		moduleManager.shutdown();
 	}
 

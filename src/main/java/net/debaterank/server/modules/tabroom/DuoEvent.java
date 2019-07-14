@@ -70,6 +70,7 @@ public class DuoEvent<E, R extends DuoRound, B extends DuoBallot<R>> implements 
 
     public void run() {
         for(EntryInfo<EntryInfo.TabroomEventInfo> tInfo : tournaments) {
+            if(tInfo.getTournament().isScraped(event) || tInfo.getEventRows(event).isEmpty()) continue;
             ArrayList<EntryInfo.TabroomEventInfo> rows = tInfo.getEventRows(event);
             for(EntryInfo.TabroomEventInfo row : rows) {
                 manager.newModule(() -> {

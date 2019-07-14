@@ -33,6 +33,7 @@ public class WorkerPoolManager {
 	}
 
 	public void clear() {
+		shutdown();
 		managers.clear();
 	}
 
@@ -59,6 +60,11 @@ public class WorkerPoolManager {
 		for(WorkerPool pool : managers)
 			active += pool.getActiveCount();
 		return active;
+	}
+
+	public void shutdown() {
+		for(WorkerPool pool : managers)
+			pool.shutdown();
 	}
 	
 }

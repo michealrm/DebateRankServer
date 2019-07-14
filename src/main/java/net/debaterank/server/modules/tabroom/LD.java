@@ -33,6 +33,7 @@ public class LD implements Runnable {
 
 	public void run() {
 		for(EntryInfo<EntryInfo.TabroomEventInfo> tInfo : tournaments) {
+			if(tInfo.getTournament().isLdScraped() || tInfo.getLdEventRows().isEmpty()) continue;
 			ArrayList<EntryInfo.TabroomEventInfo> rows = tInfo.getLdEventRows();
 			for(EntryInfo.TabroomEventInfo row : rows) {
 				manager.newModule(() -> {
