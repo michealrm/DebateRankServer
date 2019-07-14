@@ -197,7 +197,7 @@ public class Server {
 
 		// JOT
 		ArrayList<EntryInfo<EntryInfo.JOTEventLinks>> jotEntries = new ArrayList<>();
-		//moduleManager.newModule(new JOTEntryScraper(jotTournaments, jotEntries, workerManager.newPool()));
+		moduleManager.newModule(new JOTEntryScraper(jotTournaments, jotEntries, workerManager.newPool()));
 
 		//Tabroom
 		ArrayList<EntryInfo<EntryInfo.TabroomEventInfo>> tabroomEntries = new ArrayList<>();
