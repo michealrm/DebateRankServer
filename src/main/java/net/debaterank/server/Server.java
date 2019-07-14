@@ -5,6 +5,7 @@ import net.debaterank.server.modules.ModuleManager;
 import net.debaterank.server.modules.PoolSizeException;
 import net.debaterank.server.modules.WorkerPoolManager;
 import net.debaterank.server.modules.tabroom.TabroomEntryScraper;
+import net.debaterank.server.util.ConfigUtil;
 import net.debaterank.server.util.EntryInfo;
 import net.debaterank.server.modules.jot.JOTEntryScraper;
 import net.debaterank.server.util.HibernateUtil;
@@ -116,18 +117,14 @@ public class Server {
 			Collections.reverse(years);
 			// Get all the tournaments
 				for(String year : years) {
-//					Document tournamentDoc = Jsoup.connect("https://www.tabroom.com/index/results/")
-//						.data("year", year)
-//						.post();
+					Document tournamentDoc = Jsoup.connect("https://www.tabroom.com/index/results/")
+						.data("year", year)
+						.post();
 					ArrayList<String> circuits = new ArrayList<>();
-//					for(Element select : tournamentDoc.select("select[name=circuit_id] > option"))
-//						circuits.add(select.attr("value"));
-//					circuits.remove("43"); // NDT / CEDA
-//					circuits.remove("15"); // College invitationals
-//					circuits.remove("49"); // Afghan
-//					circuits.remove("141"); // Canada
-					circuits.add("6"); // National Circuit (US HS)
-//					circuits.add("43");
+					for(Element select : tournamentDoc.select("select[name=circuit_id] > option"))
+						circuits.add(select.attr("value"));
+					circuits = ConfigUtil.getCircuits(circuits);
+					log.info(year + " using circuits: " + circuits);
 
 					for(String circuit : circuits) {
 						Document doc = null;
@@ -213,15 +210,7 @@ public class Server {
 		// Tournament parsing //
 		////////////////////////
 
-		// JOT
-		//moduleManager.newModule(new net.debaterank.server.modules.jot.LD(jotEntries, workerManager.newPool()));
-		//moduleManager.newModule(new net.debaterank.server.modules.jot.PF(jotEntries, workerManager.newPool()));
-		//moduleManager.newModule(new net.debaterank.server.modules.jot.CX(jotEntries, workerManager.newPool()));
-
-		// Tabroom
-		//moduleManager.newModule(new net.debaterank.server.modules.tabroom.LD(tabroomEntries, workerManager.newPool()));
-		//moduleManager.newModule(new net.debaterank.server.modules.tabroom.PF(tabroomEntries, workerManager.newPool()));
-		moduleManager.newModule(new net.debaterank.server.modules.tabroom.CX(tabroomEntries, workerManager.newPool()));
+		ConfigUtil.addModules(moduleManager, workerManager, jotEntries, tabroomEntries);
 
 		// Execute //
 		execute("tournament parsing", workerManager, moduleManager);
