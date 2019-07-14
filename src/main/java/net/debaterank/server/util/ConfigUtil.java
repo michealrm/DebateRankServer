@@ -45,13 +45,9 @@ public class ConfigUtil {
         }
     }
 
-    public static ArrayList<String> getCircuits(ArrayList<String> fullCircuit) {
+    public static ArrayList<String> getCircuits() {
         // TODO: Want to be able to have choice of inclusive or exclusive
-        String[] circuits = config.getString("tabroom_circuits").split(",");
-        if(circuits.length == 0)
-            return fullCircuit;
-        else
-            return new ArrayList<>(Arrays.asList(circuits));
+        return new ArrayList<>(Arrays.asList(config.getString("tabroom_circuits").split(",")));
     }
 
 
