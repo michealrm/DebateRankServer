@@ -108,6 +108,8 @@ public class Server {
 
 		SimpleDateFormat tabroomFormatter = new SimpleDateFormat("MM/dd/yyyy");
         lastTime = System.currentTimeMillis() + 1000; // offset by 1s
+		ArrayList<String> circuits = ConfigUtil.getCircuits();
+		log.info("Tabroom using circuits: " + circuits);
 		try {
 			// Get seasons so we can iterate through all the tournaments
 			Document tlist = Jsoup.connect("https://www.tabroom.com/index/results/").get();
@@ -117,14 +119,14 @@ public class Server {
 			Collections.reverse(years);
 			// Get all the tournaments
 				for(String year : years) {
-					Document tournamentDoc = Jsoup.connect("https://www.tabroom.com/index/results/")
-						.data("year", year)
-						.post();
-					ArrayList<String> circuits = new ArrayList<>();
-					for(Element select : tournamentDoc.select("select[name=circuit_id] > option"))
-						circuits.add(select.attr("value"));
-					circuits = ConfigUtil.getCircuits(circuits);
-					log.info(year + " using circuits: " + circuits);
+//					Document tournamentDoc = Jsoup.connect("https://www.tabroom.com/index/results/")
+//						.data("year", year)
+//						.post();
+//					ArrayList<String> circuits = new ArrayList<>();
+//					for(Element select : tournamentDoc.select("select[name=circuit_id] > option"))
+//						circuits.add(select.attr("value"));
+//					circuits = ConfigUtil.getCircuits(circuits);
+//					log.info(year + " using circuits: " + circuits);
 
 					for(String circuit : circuits) {
 						Document doc = null;
@@ -236,7 +238,7 @@ public class Server {
 			}
 		} while (moduleManager.getActiveCount() != 0 || workerManager.getActiveCount() != 0);
 		workerManager.clear();
-		log.info("Finished executing " + taskName + " in " + ((System.currentTimeMillis() - startTime) % 1000) + " seconds");
+		log.info("Finished executing " + taskName + " in " + ((System.currentTimeMillis() - startTime) / 1000) + " seconds");
 	}
 
 }
