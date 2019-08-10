@@ -83,7 +83,7 @@ public class TabroomEntryScraper implements Runnable {
 					try {
 						jsonArray = readJsonArrayFromInputStream(iStream);
 					} catch(Exception e) {
-						log.warn(String.format("Skipping %s (URL: %s). This is not a valid JSON object.", t.getLink(), url));
+						log.error(String.format("Skipping %s (URL: %s). This is not a valid JSON object.", t.getLink(), url));
 						return;
 					}
 					boolean ldExists = false;
@@ -100,41 +100,50 @@ public class TabroomEntryScraper implements Runnable {
 							int id = tournObject.getInt("id");
 							if(tourn_id != id)
 								continue;
-							for(Object o : tournObject.getJSONArray("categories")) {
-								JSONObject eventObject = (JSONObject)o;
-								if(!eventObject.getString("type").equals("debate"))
-									continue;
-								int eventId = eventObject.getInt("id");
-								String eventName = eventObject.getString("name");
-								if (eventName.matches("^.*(LD|Lincoln|L-D).*$")) {
-									String endpoint = "https://www.tabroom.com/api/tourn_published.mhtml?tourn_id=" + tourn_id + "&event_id=" + eventId + "&output=json";
-									sb.append("LD");
-									sb.append(eventId);
-									sb.append(" ");
-									entryInfo.addLdEventRow(new EntryInfo.TabroomEventInfo(tourn_id, eventId, endpoint));
-									ldExists = true;
-								}
-								else if (eventName.matches("^.*(PF|Public Forum|P-F).*$")) {
-									String endpoint = "https://www.tabroom.com/api/tourn_published.mhtml?tourn_id=" + tourn_id + "&event_id=" + eventId + "&output=json";
-									sb.append("PF");
-									sb.append(eventId);
-									sb.append(" ");
-									entryInfo.addPfEventRow(new EntryInfo.TabroomEventInfo(tourn_id, eventId, endpoint));
-									pfExists = true;
-								}
-								// eventName.matches("^.*(CX|Cross|Examination|C-X|Policy|Open|JV|Novice).*$")
-								else if (!eventName.matches("^.*(Communication Analysis|Impromptu|Informative|Interp|IPDA|Persuasion|POI|Prose|Speech|LD|Lincoln|L-D|PF|Public Forum|P-F).*$")) {
-									String endpoint = "https://www.tabroom.com/api/tourn_published.mhtml?tourn_id=" + tourn_id + "&event_id=" + eventId + "&output=json";
-									sb.append("CX");
-									sb.append(eventId);
-									sb.append(" ");
-									entryInfo.addCxEventRow(new EntryInfo.TabroomEventInfo(tourn_id, eventId, endpoint));
-									cxExists = true;
-								} else {
-									log.fatal(t.getLink() + " Error - unassigned event: " + eventName);
+							JSONArray categoriesArr = tournObject.getJSONArray("categories");
+							for(int k = 0; k < categoriesArr.length(); k++) {
+								try {
+									JSONArray eventsArr = categoriesArr.getJSONObject(k).getJSONArray("events");
+									for (int j = 0; j < eventsArr.length(); j++) {
+										JSONObject eventObject = eventsArr.getJSONObject(j);
+										if (!eventObject.getString("type").equals("debate"))
+											continue;
+										int eventId = eventObject.getInt("id");
+										String eventName = eventObject.getString("name");
+										if (eventName.matches("^.*(LD|Lincoln|L-D).*$")) {
+											String endpoint = "https://www.tabroom.com/api/tourn_published.mhtml?tourn_id=" + tourn_id + "&event_id=" + eventId + "&output=json";
+											sb.append("LD");
+											sb.append(eventId);
+											sb.append(" ");
+											entryInfo.addLdEventRow(new EntryInfo.TabroomEventInfo(tourn_id, eventId, endpoint));
+											ldExists = true;
+										} else if (eventName.matches("^.*(PF|Public Forum|P-F).*$")) {
+											String endpoint = "https://www.tabroom.com/api/tourn_published.mhtml?tourn_id=" + tourn_id + "&event_id=" + eventId + "&output=json";
+											sb.append("PF");
+											sb.append(eventId);
+											sb.append(" ");
+											entryInfo.addPfEventRow(new EntryInfo.TabroomEventInfo(tourn_id, eventId, endpoint));
+											pfExists = true;
+										}
+										// eventName.matches("^.*(CX|Cross|Examination|C-X|Policy|Open|JV|Novice).*$")
+										else if (!eventName.matches("^.*(Communication Analysis|Impromptu|Informative|Interp|IPDA|Persuasion|POI|Prose|Speech|LD|Lincoln|L-D|PF|Public Forum|P-F).*$")) {
+											String endpoint = "https://www.tabroom.com/api/tourn_published.mhtml?tourn_id=" + tourn_id + "&event_id=" + eventId + "&output=json";
+											sb.append("CX");
+											sb.append(eventId);
+											sb.append(" ");
+											entryInfo.addCxEventRow(new EntryInfo.TabroomEventInfo(tourn_id, eventId, endpoint));
+											cxExists = true;
+										} else {
+											log.fatal(t.getLink() + " Error - unassigned event: " + eventName);
+										}
+									}
+								} catch(Exception e2) {
+									log.error(String.format("Error on %s (URL: %s). %s", t.getLink(), url, e2));
 								}
 							}
-						} catch(Exception e1) {}
+						} catch(Exception e1) {
+							log.error(String.format("Error on %s (URL: %s). %s", t.getLink(), url, e1));
+						}
 					}
 					if(!ldExists)
 						t.setLdScraped(true);
