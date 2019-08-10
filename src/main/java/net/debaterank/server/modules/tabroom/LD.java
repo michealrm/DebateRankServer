@@ -52,7 +52,7 @@ public class LD implements Runnable {
 		try {
 			Transaction transaction = session.beginTransaction();
 			BufferedInputStream iStream = getInputStream(ei.endpoint, log);
-			JSONObject jsonObject = readJsonFromInputStream(iStream);
+			JSONObject jsonObject = readJsonObjectFromInputStream(iStream);
 			int tourn_id = ei.tourn_id;
 			int event_id = ei.event_id;
 

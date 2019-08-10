@@ -3,6 +3,7 @@ package net.debaterank.server.util;
 import net.debaterank.server.models.Debater;
 import org.apache.commons.beanutils.PropertyUtils;
 import org.apache.logging.log4j.Logger;
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -91,10 +92,17 @@ public class DRHelper {
 		return iStream;
 	}
 
-	public static JSONObject readJsonFromInputStream(InputStream is) throws IOException, JSONException {
+	private static String getTextFromInputStream(InputStream is) throws IOException {
 		BufferedReader rd = new BufferedReader(new InputStreamReader(is, Charset.forName("UTF-8")));
-		String jsonText = readAll(rd);
-		return new JSONObject(jsonText);
+		return readAll(rd);
+	}
+
+	public static JSONObject readJsonObjectFromInputStream(InputStream is) throws IOException, JSONException {
+		return new JSONObject(getTextFromInputStream(is));
+	}
+
+	public static JSONArray readJsonArrayFromInputStream(InputStream is) throws IOException, JSONException {
+		return new JSONArray(getTextFromInputStream(is));
 	}
 
 	private static String readAll(Reader rd) throws IOException {

@@ -17,7 +17,8 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import static net.debaterank.server.util.DRHelper.readJsonFromInputStream;
+import static net.debaterank.server.util.DRHelper.readJsonArrayFromInputStream;
+import static net.debaterank.server.util.DRHelper.readJsonObjectFromInputStream;
 import static net.debaterank.server.util.EntryInfo.*;
 
 // <Tournament, <Tournament ID, Event ID>>
@@ -67,7 +68,7 @@ public class TabroomEntryScraper implements Runnable {
 						catch(NumberFormatException e) {
 							break;
 						}
-						tournIDStr.append(Character.toString(t.getLink().toCharArray()[index]));
+						tournIDStr.append(t.getLink().toCharArray()[index]);
 						++index;
 					}
 
@@ -78,14 +79,13 @@ public class TabroomEntryScraper implements Runnable {
 
 					InputStream iStream = url.openStream();
 
-					JSONObject jsonObject = null;
+					JSONArray jsonArray = null;
 					try {
-						jsonObject = readJsonFromInputStream(iStream);
+						jsonArray = readJsonArrayFromInputStream(iStream);
 					} catch(Exception e) {
-						log.warn("Skipping " + t.getLink() + " with date " + t.getDate() + ". This is not a valid JSON object. URL: " + url);
+						log.warn(String.format("Skipping %s (URL: %s). This is not a valid JSON object.", t.getLink(), url));
 						return;
 					}
-					JSONArray eventsArr = jsonObject.getJSONArray("EVENT");
 					boolean ldExists = false;
 					boolean pfExists = false;
 					boolean cxExists = false;
@@ -94,37 +94,41 @@ public class TabroomEntryScraper implements Runnable {
 					sb.append("TID");
 					sb.append(tourn_id);
 					sb.append(" ");
-					for(int i = 0; i < eventsArr.length(); i++) {
+					for(int i = 0; i < jsonArray.length(); i++) {
 						try {
-							JSONObject jObject = eventsArr.getJSONObject(i);
-							int tourn = jObject.getInt("TOURN");
-							int event = jObject.getInt("ID");
-							String eventName = jObject.getString("EVENTNAME");
-							// TODO: Make this testable and sepearate this into its own method. We should assert that any events that match the ID get added
-							if(tourn == tourn_id) {
+							JSONObject tournObject = jsonArray.getJSONObject(i);
+							int id = tournObject.getInt("id");
+							if(tourn_id != id)
+								continue;
+							for(Object o : tournObject.getJSONArray("categories")) {
+								JSONObject eventObject = (JSONObject)o;
+								if(!eventObject.getString("type").equals("debate"))
+									continue;
+								int eventId = eventObject.getInt("id");
+								String eventName = eventObject.getString("name");
 								if (eventName.matches("^.*(LD|Lincoln|L-D).*$")) {
-									String endpoint = "https://www.tabroom.com/api/tourn_published.mhtml?tourn_id=" + tourn + "&event_id=" + event + "&output=json";
+									String endpoint = "https://www.tabroom.com/api/tourn_published.mhtml?tourn_id=" + tourn_id + "&event_id=" + eventId + "&output=json";
 									sb.append("LD");
-									sb.append(event);
+									sb.append(eventId);
 									sb.append(" ");
-									entryInfo.addLdEventRow(new EntryInfo.TabroomEventInfo(tourn_id, event, endpoint));
+									entryInfo.addLdEventRow(new EntryInfo.TabroomEventInfo(tourn_id, eventId, endpoint));
 									ldExists = true;
 								}
 								else if (eventName.matches("^.*(PF|Public Forum|P-F).*$")) {
-									String endpoint = "https://www.tabroom.com/api/tourn_published.mhtml?tourn_id=" + tourn + "&event_id=" + event + "&output=json";
+									String endpoint = "https://www.tabroom.com/api/tourn_published.mhtml?tourn_id=" + tourn_id + "&event_id=" + eventId + "&output=json";
 									sb.append("PF");
-									sb.append(event);
+									sb.append(eventId);
 									sb.append(" ");
-									entryInfo.addPfEventRow(new EntryInfo.TabroomEventInfo(tourn_id, event, endpoint));
+									entryInfo.addPfEventRow(new EntryInfo.TabroomEventInfo(tourn_id, eventId, endpoint));
 									pfExists = true;
 								}
 								// eventName.matches("^.*(CX|Cross|Examination|C-X|Policy|Open|JV|Novice).*$")
 								else if (!eventName.matches("^.*(Communication Analysis|Impromptu|Informative|Interp|IPDA|Persuasion|POI|Prose|Speech|LD|Lincoln|L-D|PF|Public Forum|P-F).*$")) {
-									String endpoint = "https://www.tabroom.com/api/tourn_published.mhtml?tourn_id=" + tourn + "&event_id=" + event + "&output=json";
+									String endpoint = "https://www.tabroom.com/api/tourn_published.mhtml?tourn_id=" + tourn_id + "&event_id=" + eventId + "&output=json";
 									sb.append("CX");
-									sb.append(event);
+									sb.append(eventId);
 									sb.append(" ");
-									entryInfo.addCxEventRow(new EntryInfo.TabroomEventInfo(tourn_id, event, endpoint));
+									entryInfo.addCxEventRow(new EntryInfo.TabroomEventInfo(tourn_id, eventId, endpoint));
 									cxExists = true;
 								} else {
 									log.fatal(t.getLink() + " Error - unassigned event: " + eventName);
