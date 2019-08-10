@@ -1,6 +1,6 @@
 package net.debaterank.server.util;
 
-import com.sun.org.apache.xml.internal.security.utils.Base64;
+import org.apache.commons.codec.binary.Base64;
 import net.debaterank.server.models.Tournament;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -153,7 +153,7 @@ public class EntryInfo <T extends Serializable> implements Serializable {
 			e.printStackTrace();
 			return null;
 		}
-		byte[] hash = md.digest(Base64.encode(t.getLink().getBytes()).getBytes());
+		byte[] hash = md.digest(Base64.encodeBase64(t.getLink().getBytes()));
 		StringBuilder sb = new StringBuilder();
 		for(byte b : hash)
 			sb.append(String.format("%02x", b));
