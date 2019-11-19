@@ -9,6 +9,7 @@ import net.debaterank.server.util.ConfigUtil;
 import net.debaterank.server.util.EntryInfo;
 import net.debaterank.server.modules.jot.JOTEntryScraper;
 import net.debaterank.server.util.HibernateUtil;
+import net.sf.ehcache.CacheManager;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.hibernate.Session;
@@ -39,6 +40,10 @@ public class Server {
 		///////////////
 		// Variables //
 		///////////////
+
+		log.info("Debaters in cache: " + CacheManager.ALL_CACHE_MANAGERS.get(0).getCache("net.debaterank.server.models.Debater").getSize());
+		HibernateUtil.loadCache();
+		log.info("Debaters in cache: " + CacheManager.ALL_CACHE_MANAGERS.get(0).getCache("net.debaterank.server.models.Debater").getSize());
 
 		ModuleManager moduleManager = new ModuleManager();
 		WorkerPoolManager workerManager = new WorkerPoolManager();

@@ -4,6 +4,7 @@ import net.debaterank.server.util.HibernateUtil;
 import net.debaterank.server.util.NameTokenizer;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
+import org.hibernate.annotations.CacheConcurrencyStrategy;
 
 import javax.persistence.*;
 
@@ -14,6 +15,15 @@ import static net.debaterank.server.util.DRHelper.replaceNull;
 
 @Entity
 @Table
+@Cacheable
+@org.hibernate.annotations.Cache(usage = CacheConcurrencyStrategy.READ_ONLY)
+/**
+ * Note: Cache is read-only, so this application shouldn't make any updates to the object. This is expected because
+ * this server should function as an unmanaged, single instance scraper only. Note: if this application is changed
+ * to be distributed then cache usage should either be shared across the nodes OR turned off entirely
+ * Updates to this object should be make in a separate application (with moderation). The cache should be reset
+ * or this server can be restarted after changes are pushed
+ */
 public class Judge {
 
 	@Id
@@ -117,6 +127,16 @@ public class Judge {
 				}
 			}
 			return null;
+		} finally {
+			session.close();
+		}
+	}
+
+	public static List<Judge> getJudges() {
+		Session session = HibernateUtil.getSession();
+		try {
+			return (List<Judge>) session.createQuery("from Judge")
+					.getResultList();
 		} finally {
 			session.close();
 		}

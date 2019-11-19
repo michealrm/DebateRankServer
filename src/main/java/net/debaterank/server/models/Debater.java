@@ -2,10 +2,18 @@ package net.debaterank.server.models;
 
 import net.debaterank.server.util.HibernateUtil;
 import net.debaterank.server.util.NameTokenizer;
+import org.hibernate.Criteria;
+import org.hibernate.SessionFactory;
+import org.hibernate.annotations.Cache;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
+import org.hibernate.annotations.CacheConcurrencyStrategy;
+import org.hibernate.criterion.Restrictions;
 
 import javax.persistence.*;
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.Root;
 import java.io.Serializable;
 import java.util.List;
 
@@ -15,6 +23,15 @@ import static net.debaterank.server.util.DRHelper.isSameName;
 
 @Entity
 @Table
+@Cacheable
+@Cache(usage = CacheConcurrencyStrategy.READ_ONLY)
+/**
+ * Note: Cache is read-only, so this application shouldn't make any updates to the object. This is expected because
+ * this server should function as an unmanaged, single instance scraper only. Note: if this application is changed
+ * to be distributed then cache usage should either be shared across the nodes OR turned off entirely
+ * Updates to this object should be make in a separate application (with moderation). The cache should be reset
+ * or this server can be restarted after changes are pushed
+ */
 public class Debater implements Serializable {
 
 	@Id
@@ -83,14 +100,51 @@ public class Debater implements Serializable {
 				.getSingleResult();
 	}
 
+	public static List<Debater> getDebaters() {
+		Session session = HibernateUtil.getSession();
+		try {
+			CriteriaQuery<Debater> query = session.getCriteriaBuilder().createQuery(Debater.class);
+			query.select(
+					query.from(Debater.class)
+			);
+			return session.createQuery(query)
+					.setCacheable(true)
+					.list();
+		} finally {
+			session.close();
+		}
+	}
+
+	private static String toLowerCase(String s) {
+		if(s == null)
+			return null;
+		else
+			return s.toLowerCase();
+	}
+
 	public static Debater getDebater(Debater debater) {
 		if(debater == null) return null;
 		Session session = HibernateUtil.getSession();
 		try {
-			List<Debater> results = (List<Debater>) session.createQuery("from Debater where first = :f and last = :l")
-					.setParameter("f", debater.getFirst())
-					.setParameter("l", debater.getLast())
-					.getResultList();
+			CriteriaBuilder builder = session.getCriteriaBuilder();
+
+			CriteriaQuery<Debater> query = builder.createQuery(Debater.class);
+			Root<Debater> root = query.from(Debater.class);
+			query.where(
+					builder.or(
+							builder.equal(
+								builder.lower(root.get("first")),
+								toLowerCase(debater.getFirst())
+							),
+							builder.equal(
+								builder.lower(root.get("last")),
+								toLowerCase(debater.getLast())
+							)
+					)
+			);
+			List<Debater> results = session.createQuery(query)
+					.setCacheable(true)
+					.list();
 			for (Debater d : results) {
 				if (debater.equals(d)) {
 					replaceNull(d, debater);

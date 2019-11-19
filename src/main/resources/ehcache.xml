@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- refer to https://www.ehcache.org/documentation/2.7/configuration/data-life.html -->
+<ehcache>
+    <cache
+        name="net.debaterank.server.models.Debater"
+        maxEntriesLocalHeap="0"
+        eternal="false"
+        timeToIdleSeconds="120"
+        timeToLiveSeconds="600"
+     />
+    <cache
+        name="net.debaterank.server.models.Judge"
+        maxEntriesLocalHeap="0"
+        eternal="false"
+        timeToIdleSeconds="120"
+        timeToLiveSeconds="600"
+    />
+</ehcache>
