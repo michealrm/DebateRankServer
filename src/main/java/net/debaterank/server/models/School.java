@@ -3,6 +3,7 @@ package net.debaterank.server.models;
 import net.debaterank.server.util.HibernateUtil;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
+import org.hibernate.annotations.CacheConcurrencyStrategy;
 
 import javax.persistence.*;
 import java.io.Serializable;
@@ -34,7 +35,7 @@ public class School implements Serializable {
 	public static School getSchool(School school) {
 		Session session = HibernateUtil.getSession();
 		try {
-			School result = (School)session.createQuery("select s from School s where name is :n")
+			School result = (School)session.createQuery("select s from School s where name=:n")
 					.setParameter("n", school.getName())
 					.uniqueResult();
 			return result;

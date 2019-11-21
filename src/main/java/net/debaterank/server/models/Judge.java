@@ -7,6 +7,9 @@ import org.hibernate.Transaction;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
 
 import javax.persistence.*;
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.Root;
 
 import java.util.List;
 
@@ -112,18 +115,63 @@ public class Judge {
 		this.suffix = suffix;
 	}
 
+	public static Judge getJudgeFromLastName(String last, School school) {
+		Session session = HibernateUtil.getSession();
+		return (Judge)session.createQuery("from Judge where last = :n and school = :s ")
+				.setParameter("n", last)
+				.setParameter("s", school)
+				.getSingleResult();
+	}
+
+	public static List<Judge> getJudges() {
+		Session session = HibernateUtil.getSession();
+		try {
+			CriteriaQuery<Judge> query = session.getCriteriaBuilder().createQuery(Judge.class);
+			query.select(
+					query.from(Judge.class)
+			);
+			return session.createQuery(query)
+					.setCacheable(true)
+					.list();
+		} finally {
+			session.close();
+		}
+	}
+
+	private static String toLowerCase(String s) {
+		if(s == null)
+			return null;
+		else
+			return s.toLowerCase();
+	}
+
 	public static Judge getJudge(Judge judge) {
 		if(judge == null) return null;
 		Session session = HibernateUtil.getSession();
 		try {
-			List<Judge> results = (List<Judge>) session.createQuery("from Judge where first = :f and last = :l")
-					.setParameter("f", judge.getFirst())
-					.setParameter("l", judge.getLast())
-					.getResultList();
-			for (Judge j : results) {
-				if (judge.equals(j)) {
-					replaceNull(j, judge);
-					return j;
+			CriteriaBuilder builder = session.getCriteriaBuilder();
+
+			CriteriaQuery<Judge> query = builder.createQuery(Judge.class);
+			Root<Judge> root = query.from(Judge.class);
+			query.where(
+					builder.or(
+							builder.equal(
+									builder.lower(root.get("first")),
+									toLowerCase(judge.getFirst())
+							),
+							builder.equal(
+									builder.lower(root.get("last")),
+									toLowerCase(judge.getLast())
+							)
+					)
+			);
+			List<Judge> results = session.createQuery(query)
+					.setCacheable(true)
+					.list();
+			for (Judge d : results) {
+				if (judge.equals(d)) {
+					replaceNull(d, judge);
+					return d;
 				}
 			}
 			return null;
@@ -132,20 +180,10 @@ public class Judge {
 		}
 	}
 
-	public static List<Judge> getJudges() {
-		Session session = HibernateUtil.getSession();
-		try {
-			return (List<Judge>) session.createQuery("from Judge")
-					.getResultList();
-		} finally {
-			session.close();
-		}
-	}
-
 	public static Judge getJudgeOrInsert(Judge judge) {
 		if(judge == null) return null;
-		Judge j = getJudge(judge);
-		if(j != null) return j;
+		Judge d = getJudge(judge);
+		if(d != null) return d;
 		return insertJudge(judge);
 	}
 
