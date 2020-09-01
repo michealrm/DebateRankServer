@@ -247,6 +247,12 @@ public class LD implements Runnable {
 											if (left == null)
 												left = debater;
 											else {
+												try {
+													left.childNode(0).toString();
+													debater.childNode(0).toString();
+												} catch(Exception e) {
+													continue;
+												}
 												String leftSchool = null,
 														rightSchool = null,
 														leftText = left.childNode(0).toString(),

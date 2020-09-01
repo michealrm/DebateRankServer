@@ -116,7 +116,14 @@ public class DuoEvent<E, R extends DuoRound, B extends DuoBallot<R>> implements 
                 int id = jObject.getInt("ID");
                 String first = jObject.getString("FIRST");
                 String last = jObject.getString("LAST");
-                School school = schools.get(jObject.getInt("SCHOOL"));
+                School school = null;
+                try {
+                    String schoolStr = jObject.getString("SCHOOL");
+                    int schoolId = Integer.parseInt(schoolStr);
+                    school = schools.get(schoolId);
+                } catch(Exception e) {
+                    log.warn("Could not convert  " + jObject.get("SCHOOL") + " to an integer");
+                }
                 Team team;
                 if ((team = competitors.get(entry)) == null) {
                     team = new Team();

@@ -19,7 +19,10 @@ public class DRHelper {
 	public static final int MAX_RETRY = 5;
 
 	public static boolean isSameName(String str1, String str2) {
-		return (str1 == null && str2 == null) || (str1 != null && cleanString(str1).equals(cleanString(str2)));
+		return (str1 == null && str2 == null) ||
+				(str1 == null && str2.equals("null")) ||
+				(str1.equals("null") && str2 == null) ||
+				(str1 != null && cleanString(str1).equals(cleanString(str2)));
 	}
 
 	public static String cleanString(String str) {

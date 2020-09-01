@@ -370,6 +370,12 @@ public class DuoEvent<E, R extends DuoRound, B extends DuoBallot<R>> implements 
                                         if(left == null)
                                             left = team;
                                         else {
+                                            try {
+                                                left.childNode(0).toString();
+                                                team.childNode(0).toString();
+                                            } catch(Exception e) {
+                                                continue;
+                                            }
                                             String leftSchool = null,
                                                     rightSchool = null,
                                                     leftText = left.childNode(0).toString(),
@@ -395,7 +401,7 @@ public class DuoEvent<E, R extends DuoRound, B extends DuoBallot<R>> implements 
                                                 l = getTeamFromLastName(competitorsList, leftNames[0], leftNames[1], leftSchool);
                                             }
                                             Team r;
-                                            if(rightText.contains("&nbsp;"))
+                                            if(rightText.contains("&nbsp;") || leftNames.length < 2)
                                                 r = null;
                                             else {
                                                 r = getTeamFromLastName(competitorsList, leftNames[0], leftNames[1], rightSchool);
