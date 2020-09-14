@@ -47,65 +47,77 @@ public class Server {
 		session = HibernateUtil.getSession();
 		transaction = session.beginTransaction();
 
-		List<Object[]> debates = session.createSQLQuery("SELECT ld.id,tournament_id, a_id, n_id, string_agg(b.decision, ',') " +
-				"FROM LDRound ld JOIN Tournament AS t ON t.id=ld.tournament_id JOIN ldballot AS b ON ld.id=b.round_id " +
-				"WHERE tournament_id IN (SELECT id FROM Tournament WHERE date>'2016-07-01 00:00:00.000') AND NOT a_id=n_id " +
-				"GROUP BY t.date,tournament_id,round,a_id,n_id,ld.id ORDER BY t.date, round").list();
-		ArrayList<Rating> ratings = new ArrayList<Rating>();
-		RatingCalculator ratingSystem = new RatingCalculator(0.06, 0.5);
-		RatingPeriodResults results = new RatingPeriodResults();
+		List<String> seasons = new ArrayList<>();
+		List<Double> seasonsResult = session.createSQLQuery("SELECT DISTINCT EXTRACT(year FROM date) FROM tournament " +
+				"ORDER BY EXTRACT(year FROM date)").list();
+		for(Double d : seasonsResult)
+			seasons.add(String.valueOf(d.intValue()));
 
-		for(Object[] d : debates) {
-			Rating aff = null, neg = null;
-			for(Rating rating : ratings) {
-				if(rating.getUid().equals(String.valueOf(d[2])))
-					aff = rating;
-				if(rating.getUid().equals(String.valueOf(d[3])))
-					neg = rating;
-				if(aff != null && neg != null)
-					break;
+		for(String season : seasons) {
+			String end = String.valueOf(Integer.parseInt(season) + 1);
+			List<Object[]> debates = session.createSQLQuery("SELECT ld.id,tournament_id, a_id, n_id, " +
+					"string_agg(b.decision, ',') FROM LDRound ld JOIN Tournament AS t ON t.id=ld.tournament_id JOIN " +
+					"ldballot AS b ON ld.id=b.round_id WHERE tournament_id IN (SELECT id FROM Tournament WHERE " +
+					"date>='" + season + "-07-01 00:00:00.000' AND date<'" + end + "-07-01 00:00:00.000') AND NOT a_id=n_id AND bye=false AND aAfter=0 GROUP BY t.date," +
+					"tournament_id,round,a_id,n_id,ld.id ORDER BY t.date, round")
+					.list();
+
+			HashMap<String, Rating> ratings = new HashMap<>();
+			for(Rating r : Rating.getRatings(season))
+				ratings.put(r.getUid(), r);
+
+			RatingCalculator ratingSystem = new RatingCalculator(0.06, 0.5);
+			RatingPeriodResults results = new RatingPeriodResults();
+
+			for (Object[] d : debates) {
+				Rating aff = null, neg = null;
+				aff = ratings.get(String.valueOf(d[2]));
+				neg = ratings.get(String.valueOf(d[3]));
+
+				if (aff == null) {
+					aff = new Rating(String.valueOf(d[2]), ratingSystem, season);
+					ratings.put(aff.getUid(), aff);
+				}
+				if (neg == null) {
+					neg = new Rating(String.valueOf(d[3]), ratingSystem, season);
+					ratings.put(neg.getUid(), neg);
+				}
+
+				int affBallots = 0;
+				int totalBallots = 0;
+				for (String s : String.valueOf(d[4]).split(",")) {
+					if (s.equals("Aff"))
+						affBallots++;
+					totalBallots++;
+				}
+				double affWinPercentage = (double) affBallots / totalBallots;
+
+				if (affWinPercentage > .5)
+					results.addResult(aff, neg);
+				else
+					results.addResult(neg, aff);
+				double aBefore = aff.getRating();
+				double nBefore = neg.getRating();
+				ratingSystem.updateRatings(results);
+				double aAfter = aff.getRating();
+				double nAfter = neg.getRating();
+
+				LDRound round = (LDRound) session.createQuery("from LDRound where id = :i")
+						.setParameter("i", ((BigInteger) d[0]).longValue())
+						.getSingleResult();
+				round.setaBefore(aBefore);
+				round.setnBefore(nBefore);
+				round.setaAfter(aAfter);
+				round.setnAfter(nAfter);
+				session.saveOrUpdate(round);
 			}
-
-			if(aff == null) {
-				aff = new Rating(String.valueOf(d[2]), ratingSystem);
-				ratings.add(aff);
-			}
-			if(neg == null) {
-				neg = new Rating(String.valueOf(d[3]), ratingSystem);
-			}
-
-			int affBallots = 0;
-			int totalBallots = 0;
-			for(String s : String.valueOf(d[4]).split(",")) {
-				if (s.equals("Aff"))
-					affBallots++;
-				totalBallots++;
-			}
-			double affWinPercentage = (double)affBallots / totalBallots;
-
-			if(affWinPercentage > .5)
-				results.addResult(aff, neg);
-			else
-				results.addResult(neg, aff);
-			double aBefore = aff.getRating();
-			double nBefore = neg.getRating();
-			ratingSystem.updateRatings(results);
-			double aAfter = aff.getRating();
-			double nAfter = neg.getRating();
-
-			LDRound round = (LDRound)session.createQuery("from LDRound where id = :i")
-					.setParameter("i",((BigInteger)d[0]).longValue())
-					.getSingleResult();
-			round.setaBefore(aBefore);
-			round.setnBefore(nBefore);
-			round.setaAfter(aAfter);
-			round.setnAfter(nAfter);
-			session.persist(round);
+			for(Rating r : ratings.values())
+				session.saveOrUpdate(r);
 		}
-
 		transaction.commit();
 
 
+		transaction = session.beginTransaction();
 
 		///////////////
 		// Variables //

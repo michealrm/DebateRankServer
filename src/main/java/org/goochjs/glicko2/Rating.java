@@ -6,6 +6,16 @@
  */
 package org.goochjs.glicko2;
 
+import net.debaterank.server.models.Debater;
+import net.debaterank.server.util.HibernateUtil;
+import org.hibernate.Session;
+
+import javax.persistence.*;
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.Root;
+import java.util.List;
+
 /**
  * Holds an individual's Glicko-2 rating.
  *
@@ -15,8 +25,13 @@ package org.goochjs.glicko2;
  *
  * @author Jeremy Gooch
  */
+@Entity
+@Table
 public class Rating {
 
+	@Id
+	@GeneratedValue(strategy = GenerationType.SEQUENCE)
+	private Long id;
 	private String uid; // not actually used by the calculation engine but useful to track whose rating is whose
 	private double rating;
 	private double ratingDeviation;
@@ -27,6 +42,8 @@ public class Rating {
 	private double workingRating;
 	private double workingRatingDeviation;
 	private double workingVolatility;
+
+	private String season;
 	
 	/**
 	 * 
@@ -45,6 +62,27 @@ public class Rating {
 		this.rating = initRating;
 		this.ratingDeviation = initRatingDeviation;
 		this.volatility = initVolatility;
+	}
+
+	public Rating(String uid, RatingCalculator ratingSystem, String season) {
+		this.uid = uid;
+		this.rating = ratingSystem.getDefaultRating();
+		this.ratingDeviation = ratingSystem.getDefaultRatingDeviation();
+		this.volatility = ratingSystem.getDefaultVolatility();
+		this.season = season;
+	}
+
+	public Rating() {}
+
+	public static List<Rating> getRatings(String season) {
+		Session session = HibernateUtil.getSession();
+		try {
+			return session.createQuery("FROM Rating WHERE season=:s")
+					.setParameter("s", season)
+					.list();
+		} finally {
+			session.close();
+		}
 	}
 
 	/**
