@@ -20,6 +20,7 @@ public class DuoRound {
     private boolean bye;
     private String round;
     private String absUrl;
+    private double aBefore, aAfter, nBefore, nAfter;
 
     public DuoRound() {}
 

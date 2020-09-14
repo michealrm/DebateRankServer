@@ -1,5 +1,7 @@
 package net.debaterank.server;
 
+import net.debaterank.server.models.Debater;
+import net.debaterank.server.models.LDRound;
 import net.debaterank.server.models.Tournament;
 import net.debaterank.server.modules.ModuleManager;
 import net.debaterank.server.modules.PoolSizeException;
@@ -12,6 +14,9 @@ import net.debaterank.server.util.HibernateUtil;
 import net.sf.ehcache.CacheManager;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.goochjs.glicko2.Rating;
+import org.goochjs.glicko2.RatingCalculator;
+import org.goochjs.glicko2.RatingPeriodResults;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.jsoup.Jsoup;
@@ -20,6 +25,7 @@ import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
 import java.io.IOException;
+import java.math.BigInteger;
 import java.net.SocketTimeoutException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -36,6 +42,70 @@ public class Server {
 
 		Session session = HibernateUtil.getSession();
 		Transaction transaction = session.beginTransaction();
+
+
+		session = HibernateUtil.getSession();
+		transaction = session.beginTransaction();
+
+		List<Object[]> debates = session.createSQLQuery("SELECT ld.id,tournament_id, a_id, n_id, string_agg(b.decision, ',') " +
+				"FROM LDRound ld JOIN Tournament AS t ON t.id=ld.tournament_id JOIN ldballot AS b ON ld.id=b.round_id " +
+				"WHERE tournament_id IN (SELECT id FROM Tournament WHERE date>'2016-07-01 00:00:00.000') AND NOT a_id=n_id " +
+				"GROUP BY t.date,tournament_id,round,a_id,n_id,ld.id ORDER BY t.date, round").list();
+		ArrayList<Rating> ratings = new ArrayList<Rating>();
+		RatingCalculator ratingSystem = new RatingCalculator(0.06, 0.5);
+		RatingPeriodResults results = new RatingPeriodResults();
+
+		for(Object[] d : debates) {
+			Rating aff = null, neg = null;
+			for(Rating rating : ratings) {
+				if(rating.getUid().equals(String.valueOf(d[2])))
+					aff = rating;
+				if(rating.getUid().equals(String.valueOf(d[3])))
+					neg = rating;
+				if(aff != null && neg != null)
+					break;
+			}
+
+			if(aff == null) {
+				aff = new Rating(String.valueOf(d[2]), ratingSystem);
+				ratings.add(aff);
+			}
+			if(neg == null) {
+				neg = new Rating(String.valueOf(d[3]), ratingSystem);
+			}
+
+			int affBallots = 0;
+			int totalBallots = 0;
+			for(String s : String.valueOf(d[4]).split(",")) {
+				if (s.equals("Aff"))
+					affBallots++;
+				totalBallots++;
+			}
+			double affWinPercentage = (double)affBallots / totalBallots;
+
+			if(affWinPercentage > .5)
+				results.addResult(aff, neg);
+			else
+				results.addResult(neg, aff);
+			double aBefore = aff.getRating();
+			double nBefore = neg.getRating();
+			ratingSystem.updateRatings(results);
+			double aAfter = aff.getRating();
+			double nAfter = neg.getRating();
+
+			LDRound round = (LDRound)session.createQuery("from LDRound where id = :i")
+					.setParameter("i",((BigInteger)d[0]).longValue())
+					.getSingleResult();
+			round.setaBefore(aBefore);
+			round.setnBefore(nBefore);
+			round.setaAfter(aAfter);
+			round.setnAfter(nAfter);
+			session.persist(round);
+		}
+
+		transaction.commit();
+
+
 
 		///////////////
 		// Variables //
@@ -221,6 +291,18 @@ public class Server {
 
 		// Execute //
 		execute("tournament parsing", workerManager, moduleManager);
+
+		//////////////
+		// Glicko-2 //
+		//////////////
+
+
+		// no multithreading because they have to be processed in order
+		// to calcuate rating to rating
+
+		// group by tournament, round
+		// join round, ballot, tournament
+		// select a, n, ballots
 
 		workerManager.shutdown();
 		moduleManager.shutdown();

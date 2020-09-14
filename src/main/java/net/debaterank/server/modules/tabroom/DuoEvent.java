@@ -187,6 +187,7 @@ public class DuoEvent<E, R extends DuoRound, B extends DuoBallot<R>> implements 
                 R r = newRound(t);
                 r.setBye(bye);
                 r.setRound(roundStrings.get(round));
+                r.setAbsUrl(t.getLink());
 
                 panels.put(id, r);
             }
