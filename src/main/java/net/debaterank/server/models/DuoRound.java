@@ -34,6 +34,38 @@ public class DuoRound {
         this.n = n;
     }
 
+    public double getaBefore() {
+        return aBefore;
+    }
+
+    public void setaBefore(double aBefore) {
+        this.aBefore = aBefore;
+    }
+
+    public double getaAfter() {
+        return aAfter;
+    }
+
+    public void setaAfter(double aAfter) {
+        this.aAfter = aAfter;
+    }
+
+    public double getnBefore() {
+        return nBefore;
+    }
+
+    public void setnBefore(double nBefore) {
+        this.nBefore = nBefore;
+    }
+
+    public double getnAfter() {
+        return nAfter;
+    }
+
+    public void setnAfter(double nAfter) {
+        this.nAfter = nAfter;
+    }
+
     public boolean isBye() {
         return bye;
     }

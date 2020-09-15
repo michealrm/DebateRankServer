@@ -16,6 +16,27 @@ public class LDRound {
 	@JoinColumn
 	private Debater a;
 
+	@ManyToOne
+	@JoinColumn
+	private Debater n;
+	private boolean bye;
+	private String round;
+	private String absUrl;
+	private double aBefore, aAfter, nBefore, nAfter;
+
+	public LDRound(Tournament tournament) {
+		this.tournament = tournament;
+	}
+
+	public LDRound(Tournament tournament, Debater a, Debater n) {
+		this.tournament = tournament;
+		this.a = a;
+		this.n = n;
+	}
+
+	public LDRound() {
+	}
+
 	public double getaBefore() {
 		return aBefore;
 	}
@@ -46,27 +67,6 @@ public class LDRound {
 
 	public void setnAfter(double nAfter) {
 		this.nAfter = nAfter;
-	}
-
-	@ManyToOne
-	@JoinColumn
-	private Debater n;
-	private boolean bye;
-	private String round;
-	private String absUrl;
-	private double aBefore, aAfter, nBefore, nAfter;
-
-	public LDRound(Tournament tournament) {
-		this.tournament = tournament;
-	}
-
-	public LDRound(Tournament tournament, Debater a, Debater n) {
-		this.tournament = tournament;
-		this.a = a;
-		this.n = n;
-	}
-
-	public LDRound() {
 	}
 
 	public Long getId() {

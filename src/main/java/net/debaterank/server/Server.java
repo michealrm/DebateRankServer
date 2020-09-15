@@ -3,6 +3,7 @@ package net.debaterank.server;
 import net.debaterank.server.models.Debater;
 import net.debaterank.server.models.LDRound;
 import net.debaterank.server.models.Tournament;
+import net.debaterank.server.modules.Glicko2;
 import net.debaterank.server.modules.ModuleManager;
 import net.debaterank.server.modules.PoolSizeException;
 import net.debaterank.server.modules.WorkerPoolManager;
@@ -53,89 +54,6 @@ public class Server {
 
 		ModuleManager moduleManager = new ModuleManager();
 		WorkerPoolManager workerManager = new WorkerPoolManager();
-
-		session = HibernateUtil.getSession();
-		transaction = session.beginTransaction();
-
-		List<String> seasons = new ArrayList<>();
-		List<Double> seasonsResult = session.createSQLQuery("SELECT DISTINCT EXTRACT(year FROM date) FROM tournament " +
-				"ORDER BY EXTRACT(year FROM date)").list();
-		for(Double d : seasonsResult)
-			seasons.add(String.valueOf(d.intValue()));
-
-		for(String season : seasons) {
-			String end = String.valueOf(Integer.parseInt(season) + 1);
-			List<Object[]> debates = session.createSQLQuery("SELECT ld.id,tournament_id, a_id, n_id, " +
-					"string_agg(b.decision, ',') FROM LDRound ld JOIN Tournament AS t ON t.id=ld.tournament_id " +
-					"JOIN ldballot AS b ON ld.id=b.round_id WHERE tournament_id IN (SELECT id FROM Tournament WHERE " +
-					"date>='" + season + "-07-01 00:00:00.000' AND date<'" + end + "-07-01 00:00:00.000') AND NOT " +
-					"a_id=n_id AND bye=false AND aAfter=0 GROUP BY t.date,tournament_id,round,a_id,n_id,ld.id ORDER BY " +
-					"t.date, round")
-					.list();
-
-			HashMap<String, Rating> ratings = new HashMap<>();
-			for(Rating r : Rating.getRatings(season))
-				ratings.put(r.getUid(), r);
-
-			RatingCalculator ratingSystem = new RatingCalculator(0.03, 0.5);
-			RatingPeriodResults results = new RatingPeriodResults();
-
-			for (Object[] d : debates) {
-				Rating aff = null, neg = null;
-				aff = ratings.get(String.valueOf(d[2]));
-				neg = ratings.get(String.valueOf(d[3]));
-
-				if (aff == null) {
-					aff = new Rating(String.valueOf(d[2]), ratingSystem, season);
-					ratings.put(aff.getUid(), aff);
-				}
-				if (neg == null) {
-					neg = new Rating(String.valueOf(d[3]), ratingSystem, season);
-					ratings.put(neg.getUid(), neg);
-				}
-
-				int affBallots = 0;
-				int totalBallots = 0;
-				for (String s : String.valueOf(d[4]).split(",")) {
-					if (s.equals("Aff"))
-						affBallots++;
-					totalBallots++;
-				}
-				double affWinPercentage = (double) affBallots / totalBallots;
-
-				if (affWinPercentage > .5)
-					results.addResult(aff, neg);
-				else
-					results.addResult(neg, aff);
-				double aBefore = aff.getRating();
-				double nBefore = neg.getRating();
-				ratingSystem.updateRatings(results);
-				double aAfter = aff.getRating();
-				double nAfter = neg.getRating();
-
-				final Session finalSession = HibernateUtil.getSession();
-				final Transaction finalTransaction = finalSession.beginTransaction();
-				moduleManager.newModule(() -> {
-					LDRound round = (LDRound) finalSession.createQuery("from LDRound where id = :i")
-							.setParameter("i", ((BigInteger) d[0]).longValue())
-							.getSingleResult();
-					round.setaBefore(aBefore);
-					round.setnBefore(nBefore);
-					round.setaAfter(aAfter);
-					round.setnAfter(nAfter);
-					finalSession.saveOrUpdate(round);
-					finalTransaction.commit();
-				});
-			}
-			for(Rating r : ratings.values())
-				session.saveOrUpdate(r);
-		}
-		transaction.commit();
-		session.close();
-
-		session = HibernateUtil.getSession();
-		transaction = session.beginTransaction();
-
 
 
 		HashSet<String> existingLinks = new HashSet<>(session.createQuery("select link from Tournament").list());
@@ -316,13 +234,14 @@ public class Server {
 		// Glicko-2 //
 		//////////////
 
+		moduleManager.newModule(new Glicko2(Glicko2.DebateType.LD, workerManager.newPool()));
+		moduleManager.newModule(new Glicko2(Glicko2.DebateType.PF, workerManager.newPool()));
+		moduleManager.newModule(new Glicko2(Glicko2.DebateType.CX, workerManager.newPool()));
 
-		// no multithreading because they have to be processed in order
-		// to calcuate rating to rating
+		execute("ratings update", workerManager, moduleManager);
 
-		// group by tournament, round
-		// join round, ballot, tournament
-		// select a, n, ballots
+		session = HibernateUtil.getSession();
+		transaction = session.beginTransaction();
 
 		workerManager.shutdown();
 		moduleManager.shutdown();
