@@ -43,6 +43,16 @@ public class Server {
 		Session session = HibernateUtil.getSession();
 		Transaction transaction = session.beginTransaction();
 
+		///////////////
+		// Variables //
+		///////////////
+
+		log.info("Debaters in cache: " + CacheManager.ALL_CACHE_MANAGERS.get(0).getCache("net.debaterank.server.models.Debater").getSize());
+		HibernateUtil.loadCache();
+		log.info("Debaters in cache: " + CacheManager.ALL_CACHE_MANAGERS.get(0).getCache("net.debaterank.server.models.Debater").getSize());
+
+		ModuleManager moduleManager = new ModuleManager();
+		WorkerPoolManager workerManager = new WorkerPoolManager();
 
 		session = HibernateUtil.getSession();
 		transaction = session.beginTransaction();
@@ -56,17 +66,18 @@ public class Server {
 		for(String season : seasons) {
 			String end = String.valueOf(Integer.parseInt(season) + 1);
 			List<Object[]> debates = session.createSQLQuery("SELECT ld.id,tournament_id, a_id, n_id, " +
-					"string_agg(b.decision, ',') FROM LDRound ld JOIN Tournament AS t ON t.id=ld.tournament_id JOIN " +
-					"ldballot AS b ON ld.id=b.round_id WHERE tournament_id IN (SELECT id FROM Tournament WHERE " +
-					"date>='" + season + "-07-01 00:00:00.000' AND date<'" + end + "-07-01 00:00:00.000') AND NOT a_id=n_id AND bye=false AND aAfter=0 GROUP BY t.date," +
-					"tournament_id,round,a_id,n_id,ld.id ORDER BY t.date, round")
+					"string_agg(b.decision, ',') FROM LDRound ld JOIN Tournament AS t ON t.id=ld.tournament_id " +
+					"JOIN ldballot AS b ON ld.id=b.round_id WHERE tournament_id IN (SELECT id FROM Tournament WHERE " +
+					"date>='" + season + "-07-01 00:00:00.000' AND date<'" + end + "-07-01 00:00:00.000') AND NOT " +
+					"a_id=n_id AND bye=false AND aAfter=0 GROUP BY t.date,tournament_id,round,a_id,n_id,ld.id ORDER BY " +
+					"t.date, round")
 					.list();
 
 			HashMap<String, Rating> ratings = new HashMap<>();
 			for(Rating r : Rating.getRatings(season))
 				ratings.put(r.getUid(), r);
 
-			RatingCalculator ratingSystem = new RatingCalculator(0.06, 0.5);
+			RatingCalculator ratingSystem = new RatingCalculator(0.03, 0.5);
 			RatingPeriodResults results = new RatingPeriodResults();
 
 			for (Object[] d : debates) {
@@ -102,33 +113,30 @@ public class Server {
 				double aAfter = aff.getRating();
 				double nAfter = neg.getRating();
 
-				LDRound round = (LDRound) session.createQuery("from LDRound where id = :i")
-						.setParameter("i", ((BigInteger) d[0]).longValue())
-						.getSingleResult();
-				round.setaBefore(aBefore);
-				round.setnBefore(nBefore);
-				round.setaAfter(aAfter);
-				round.setnAfter(nAfter);
-				session.saveOrUpdate(round);
+				final Session finalSession = HibernateUtil.getSession();
+				final Transaction finalTransaction = finalSession.beginTransaction();
+				moduleManager.newModule(() -> {
+					LDRound round = (LDRound) finalSession.createQuery("from LDRound where id = :i")
+							.setParameter("i", ((BigInteger) d[0]).longValue())
+							.getSingleResult();
+					round.setaBefore(aBefore);
+					round.setnBefore(nBefore);
+					round.setaAfter(aAfter);
+					round.setnAfter(nAfter);
+					finalSession.saveOrUpdate(round);
+					finalTransaction.commit();
+				});
 			}
 			for(Rating r : ratings.values())
 				session.saveOrUpdate(r);
 		}
 		transaction.commit();
+		session.close();
 
-
+		session = HibernateUtil.getSession();
 		transaction = session.beginTransaction();
 
-		///////////////
-		// Variables //
-		///////////////
 
-		log.info("Debaters in cache: " + CacheManager.ALL_CACHE_MANAGERS.get(0).getCache("net.debaterank.server.models.Debater").getSize());
-		HibernateUtil.loadCache();
-		log.info("Debaters in cache: " + CacheManager.ALL_CACHE_MANAGERS.get(0).getCache("net.debaterank.server.models.Debater").getSize());
-
-		ModuleManager moduleManager = new ModuleManager();
-		WorkerPoolManager workerManager = new WorkerPoolManager();
 
 		HashSet<String> existingLinks = new HashSet<>(session.createQuery("select link from Tournament").list());
 		ArrayList<Tournament> jotTournaments = new ArrayList<>();
