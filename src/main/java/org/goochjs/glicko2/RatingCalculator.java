@@ -78,7 +78,7 @@ public class RatingCalculator {
 		}
 		
 		// lastly, clear the result set down in anticipation of the next rating period
-		results.clear();
+		//results.clear();
 	}
 
 	

@@ -43,7 +43,7 @@ public class RatingPeriodResults {
 	 * @param winner
 	 * @param loser
 	 */
-	public void addResult(Rating winner, Rating loser, boolean affWinner, int roundID) {
+	public void addResult(Rating winner, Rating loser, boolean affWinner, Long roundID) {
 		Result result = new Result(winner, loser, affWinner, roundID);
 		
 		results.add(result);

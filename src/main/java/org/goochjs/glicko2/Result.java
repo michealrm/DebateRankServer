@@ -22,7 +22,7 @@ public class Result {
 	private boolean affWinner;
 	private double wBefore;
 	private double lBefore;
-	private int roundID;
+	private Long roundID;
 	
 	
 	/**
@@ -31,7 +31,7 @@ public class Result {
 	 * @param winner
 	 * @param loser
 	 */
-	public Result(Rating winner, Rating loser, boolean affWinner, int roundID) {
+	public Result(Rating winner, Rating loser, boolean affWinner, Long roundID) {
 		if ( ! validPlayers(winner, loser) ) {
 			throw new IllegalArgumentException();
 		}
@@ -150,11 +150,11 @@ public class Result {
 		this.lBefore = lBefore;
 	}
 
-	public int getRoundID() {
+	public Long getRoundID() {
 		return roundID;
 	}
 
-	public void setRoundID(int roundID) {
+	public void setRoundID(Long roundID) {
 		this.roundID = roundID;
 	}
 

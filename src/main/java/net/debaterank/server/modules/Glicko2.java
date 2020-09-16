@@ -76,79 +76,12 @@ public class Glicko2 implements Runnable {
             RatingCalculator ratingSystem = new RatingCalculator(0.05, 0.75);
             RatingPeriodResults results = new RatingPeriodResults();
 
-            Date lastDate = null;
             String lastRound = null;
             for (Object[] d : debates) {
-                Date currentDate = (Date)d[5];
                 String currentRound = String.valueOf(d[6]);
-                // if new period save each results before
-                // then calculate new ratings, update ratings, then for each rating assign
-                if(lastDate != null && lastRound != null && (!lastDate.equals(currentDate) || !lastRound.equals(currentRound))) {
-                    results.saveBeforeRatings();
-                    ratingSystem.updateRatings(results);
-
-                    for(Result r : results.getResults()) {
-                        Rating aff = null;
-                        Rating neg = null;
-                        double taBefore = 0;
-                        double tnBefore = 0;
-
-                        if(r.isAffWinner()) {
-                            aff = r.getWinner();
-                            neg = r.getLoser();
-                            taBefore = r.getwBefore();
-                            tnBefore = r.getlBefore();
-                        } else {
-                            aff = r.getLoser();
-                            neg = r.getWinner();
-                            taBefore = r.getlBefore();
-                            tnBefore = r.getwBefore();
-                        }
-
-                        final double aBefore = taBefore;
-                        final double nBefore = tnBefore;
-                        double aAfter = aff.getGlicko2Rating();
-                        double nAfter = neg.getGlicko2Rating();
-
-                        final Session finalSession = HibernateUtil.getSession();
-                        final Transaction finalTransaction = finalSession.beginTransaction();
-                        manager.newModule(() -> {
-                            if (type == DebateType.LD) {
-                                LDRound round = (LDRound) finalSession.createQuery("from LDRound where id = :i")
-                                        .setParameter("i", (r.getRoundID()))
-                                        .getSingleResult();
-                                round.setaBefore(aBefore);
-                                round.setnBefore(nBefore);
-                                round.setaAfter(aAfter);
-                                round.setnAfter(nAfter);
-                                finalSession.saveOrUpdate(round);
-                            }
-                            if (type == DebateType.PF) {
-                                PFRound round = (PFRound) finalSession.createQuery("from PFRound where id = :i")
-                                        .setParameter("i", (r.getRoundID()))
-                                        .getSingleResult();
-                                round.setaBefore(aBefore);
-                                round.setnBefore(nBefore);
-                                round.setaAfter(aAfter);
-                                round.setnAfter(nAfter);
-                                finalSession.saveOrUpdate(round);
-                            }
-                            if (type == DebateType.CX) {
-                                CXRound round = (CXRound) finalSession.createQuery("from CXRound where id = :i")
-                                        .setParameter("i", (r.getRoundID()))
-                                        .getSingleResult();
-                                round.setaBefore(aBefore);
-                                round.setnBefore(nBefore);
-                                round.setaAfter(aAfter);
-                                round.setnAfter(nAfter);
-                                finalSession.saveOrUpdate(round);
-                            }
-                            finalTransaction.commit();
-                            finalSession.close();
-                        });
-                    }
+                if(lastRound != null && !lastRound.equals(currentRound)) {
+                    updateRatings(ratingSystem, results);
                 }
-                lastDate = currentDate;
                 lastRound = currentRound;
 
                 Rating aff = null, neg = null;
@@ -174,15 +107,83 @@ public class Glicko2 implements Runnable {
                 double affWinPercentage = (double) affBallots / totalBallots;
 
                 if (affWinPercentage > .5)
-                    results.addResult(aff, neg, true, ((BigInteger)d[0]).intValue());
+                    results.addResult(aff, neg, true, ((BigInteger)d[0]).longValue());
                 else
-                    results.addResult(neg, aff, false, ((BigInteger)d[0]).intValue());
+                    results.addResult(neg, aff, false, ((BigInteger)d[0]).longValue()   );
             }
             for(Rating r : ratings.values())
                 session.saveOrUpdate(r);
         }
         transaction.commit();
         session.close();
+    }
+
+    private void updateRatings(RatingCalculator ratingSystem, RatingPeriodResults results) {
+        results.saveBeforeRatings();
+        ratingSystem.updateRatings(results);
+
+        for(Result r : results.getResults()) {
+            Rating aff = null;
+            Rating neg = null;
+            double taBefore = 0;
+            double tnBefore = 0;
+
+            if(r.isAffWinner()) {
+                aff = r.getWinner();
+                neg = r.getLoser();
+                taBefore = r.getwBefore();
+                tnBefore = r.getlBefore();
+            } else {
+                aff = r.getLoser();
+                neg = r.getWinner();
+                taBefore = r.getlBefore();
+                tnBefore = r.getwBefore();
+            }
+
+            final double aBefore = taBefore;
+            final double nBefore = tnBefore;
+            double aAfter = aff.getGlicko2Rating();
+            double nAfter = neg.getGlicko2Rating();
+
+            manager.newModule(() -> {
+                Session session = HibernateUtil.getSession();
+                Transaction transaction = session.beginTransaction();
+                if (type == DebateType.LD) {
+                    LDRound round = (LDRound) session.createQuery("from LDRound where id = :i")
+                            .setParameter("i", (r.getRoundID()))
+                            .getSingleResult();
+                    round.setaBefore(aBefore);
+                    round.setnBefore(nBefore);
+                    round.setaAfter(aAfter);
+                    round.setnAfter(nAfter);
+                    session.saveOrUpdate(round);
+                }
+                if (type == DebateType.PF) {
+                    PFRound round = (PFRound) session.createQuery("from PFRound where id = :i")
+                            .setParameter("i", (r.getRoundID()))
+                            .getSingleResult();
+                    round.setaBefore(aBefore);
+                    round.setnBefore(nBefore);
+                    round.setaAfter(aAfter);
+                    round.setnAfter(nAfter);
+                    session.saveOrUpdate(round);
+                }
+                if (type == DebateType.CX) {
+                    CXRound round = (CXRound) session.createQuery("from CXRound where id = :i")
+                            .setParameter("i", (r.getRoundID()))
+                            .getSingleResult();
+                    round.setaBefore(aBefore);
+                    round.setnBefore(nBefore);
+                    round.setaAfter(aAfter);
+                    round.setnAfter(nAfter);
+                    session.saveOrUpdate(round);
+                }
+                transaction.commit();
+                session.close();
+            });
+        }
+
+        results.clear();
     }
 
 }
