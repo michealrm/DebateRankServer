@@ -55,12 +55,19 @@ public class Server {
 		ModuleManager moduleManager = new ModuleManager();
 		WorkerPoolManager workerManager = new WorkerPoolManager();
 
+		//////////////
+		// Glicko-2 //
+		//////////////
+
 		moduleManager.newModule(new Glicko2(Glicko2.DebateType.LD, workerManager.newPool()));
 		moduleManager.newModule(new Glicko2(Glicko2.DebateType.PF, workerManager.newPool()));
 		moduleManager.newModule(new Glicko2(Glicko2.DebateType.CX, workerManager.newPool()));
 
-		execute("ratings update", workerManager, moduleManager);
+		execute("first ratings update", workerManager, moduleManager);
 
+		/////////////////////////
+		// Tournament scraping //
+		/////////////////////////
 
 		HashSet<String> existingLinks = new HashSet<>(session.createQuery("select link from Tournament").list());
 		ArrayList<Tournament> jotTournaments = new ArrayList<>();
@@ -69,9 +76,7 @@ public class Server {
         int tabroomScraped = 0;
         int jotScraped = 0;
 
-        /////////
-		// JOT //
-		/////////
+        // JOT
 
 		long lastTime = System.currentTimeMillis() + 1000; // offset by 1s
 		try {
@@ -121,9 +126,7 @@ public class Server {
 			e.printStackTrace();
 		}
 
-		/////////////
-		// Tabroom //
-		/////////////
+		// Tabroom
 
 		SimpleDateFormat tabroomFormatter = new SimpleDateFormat("MM/dd/yyyy");
         lastTime = System.currentTimeMillis() + 1000; // offset by 1s
@@ -244,7 +247,7 @@ public class Server {
 		moduleManager.newModule(new Glicko2(Glicko2.DebateType.PF, workerManager.newPool()));
 		moduleManager.newModule(new Glicko2(Glicko2.DebateType.CX, workerManager.newPool()));
 
-		execute("ratings update", workerManager, moduleManager);
+		execute("second ratings update", workerManager, moduleManager);
 
 		session = HibernateUtil.getSession();
 		transaction = session.beginTransaction();

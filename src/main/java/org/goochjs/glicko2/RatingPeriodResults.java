@@ -43,21 +43,8 @@ public class RatingPeriodResults {
 	 * @param winner
 	 * @param loser
 	 */
-	public void addResult(Rating winner, Rating loser) {
-		Result result = new Result(winner, loser);
-		
-		results.add(result);
-	}
-	
-	
-	/**
-	 * Record a draw between two players and add to the set.
-	 * 
-	 * @param player1
-	 * @param player2
-	 */
-	public void addDraw(Rating player1, Rating player2) {
-		Result result = new Result(player1, player2, true);
+	public void addResult(Rating winner, Rating loser, boolean affWinner, int roundID) {
+		Result result = new Result(winner, loser, affWinner, roundID);
 		
 		results.add(result);
 	}
@@ -79,6 +66,10 @@ public class RatingPeriodResults {
 		}
 		
 		return filteredResults;
+	}
+
+	public List<Result> getResults() {
+		return results;
 	}
 
 	
@@ -114,5 +105,10 @@ public class RatingPeriodResults {
 	 */
 	public void clear() {
 		results.clear();
+	}
+
+	public void saveBeforeRatings() {
+		for(Result r : results)
+			r.saveBefore();
 	}
 }

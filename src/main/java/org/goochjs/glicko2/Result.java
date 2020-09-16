@@ -19,6 +19,10 @@ public class Result {
 	private boolean isDraw = false;
 	private Rating winner;
 	private Rating loser;
+	private boolean affWinner;
+	private double wBefore;
+	private double lBefore;
+	private int roundID;
 	
 	
 	/**
@@ -27,31 +31,15 @@ public class Result {
 	 * @param winner
 	 * @param loser
 	 */
-	public Result(Rating winner, Rating loser) {
+	public Result(Rating winner, Rating loser, boolean affWinner, int roundID) {
 		if ( ! validPlayers(winner, loser) ) {
 			throw new IllegalArgumentException();
 		}
 
 		this.winner = winner;
 		this.loser = loser;
-	}
-	
-	
-	/**
-	 * Record a draw between two players.
-	 * 
-	 * @param player1
-	 * @param player2
-	 * @param isDraw (must be set to "true")
-	 */
-	public Result(Rating player1, Rating player2, boolean isDraw) {
-		if (! isDraw || ! validPlayers(player1, player2) ) {
-			throw new IllegalArgumentException();
-		}
-		
-		this.winner = player1;
-		this.loser = player2;
-		this.isDraw = true;
+		this.affWinner = affWinner;
+		this.roundID = roundID;
 	}
 
 	
@@ -140,5 +128,38 @@ public class Result {
 	
 	public Rating getLoser() {
 		return this.loser;
+	}
+
+	public boolean isAffWinner() {
+		return affWinner;
+	}
+
+	public double getwBefore() {
+		return wBefore;
+	}
+
+	public void setwBefore(double wBefore) {
+		this.wBefore = wBefore;
+	}
+
+	public double getlBefore() {
+		return lBefore;
+	}
+
+	public void setlBefore(double lBefore) {
+		this.lBefore = lBefore;
+	}
+
+	public int getRoundID() {
+		return roundID;
+	}
+
+	public void setRoundID(int roundID) {
+		this.roundID = roundID;
+	}
+
+	public void saveBefore() {
+		wBefore = winner.getGlicko2Rating();
+		lBefore = loser.getGlicko2Rating();
 	}
 }
