@@ -55,6 +55,12 @@ public class Server {
 		ModuleManager moduleManager = new ModuleManager();
 		WorkerPoolManager workerManager = new WorkerPoolManager();
 
+		moduleManager.newModule(new Glicko2(Glicko2.DebateType.LD, workerManager.newPool()));
+		moduleManager.newModule(new Glicko2(Glicko2.DebateType.PF, workerManager.newPool()));
+		moduleManager.newModule(new Glicko2(Glicko2.DebateType.CX, workerManager.newPool()));
+
+		execute("ratings update", workerManager, moduleManager);
+
 
 		HashSet<String> existingLinks = new HashSet<>(session.createQuery("select link from Tournament").list());
 		ArrayList<Tournament> jotTournaments = new ArrayList<>();

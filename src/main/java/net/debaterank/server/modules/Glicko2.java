@@ -59,12 +59,12 @@ public class Glicko2 implements Runnable {
 
         for(String season : seasons) {
             String end = String.valueOf(Integer.parseInt(season) + 1);
-            List<Object[]> debates = session.createSQLQuery("SELECT e.id,tournament_id, a_id, n_id, " +
-                    "string_agg(b.decision, ',') FROM " + type.getType() + "Round e JOIN Tournament AS t ON " +
-                    "t.id=e.tournament_id JOIN " + type.getType()+ "ballot AS b ON ld.id=b.round_id WHERE tournament_id " +
+            List<Object[]> debates = session.createSQLQuery("SELECT event.id,tournament_id, a_id, n_id, " +
+                    "string_agg(b.decision, ',') FROM " + type.getType() + "Round event JOIN Tournament AS t ON " +
+                    "t.id=event.tournament_id JOIN " + type.getType()+ "Ballot AS b ON event.id=b.round_id WHERE tournament_id " +
                     "IN (SELECT id FROM Tournament WHERE date>='" + season + "-07-01 00:00:00.000' AND date<'" + end +
                     "-07-01 00:00:00.000') AND NOT a_id=n_id AND bye=false AND aAfter=0 GROUP BY t.date,tournament_id," +
-                    "round,a_id,n_id,ld.id ORDER BY t.date, round")
+                    "round,a_id,n_id,event.id ORDER BY t.date, round")
                     .list();
 
             HashMap<String, Rating> ratings = new HashMap<>();
