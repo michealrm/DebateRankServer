@@ -44,6 +44,7 @@ public class Rating {
 	private double workingVolatility;
 
 	private String season;
+	private String event;
 	
 	/**
 	 * 
@@ -64,21 +65,23 @@ public class Rating {
 		this.volatility = initVolatility;
 	}
 
-	public Rating(String uid, RatingCalculator ratingSystem, String season) {
+	public Rating(String uid, RatingCalculator ratingSystem, String season, String event) {
 		this.uid = uid;
 		this.rating = ratingSystem.getDefaultRating();
 		this.ratingDeviation = ratingSystem.getDefaultRatingDeviation();
 		this.volatility = ratingSystem.getDefaultVolatility();
 		this.season = season;
+		this.event = event;
 	}
 
 	public Rating() {}
 
-	public static List<Rating> getRatings(String season) {
+	public static List<Rating> getRatings(String season, String event) {
 		Session session = HibernateUtil.getSession();
 		try {
-			return session.createQuery("FROM Rating WHERE season=:s")
+			return session.createQuery("FROM Rating WHERE season=:s AND event=:e")
 					.setParameter("s", season)
+					.setParameter("e", event)
 					.list();
 		} finally {
 			session.close();

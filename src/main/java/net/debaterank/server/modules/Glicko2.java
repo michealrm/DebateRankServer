@@ -68,10 +68,10 @@ public class Glicko2 implements Runnable {
                     .list();
 
             HashMap<String, Rating> ratings = new HashMap<>();
-            for(Rating r : Rating.getRatings(season))
+            for(Rating r : Rating.getRatings(season, type.getType()))
                 ratings.put(r.getUid(), r);
 
-            RatingCalculator ratingSystem = new RatingCalculator(0.03, 0.5);
+            RatingCalculator ratingSystem = new RatingCalculator(0.02, 0.4);
             RatingPeriodResults results = new RatingPeriodResults();
 
             for (Object[] d : debates) {
@@ -80,11 +80,11 @@ public class Glicko2 implements Runnable {
                 neg = ratings.get(String.valueOf(d[3]));
 
                 if (aff == null) {
-                    aff = new Rating(String.valueOf(d[2]), ratingSystem, season);
+                    aff = new Rating(String.valueOf(d[2]), ratingSystem, season, type.getType());
                     ratings.put(aff.getUid(), aff);
                 }
                 if (neg == null) {
-                    neg = new Rating(String.valueOf(d[3]), ratingSystem, season);
+                    neg = new Rating(String.valueOf(d[3]), ratingSystem, season, type.getType());
                     ratings.put(neg.getUid(), neg);
                 }
 
