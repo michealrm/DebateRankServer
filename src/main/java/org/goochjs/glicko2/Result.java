@@ -159,7 +159,7 @@ public class Result {
 	}
 
 	public void saveBefore() {
-		wBefore = winner.getGlicko2Rating();
-		lBefore = loser.getGlicko2Rating();
+		wBefore = winner.getRating();
+		lBefore = loser.getRating();
 	}
 }

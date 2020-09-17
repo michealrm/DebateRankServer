@@ -109,7 +109,7 @@ public class Glicko2 implements Runnable {
                 if (affWinPercentage > .5)
                     results.addResult(aff, neg, true, ((BigInteger)d[0]).longValue());
                 else
-                    results.addResult(neg, aff, false, ((BigInteger)d[0]).longValue()   );
+                    results.addResult(neg, aff, false, ((BigInteger)d[0]).longValue());
             }
             for(Rating r : ratings.values())
                 session.saveOrUpdate(r);
@@ -142,8 +142,8 @@ public class Glicko2 implements Runnable {
 
             final double aBefore = taBefore;
             final double nBefore = tnBefore;
-            double aAfter = aff.getGlicko2Rating();
-            double nAfter = neg.getGlicko2Rating();
+            double aAfter = aff.getRating();
+            double nAfter = neg.getRating();
 
             manager.newModule(() -> {
                 Session session = HibernateUtil.getSession();
