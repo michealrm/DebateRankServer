@@ -6,7 +6,7 @@ Debate Rank is a free and open source program that scrapes joyoftournaments and 
 ## Requirements
 * JDK 8+
 * Maven
-* Postgres server defined in resources/hibernate.properties (copy hibernate.properties.postgres)
+* Postgres server defined in `resources/hibernate.properties` (copy template `hibernate.properties.postgres`)
 
 ## Installation/Run Instructions
 To run use
