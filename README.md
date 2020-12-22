@@ -13,6 +13,7 @@ To install use
 1. `git clone https://github.com/michealrm/DebateRankServer`
 2. `cd DebateRankServer`
 3. `mvn install`
+
 To run use
 1. `mvn compile`
 2. `mvn exec:java -Dexec.mainClass="net.debaterank.server.Server"`
