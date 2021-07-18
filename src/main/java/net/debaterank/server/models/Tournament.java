@@ -11,6 +11,7 @@ public class Tournament implements Serializable {
 	@Id
 	@GeneratedValue(strategy = GenerationType.SEQUENCE)
     private Long id;
+	private String circuit;
 	private String name;
 	private String link;
 	private String state;
@@ -97,6 +98,8 @@ public class Tournament implements Serializable {
 	public void setDate(Date date) {
 		this.date = date;
 	}
+
+	public void setCircuit(String circuit) {this.circuit = circuit;}
 
 	public Tournament() {
 	}

@@ -105,6 +105,7 @@ public class Server {
                         String state = cols.select("[align=center]").first().text();
                         Date date = formatter.parse(cols.select("[align=right]").first().text());
                         Tournament tournament = new Tournament(name, link, state, date);
+                        tournament.setCircuit("JOT");
                         if (!existingLinks.contains(link)) {
                             jotTournaments.add(tournament);
                             existingLinks.add(link);
@@ -172,6 +173,12 @@ public class Server {
                             Elements cols = rows.get(i).select("td");
                             if (cols.size() > 0) {
                                 Tournament tournament = new Tournament(cols.get(0).text(), cols.get(0).select("a").first().absUrl("href"), null, tabroomFormatter.parse(cols.get(1).text()));
+                                if(circuit.equals("6"))
+                                    tournament.setCircuit("HSNatCir");
+                                else if(circuit.equals("43"))
+                                    tournament.setCircuit("NDTCEDA");
+                                else
+                                    tournament.setCircuit(circuit);
                                 if (!existingLinks.contains(tournament.getLink()) && tournament.getDate().before(new Date())) // Will make sure we don't scrape tournaments happening in the future
                                     tabroomTournaments.add(tournament);
                                 tabroomScraped++;
