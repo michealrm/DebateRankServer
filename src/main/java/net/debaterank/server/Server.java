@@ -3,10 +3,7 @@ package net.debaterank.server;
 import net.debaterank.server.models.Debater;
 import net.debaterank.server.models.LDRound;
 import net.debaterank.server.models.Tournament;
-import net.debaterank.server.modules.Glicko2;
-import net.debaterank.server.modules.ModuleManager;
-import net.debaterank.server.modules.PoolSizeException;
-import net.debaterank.server.modules.WorkerPoolManager;
+import net.debaterank.server.modules.*;
 import net.debaterank.server.modules.tabroom.TabroomEntryScraper;
 import net.debaterank.server.util.ConfigUtil;
 import net.debaterank.server.util.EntryInfo;
@@ -64,6 +61,13 @@ public class Server {
         moduleManager.newModule(new Glicko2(Glicko2.DebateType.CX, workerManager.newPool()));
 
         execute("first ratings update", workerManager, moduleManager);
+
+        //////////////////////////////////////
+        // Set HS / College Level in Rating //
+        //////////////////////////////////////
+
+        moduleManager.newModule(new SetRatingLevel(workerManager.newPool()));
+        execute("update HS/College in Rating", workerManager, moduleManager);
 
         /////////////////////////
         // Tournament scraping //
@@ -255,8 +259,12 @@ public class Server {
 
         execute("second ratings update", workerManager, moduleManager);
 
-        session = HibernateUtil.getSession();
-        transaction = session.beginTransaction();
+        //////////////////////////////////////
+        // Set HS / College Level in Rating //
+        //////////////////////////////////////
+
+        moduleManager.newModule(new SetRatingLevel(workerManager.newPool()));
+        execute("update HS/College in Rating", workerManager, moduleManager);
 
         workerManager.shutdown();
         moduleManager.shutdown();

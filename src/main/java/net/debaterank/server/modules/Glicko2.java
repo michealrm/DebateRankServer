@@ -111,8 +111,9 @@ public class Glicko2 implements Runnable {
                 else
                     results.addResult(neg, aff, false, ((BigInteger)d[0]).longValue());
             }
-            for(Rating r : ratings.values())
+            for(Rating r : ratings.values()) {
                 session.saveOrUpdate(r);
+            }
         }
         transaction.commit();
         session.close();

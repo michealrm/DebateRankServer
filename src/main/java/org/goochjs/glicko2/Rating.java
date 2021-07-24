@@ -32,6 +32,7 @@ public class Rating {
 	@Id
 	@GeneratedValue(strategy = GenerationType.SEQUENCE)
 	private Long id;
+	private String level;
 	private String uid; // not actually used by the calculation engine but useful to track whose rating is whose
 	private double rating;
 	private double ratingDeviation;
@@ -205,5 +206,13 @@ public class Rating {
 
 	public void setWorkingRatingDeviation(double workingRatingDeviation) {
 		this.workingRatingDeviation = workingRatingDeviation;
+	}
+
+	public String getLevel() {
+		return level;
+	}
+
+	public void setLevel(String level) {
+		this.level = level;
 	}
 }

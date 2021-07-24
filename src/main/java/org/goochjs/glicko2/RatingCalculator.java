@@ -18,8 +18,8 @@ import java.util.List;
 public class RatingCalculator {
 
 	private final static double DEFAULT_RATING =  1500.0;
-	private final static double DEFAULT_DEVIATION =  100;
-	private final static double DEFAULT_VOLATILITY =  0.06;
+	private final static double DEFAULT_DEVIATION =  50;
+	private final static double DEFAULT_VOLATILITY =  0.03;
 	private final static double DEFAULT_TAU =  0.75;
 	private final static double MULTIPLIER =  173.7178;
 	private final static double CONVERGENCE_TOLERANCE =  0.000001;
